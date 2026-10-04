@@ -1783,5 +1783,14 @@ function redraw() {
   </div>
 </div>
 
+<!-- SERVICE WORKER REGISTRATION -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('SW failed', e));
+    });
+  }
+</script>
+
 </body>
 </html>
