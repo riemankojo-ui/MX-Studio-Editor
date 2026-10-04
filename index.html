@@ -172,7 +172,7 @@ input[type="range"] { accent-color:#00d4ff; }
 .filter-thumb.selected .filter-thumb-label { color:#00d4ff; }
 .filter-empty { color:#666; font-size:11px; padding:14px 8px; }
 
-/* ============ BORDERS (SMALLER) ============ */
+/* ============ BORDERS ============ */
 .border-thumb { flex:0 0 auto; width:52px; cursor:pointer; text-align:center; }
 .border-thumb-img { width:52px; height:52px; border-radius:8px; background:#1a1a1a; border:2px solid #3a3a3a; position:relative; overflow:hidden; }
 .border-thumb.selected .border-thumb-img { border-color:#00d4ff; }
@@ -234,10 +234,6 @@ input[type="text"] { color:#fff; font-size:11px; width:100%; box-sizing:border-b
 </style>
 </head>
 <body>
-
-<div id="userBar" style="display:none;position:fixed;top:6px;right:8px;z-index:9999;background:rgba(30,30,30,.7);border:1px solid #333;border-radius:10px;padding:4px 10px;font-size:9px;color:#fff;">
-  <span id="userEmail" style="color:#00d4ff;font-weight:bold;">—</span>
-</div>
 
 <div id="view-home" class="view active">
   <div class="home-container">
@@ -1741,27 +1737,7 @@ function redraw() {
 }
 </script>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-  const firebaseConfig = {
-    apiKey: "AIzaSyDePIkNn3MJZX16_BKh1HaAlhW2g6m1E4c",
-    authDomain: "sd-music-c3b70.firebaseapp.com",
-    projectId: "sd-music-c3b70",
-    storageBucket: "sd-music-c3b70.firebasestorage.app",
-    messagingSenderId: "1030569992708",
-    appId: "1:1030569992708:web:0f83f8db17392cfe3d8b51"
-  };
-  const auth = getAuth(initializeApp(firebaseConfig));
-  onAuthStateChanged(auth, (user) => {
-    if (!user) window.location.href = 'index.html';
-    else {
-      const el = document.getElementById('userEmail');
-      if (el) { el.textContent = user.email.split('@')[0].toUpperCase(); document.getElementById('userBar').style.display = 'block'; }
-    }
-  });
-</script>
-
+<!-- AI PANEL -->
 <div id="aiPanel">
   <div class="ai-card">
     <div class="ai-header">
