@@ -245,6 +245,8 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
       </div>
       <label style="margin-top:6px;display:block;">Font Size: <span id="fSizeVal">36</span>px</label>
       <input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)">
+      <label style="margin-top:10px;display:block;">Rotation: <span id="fRotVal">0</span>°</label>
+      <input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)">
       <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:10px;width:100%;justify-content:center;">DELETE THIS LAYER</button>
     </div>
     <div id="subtab-featured" class="sub-view">
@@ -309,6 +311,9 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
   <div id="panel-advisory" class="panel">
     <label class="section-label" style="margin-top:0;">PARENTAL ADVISORY STICKERS</label>
     <div class="sticker-grid" id="stickerGrid"></div>
+    <label class="section-label" style="margin-top:10px;">DEFAULT SIZE: <span id="advSizeVal">35</span>%</label>
+    <input type="range" id="advSizeInput" min="10" max="80" value="35" oninput="setAdvDefaultSize(this.value)">
+    <button class="crop-tool" onclick="trimActiveSticker()" style="margin-top:10px;width:100%;justify-content:center;">✂ TRIM WHITESPACE FROM SELECTED</button>
     <div style="font-size:9px;color:#555;text-align:center;margin-top:14px;line-height:1.5;">Tap a sticker to add it · Drag with 1 finger · Pinch with 2 to resize & rotate</div>
   </div>
 
@@ -328,7 +333,7 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
     <button class="nav-btn" data-panel="text" onclick="switchPanel('text', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg><span>Text</span></button>
     <button class="nav-btn" data-panel="color" onclick="switchPanel('color', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 .5-4.5 4 1.5 6.5L12 15.5 6 19l1.5-6.5L3 8.5 9 8z"/></svg><span>Color</span></button>
     <button class="nav-btn" data-panel="bg" onclick="switchPanel('bg', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M5 19a7 7 0 0114 0"/></svg><span>Subject</span></button>
-    <button class="nav-btn" data-panel="fx" onclick="switchPanel('fx', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M19 5l-4 4M9 15l-4 4"/></svg><span>FX</span></button>
+    <button class="nav-btn" data-panel="fx" onclick="switchPanel('fx', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M19 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg><span>Effects</span></button>
     <button class="nav-btn" data-panel="border" onclick="switchPanel('border', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg><span>Border</span></button>
     <button class="nav-btn" data-panel="advisory" onclick="switchPanel('advisory', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="13" y2="17"/></svg><span>Advisory</span></button>
     <button class="nav-btn" data-panel="bgimage" onclick="switchPanel('bgimage', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>BG</span></button>
@@ -339,7 +344,7 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous"></script>
 
 <script>
-// ============ DOM references (declared FIRST so nothing breaks) ============
+// ============ DOM references (must be declared first) ============
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const textMenu = document.getElementById('textFloatingMenu');
@@ -368,6 +373,7 @@ let currentBgImageSize = 8;
 let currentProjectId = null;
 let currentFx = 'none';
 let currentFxAmount = 70;
+let advDefaultSize = 35;
 
 let textLayers = [];
 let activeLayerId = null;
@@ -493,7 +499,7 @@ async function preloadEffects() {
   buildBgImageGrid();
 }
 
-// ============ UI ============
+// ============ UI builders ============
 function switchFxTab(cat, el) {
   const panel = el.closest('.panel');
   panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
@@ -588,10 +594,15 @@ function clearBgImage() {
   redraw(); saveState();
 }
 
+function setAdvDefaultSize(v) {
+  advDefaultSize = parseInt(v);
+  document.getElementById('advSizeVal').innerText = v;
+}
+
 function addSticker(fname) {
   const im = advisoryImages[fname];
   if (!im || !imgLoaded) return;
-  const w = Math.round(Math.min(canvas.width, canvas.height) * 0.35);
+  const w = Math.round(Math.min(canvas.width, canvas.height) * (advDefaultSize / 100));
   const h = Math.round(w * (im.naturalHeight / im.naturalWidth));
   const id = Date.now() + Math.random();
   const layer = { id, image: im, imageUrl: EFFECTS_BASE + fname, isImage: true, x: canvas.width/2, y: canvas.height/2, width: w, height: h, rotation: 0, size: w };
@@ -602,7 +613,44 @@ function addSticker(fname) {
   redraw(); saveState();
 }
 
-// ============ builders ============
+function trimActiveSticker() {
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l || !l.isImage || !l.image) { alert('Select a sticker on the canvas first'); return; }
+  const im = l.image;
+  const c = document.createElement('canvas');
+  c.width = im.naturalWidth || im.width;
+  c.height = im.naturalHeight || im.height;
+  const cx = c.getContext('2d');
+  cx.drawImage(im, 0, 0);
+  const d = cx.getImageData(0, 0, c.width, c.height).data;
+  let minX = c.width, minY = c.height, maxX = 0, maxY = 0;
+  for (let y = 0; y < c.height; y += 2) {
+    for (let x = 0; x < c.width; x += 2) {
+      const i = (y * c.width + x) * 4;
+      const bright = (d[i] + d[i+1] + d[i+2]) / 3;
+      if (bright < 200) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (minX >= maxX || minY >= maxY) { alert('Nothing to trim'); return; }
+  const tw = maxX - minX, th = maxY - minY;
+  const tc = document.createElement('canvas');
+  tc.width = tw; tc.height = th;
+  tc.getContext('2d').drawImage(c, minX, minY, tw, th, 0, 0, tw, th);
+  const trimmed = new Image();
+  trimmed.onload = () => {
+    l.image = trimmed;
+    l.height = Math.round(l.width * (th / tw));
+    redraw(); saveState();
+    alert('Trimmed!');
+  };
+  trimmed.src = tc.toDataURL('image/png');
+}
+
 function buildFontGrid() {
   const c = document.getElementById('fontGridContainer');
   const fontList = ["Impact","Bebas Neue","Oswald","Montserrat","Anton","Pacifico","Permanent Marker","Russo One","Press Start 2P","Righteous","Orbitron","Bungee","Bungee Inline","Creepster","Monoton","Luckiest Guy","Rye","Satisfy","Yellowtail","Chewy","Alfa Slab One","Cinzel","Audiowide","Black Ops One","Chango","Coiny","Damion","Diplomata SC","Frijole","Gloria Hallelujah","Gugi","Knewave","Lobster","Parisienne","Poppins","Playfair Display","Special Elite","Great Vibes","Merriweather","Dancing Script"];
@@ -618,6 +666,10 @@ function buildBgColors() {
   const c = document.getElementById('bgColorRow');
   if (!c) return;
   let html = '';
+  const noneSel = (!currentBgColor && !currentBgImage) ? 'selected' : '';
+  html += `<div class="bgcolor-swatch ${noneSel}" style="background:linear-gradient(135deg,#2a2a2a 45%,#111 45%,#111 55%,#2a2a2a 55%);display:flex;align-items:center;justify-content:center;" onclick="setBgColor(null, this)">
+    <span style="color:#888;font-size:11px;font-weight:700;letter-spacing:1px;">NONE</span>
+  </div>`;
   BG_COLORS.forEach(col => {
     const sel = (currentBgColor === col) ? 'selected' : '';
     html += `<div class="bgcolor-swatch ${sel}" style="background:${col};" onclick="setBgColor('${col}', this)"></div>`;
@@ -930,7 +982,7 @@ function updateHistoryButtons() {
   document.getElementById('redoBtn').disabled = redoStack.length === 0;
 }
 
-// ============ touch / drag ============
+// ============ touch handling ============
 function getCanvasCoordinates(e, touch) {
   const rect = canvas.getBoundingClientRect();
   const cx = touch ? touch.clientX : (e.touches ? e.touches[0].clientX : e.clientX);
@@ -1102,10 +1154,13 @@ function updateTextLayersUI() {
 
 function syncActiveInputs() {
   const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l || l.isImage) { tInput.value = ''; sizeInput.value = 36; document.getElementById('fSizeVal').innerText = '36'; return; }
+  if (!l || l.isImage) { tInput.value = ''; sizeInput.value = 36; document.getElementById('fSizeVal').innerText = '36'; document.getElementById('fontRotation').value = 0; document.getElementById('fRotVal').innerText = 0; return; }
   tInput.value = l.text;
   sizeInput.value = l.size;
   document.getElementById('fSizeVal').innerText = l.size;
+  const deg = Math.round((l.rotation || 0) * 180 / Math.PI);
+  document.getElementById('fontRotation').value = deg;
+  document.getElementById('fRotVal').innerText = deg;
 }
 
 function updateActiveTextContent(v) {
@@ -1125,6 +1180,14 @@ function setActiveFontSize(v) {
   if (!l) { document.getElementById('fSizeVal').innerText = v; return; }
   l.size = parseInt(v);
   document.getElementById('fSizeVal').innerText = v;
+  redraw(); saveState();
+}
+
+function setActiveFontRotation(v) {
+  document.getElementById('fRotVal').innerText = v;
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l) return;
+  l.rotation = parseInt(v) * Math.PI / 180;
   redraw(); saveState();
 }
 
@@ -1512,6 +1575,24 @@ function drawFxLayer() {
   ctx.restore();
 }
 
+function drawSelectionBox(bx, by, bw, bh) {
+  ctx.strokeStyle = 'rgba(255,255,255,.9)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([]);
+  ctx.strokeRect(bx, by, bw, bh);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(bx,      by,      5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx+bw,   by,      5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx,      by+bh,   5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx+bw,   by+bh,   5, 0, Math.PI*2); ctx.fill();
+  // rotate handle
+  ctx.strokeStyle = 'rgba(255,255,255,.7)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(bx + bw/2, by); ctx.lineTo(bx + bw/2, by - 26); ctx.stroke();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(bx + bw/2, by - 30, 6, 0, Math.PI*2); ctx.fill();
+}
+
 function redraw() {
   if (!imgLoaded) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1595,14 +1676,8 @@ function redraw() {
       ctx.translate(layer.x, layer.y);
       if (layer.rotation) ctx.rotate(layer.rotation);
       const w = layer.width, h = layer.height;
-      if (activeLayerId === layer.id) {
-        ctx.strokeStyle = 'rgba(255,255,255,.7)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([5, 4]);
-        ctx.strokeRect(-w/2 - 4, -h/2 - 4, w + 8, h + 8);
-        ctx.setLineDash([]);
-      }
       ctx.drawImage(layer.image, -w/2, -h/2, w, h);
+      if (activeLayerId === layer.id) drawSelectionBox(-w/2 - 4, -h/2 - 4, w + 8, h + 8);
       ctx.restore();
     } else if (layer.text && layer.text.trim() !== '') {
       ctx.save();
@@ -1610,19 +1685,16 @@ function redraw() {
       if (layer.rotation) ctx.rotate(layer.rotation);
       ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      if (activeLayerId === layer.id) {
-        const m = ctx.measureText(layer.text);
-        ctx.strokeStyle = 'rgba(255,255,255,.6)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 3]);
-        ctx.strokeRect(-m.width/2 - 8, -layer.size/2 - 4, m.width + 16, layer.size + 8);
-        ctx.setLineDash([]);
-      }
       if (layer.style === 'stroke') { ctx.lineWidth = Math.max(2, layer.size * 0.08); ctx.strokeStyle = '#000'; ctx.strokeText(layer.text, 0, 0); }
       else if (layer.style === 'shadow') { ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 4; ctx.shadowOffsetY = 4; }
       else if (layer.style === 'glow') { ctx.shadowColor = layer.color; ctx.shadowBlur = 20; }
       ctx.fillStyle = layer.color;
       ctx.fillText(layer.text, 0, 0);
+      if (activeLayerId === layer.id) {
+        const m = ctx.measureText(layer.text);
+        const bw = m.width + 16, bh = layer.size + 8;
+        drawSelectionBox(-bw/2, -bh/2, bw, bh);
+      }
       ctx.restore();
     }
   });
