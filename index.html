@@ -56,8 +56,10 @@ canvas { max-width:100%; max-height:56vh; height:auto; width:auto; background:#0
 .panel { display:none; background:transparent; padding:10px 2px; text-align:left; font-size:12px; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; }
 .panel.active { display:block; animation:slideUp 0.22s ease; }
 @keyframes slideUp { from { transform:translateY(14px); opacity:0; } to { transform:translateY(0); opacity:1; } }
-.sub-tabs { display:flex; justify-content:center; gap:14px; margin-bottom:10px; border-bottom:1px solid #1a1a1a; padding-bottom:6px; flex-wrap:wrap; }
-.sub-tab { background:none; border:none; color:#666; font-weight:bold; font-size:11px; cursor:pointer; padding:2px 0; }
+.sub-tabs { display:flex; justify-content:flex-start; gap:10px; margin-bottom:10px; border-bottom:1px solid #1a1a1a; padding-bottom:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.sub-tabs::-webkit-scrollbar { display:none; }
+.sub-tabs { scrollbar-width:none; }
+.sub-tab { background:none; border:none; color:#666; font-weight:bold; font-size:11px; cursor:pointer; padding:2px 0; white-space:nowrap; flex-shrink:0; }
 .sub-tab.active { color:#fff; border-bottom:2px solid #fff; }
 .sub-view { display:none; }
 .sub-view.active { display:block; }
@@ -132,6 +134,11 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
 .ai-status { text-align:center; color:#666; font-size:12px; margin-top:10px; }
 .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.15); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:6px; }
 @keyframes spin { to { transform:rotate(360deg); } }
+.compact-sliders { display:flex; flex-direction:column; gap:5px; margin-top:6px; }
+.slider-row { display:flex; align-items:center; gap:8px; height:26px; }
+.slider-label { font-size:10px; color:#888; font-weight:700; width:34px; text-align:left; text-transform:uppercase; letter-spacing:.5px; flex-shrink:0; }
+.slider-row input[type="range"] { flex:1; height:3px; }
+.slider-val { font-size:10px; color:#fff; width:36px; text-align:right; font-weight:700; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -230,7 +237,7 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
       <input type="text" id="textContent" placeholder="Type here..." oninput="updateActiveTextContent(this.value)">
       <div id="textLayersList" class="text-layers-list"></div>
       <button class="add-text-btn" onclick="addNewTextLayer()">+ ADD TEXT</button>
-      <div style="font-size:9px;color:#555;text-align:center;margin-top:8px;line-height:1.5;">Drag with 1 finger · Pinch with 2 to resize & rotate</div>
+      <div style="font-size:9px;color:#555;text-align:center;margin-top:8px;line-height:1.5;">Drag with 1 finger · Pinch with 2 to resize & rotate · Tap canvas to deselect</div>
     </div>
     <div id="subtab-font" class="sub-view">
       <label style="margin:0 0 2px;">Select Font (40):</label>
@@ -243,11 +250,30 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
         <div class="color-circle" style="background:#ff2c2c;" onclick="setActiveTextColor('#ff2c2c',this)"></div>
         <div class="color-circle" style="background:#000000;" onclick="setActiveTextColor('#000000',this)"></div>
       </div>
-      <label style="margin-top:6px;display:block;">Font Size: <span id="fSizeVal">36</span>px</label>
-      <input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)">
-      <label style="margin-top:10px;display:block;">Rotation: <span id="fRotVal">0</span>°</label>
-      <input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)">
-      <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:10px;width:100%;justify-content:center;">DELETE THIS LAYER</button>
+      <label class="section-label" style="margin-top:12px;">POSITION & SIZE</label>
+      <div class="compact-sliders">
+        <div class="slider-row">
+          <span class="slider-label">X</span>
+          <input type="range" id="posX" min="-500" max="2500" value="0" oninput="setActivePos('x', this.value)">
+          <span class="slider-val" id="posXVal">0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Y</span>
+          <input type="range" id="posY" min="-500" max="2500" value="0" oninput="setActivePos('y', this.value)">
+          <span class="slider-val" id="posYVal">0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Size</span>
+          <input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)">
+          <span class="slider-val" id="fSizeVal">36</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Rot</span>
+          <input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)">
+          <span class="slider-val" id="fRotVal">0°</span>
+        </div>
+      </div>
+      <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:12px;width:100%;justify-content:center;">DELETE THIS LAYER</button>
     </div>
     <div id="subtab-featured" class="sub-view">
       <div class="h-scroll">
@@ -280,19 +306,11 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
   </div>
 
   <div id="panel-fx" class="panel">
-    <div class="sub-tabs">
-      <button class="sub-tab active" onclick="switchFxTab('grunge', this)">GRUNGE</button>
-      <button class="sub-tab" onclick="switchFxTab('lightleak', this)">LIGHT LEAK</button>
-    </div>
-    <div id="fx-tab-grunge" class="sub-view active">
-      <div class="fx-grid" id="fxGridGrunge"></div>
-    </div>
-    <div id="fx-tab-lightleak" class="sub-view">
-      <div class="fx-grid" id="fxGridLightleak"></div>
-    </div>
+    <div class="sub-tabs" id="fxTabBar"></div>
+    <div id="fxGrids"></div>
     <label class="section-label" style="margin-top:10px;">INTENSITY: <span id="fxVal">70</span>%</label>
     <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
-    <div style="font-size:9px;color:#555;text-align:center;margin-top:10px;line-height:1.5;">Blend mode: screen · baked in per category</div>
+    <div style="font-size:9px;color:#555;text-align:center;margin-top:10px;line-height:1.5;">Blend mode auto-set per category</div>
   </div>
 
   <div id="panel-border" class="panel">
@@ -313,8 +331,8 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
     <div class="sticker-grid" id="stickerGrid"></div>
     <label class="section-label" style="margin-top:10px;">DEFAULT SIZE: <span id="advSizeVal">35</span>%</label>
     <input type="range" id="advSizeInput" min="10" max="80" value="35" oninput="setAdvDefaultSize(this.value)">
-    <button class="crop-tool" onclick="trimActiveSticker()" style="margin-top:10px;width:100%;justify-content:center;">✂ TRIM WHITESPACE FROM SELECTED</button>
-    <div style="font-size:9px;color:#555;text-align:center;margin-top:14px;line-height:1.5;">Tap a sticker to add it · Drag with 1 finger · Pinch with 2 to resize & rotate</div>
+    <button class="crop-tool" onclick="trimActiveSticker()" style="margin-top:10px;width:100%;justify-content:center;">✂ CROP SELECTED STICKER</button>
+    <div style="font-size:9px;color:#555;text-align:center;margin-top:12px;line-height:1.5;">Tap a sticker to add it · Drag with 1 finger · Tap canvas to deselect</div>
   </div>
 
   <div id="panel-bgimage" class="panel">
@@ -341,10 +359,28 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous"></script>
-
+<div id="aiPanel">
+  <div class="ai-card">
+    <div class="ai-header">
+      <h3 class="ai-title">AI GENERATOR</h3>
+      <button onclick="closeAIPanel()" style="background:none;border:none;color:#666;cursor:pointer;padding:0;display:inline-flex;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <input type="text" id="aiGenPrompt" class="ai-input" placeholder="Describe the image you want..." autocomplete="off">
+    <label class="section-label" style="margin-top:0;">Shape</label>
+    <div class="h-scroll" style="padding-bottom:8px;">
+      <div class="h-card selected" onclick="setGenShape('square', this)">Square</div>
+      <div class="h-card" onclick="setGenShape('portrait', this)">Portrait</div>
+      <div class="h-card" onclick="setGenShape('story', this)">Story</div>
+      <div class="h-card" onclick="setGenShape('wide', this)">Wide</div>
+      <div class="h-card" onclick="setGenShape('cover', this)">Cover</div>
+    </div>
+    <button id="aiGenBtn" class="ai-btn" onclick="generateAIImage()">GENERATE</button>
+    <div id="aiGenStatus" class="ai-status"></div>
+  </div>
+</div><script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous"></script>
 <script>
-// ============ DOM references (must be declared first) ============
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const textMenu = document.getElementById('textFloatingMenu');
@@ -356,11 +392,9 @@ const subjAmt = document.getElementById('subjectAmount');
 const tInput = document.getElementById('textContent');
 const sizeInput = document.getElementById('fontSize');
 
-// ============ app state ============
 let img = new Image();
 let imgLoaded = false;
 let originalImageSrc = null;
-
 let currentFilter = 'none';
 let currentBorder = 'none';
 let currentBorderColor = '#ffffff';
@@ -389,7 +423,6 @@ let selfieSeg = null;
 let crop = { x:0, y:0, w:1, h:1 };
 let cropDrag = null;
 
-// ============ data ============
 const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
 
 const TEMPLATES = [
@@ -425,10 +458,16 @@ const BORDERS = [
 
 const EFFECTS_BASE = './effects/';
 
-const FX_CATEGORIES = {
-  grunge:    { label:'Grunge',     prefix:'grunge',    max:30, blend:'screen', files:[] },
-  lightleak: { label:'Light Leak', prefix:'lightleak', max:20, blend:'screen', files:[] }
-};
+const FX_CATEGORIES = [
+  { key:'grunge',      label:'Grunge',       prefix:'grunge',      max:50, blend:'screen',  files:[] },
+  { key:'lightleak',   label:'Light Leak',   prefix:'lightleak',   max:30, blend:'screen',  files:[] },
+  { key:'fire',        label:'Fire',         prefix:'fire',        max:10, blend:'screen',  files:[] },
+  { key:'noise',       label:'Noise',        prefix:'noise',       max:15, blend:'overlay', files:[] },
+  { key:'streetlight', label:'Street Light', prefix:'streetlight', max:10, blend:'screen',  files:[] },
+  { key:'af',          label:'AF',           prefix:'af',          max:10, blend:'screen',  files:[] },
+  { key:'heart',       label:'Heart',        prefix:'heart',       max:10, blend:'normal',  files:[] }
+];
+let currentFxTab = 'grunge';
 
 const ADVISORY_CONFIG = { prefix:'advisory', max:12, files:[] };
 const BG_CONFIG       = { prefix:'background', max:12, files:[] };
@@ -437,7 +476,6 @@ const fxImages = {};
 const advisoryImages = {};
 const bgImages = {};
 
-// ============ effect loading ============
 function loadImage(url) {
   return new Promise(res => {
     const im = new Image();
@@ -448,70 +486,102 @@ function loadImage(url) {
   });
 }
 
-async function probeCategory(catKey, cfg) {
-  const promises = [];
-  for (let i = 1; i <= cfg.max; i++) {
-    const fname = cfg.prefix + i + '.jpg';
-    promises.push(loadImage(EFFECTS_BASE + fname).then(im => im ? { fname, im } : null));
-  }
-  const results = await Promise.all(promises);
-  cfg.files = results.filter(r => r !== null);
-  cfg.files.forEach(r => { fxImages[catKey + ':' + r.fname] = r.im; });
+async function probeOne(base) {
+  let im = await loadImage(EFFECTS_BASE + base + '.jpg');
+  if (im) return { fname: base + '.jpg', im };
+  im = await loadImage(EFFECTS_BASE + base + '.jpeg');
+  if (im) return { fname: base + '.jpeg', im };
+  im = await loadImage(EFFECTS_BASE + base + '.png');
+  if (im) return { fname: base + '.png', im };
+  return null;
 }
 
-async function probeSimple(cfg, store) {
+async function probeCategory(cat) {
   const promises = [];
-  for (let i = 1; i <= cfg.max; i++) {
-    const fname = cfg.prefix + i + '.jpg';
-    promises.push(loadImage(EFFECTS_BASE + fname).then(im => im ? { fname, im } : null));
+  for (let i = 1; i <= cat.max; i++) {
+    const base = cat.prefix + i;
+    promises.push(probeOne(base).then(r => r ? { base, ...r } : null));
   }
   const results = await Promise.all(promises);
-  cfg.files = results.filter(r => r !== null);
-  cfg.files.forEach(r => { store[r.fname] = r.im; });
+  cat.files = results.filter(r => r !== null);
+  cat.files.forEach(r => { fxImages[cat.key + ':' + r.fname] = r.im; });
 }
 
-async function probeAdvisoryWithCase() {
+async function probeAdvisory() {
   const cfg = ADVISORY_CONFIG;
   const promises = [];
   for (let i = 1; i <= cfg.max; i++) {
-    const fn1 = 'Advisory' + i + '.jpg';
-    const fn2 = 'advisory' + i + '.jpg';
-    promises.push(
-      loadImage(EFFECTS_BASE + fn1).then(im => im ? { fname: fn1, im } :
-        loadImage(EFFECTS_BASE + fn2).then(im2 => im2 ? { fname: fn2, im: im2 } : null))
-    );
+    promises.push((async () => {
+      let r = await probeOne('Advisory' + i);
+      if (r) return r;
+      r = await probeOne('advisory' + i);
+      return r;
+    })());
   }
   const results = await Promise.all(promises);
   cfg.files = results.filter(r => r !== null);
   cfg.files.forEach(r => { advisoryImages[r.fname] = r.im; });
 }
 
+async function probeBackgrounds() {
+  const cfg = BG_CONFIG;
+  const promises = [];
+  for (let i = 1; i <= cfg.max; i++) {
+    promises.push(probeOne('background' + i));
+  }
+  const results = await Promise.all(promises);
+  cfg.files = results.filter(r => r !== null);
+  cfg.files.forEach(r => { bgImages[r.fname] = r.im; });
+}
+
 async function preloadEffects() {
   await Promise.all([
-    probeCategory('grunge', FX_CATEGORIES.grunge),
-    probeCategory('lightleak', FX_CATEGORIES.lightleak),
-    probeAdvisoryWithCase(),
-    probeSimple(BG_CONFIG, bgImages)
+    ...FX_CATEGORIES.map(c => probeCategory(c)),
+    probeAdvisory(),
+    probeBackgrounds()
   ]);
-  buildFxGrid('grunge');
-  buildFxGrid('lightleak');
+  buildFxTabs();
+  buildFxGrids();
   buildAdvisoryGrid();
   buildBgImageGrid();
 }
 
-// ============ UI builders ============
-function switchFxTab(cat, el) {
+function buildFxTabs() {
+  const bar = document.getElementById('fxTabBar');
+  if (!bar) return;
+  let html = '';
+  FX_CATEGORIES.forEach(cat => {
+    const sel = (currentFxTab === cat.key) ? 'active' : '';
+    html += `<button class="sub-tab ${sel}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
+  });
+  bar.innerHTML = html;
+}
+
+function buildFxGrids() {
+  const container = document.getElementById('fxGrids');
+  if (!container) return;
+  let html = '';
+  FX_CATEGORIES.forEach(cat => {
+    const active = (currentFxTab === cat.key) ? 'active' : '';
+    html += `<div id="fx-tab-${cat.key}" class="sub-view ${active}"><div class="fx-grid" id="fxGrid-${cat.key}"></div></div>`;
+  });
+  container.innerHTML = html;
+  FX_CATEGORIES.forEach(cat => buildFxGrid(cat.key));
+}
+
+function switchFxTab(key, el) {
+  currentFxTab = key;
   const panel = el.closest('.panel');
   panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
   panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('fx-tab-' + cat).classList.add('active');
+  document.getElementById('fx-tab-' + key).classList.add('active');
   el.classList.add('active');
 }
 
 function buildFxGrid(catKey) {
-  const cfg = FX_CATEGORIES[catKey];
-  const gridId = catKey === 'grunge' ? 'fxGridGrunge' : 'fxGridLightleak';
-  const g = document.getElementById(gridId);
+  const cat = FX_CATEGORIES.find(c => c.key === catKey);
+  if (!cat) return;
+  const g = document.getElementById('fxGrid-' + catKey);
   if (!g) return;
   let html = `<div class="fx-card ${currentFx === catKey + ':none' ? 'selected' : ''}" onclick="setFx('${catKey}:none', this)">
     <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
@@ -519,15 +589,18 @@ function buildFxGrid(catKey) {
     </div>
     <span class="fx-card-label">Off</span>
   </div>`;
-  if (!cfg.files.length) html += `<div class="filter-empty">Loading…</div>`;
-  cfg.files.forEach(f => {
-    const key = catKey + ':' + f.fname;
-    const sel = (currentFx === key) ? 'selected' : '';
-    html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)">
-      <div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;" alt=""></div>
-      <span class="fx-card-label">${f.fname.replace('.jpg','')}</span>
-    </div>`;
-  });
+  if (!cat.files || !cat.files.length) {
+    html += `<div class="filter-empty">No files</div>`;
+  } else {
+    cat.files.forEach(f => {
+      const key = catKey + ':' + f.fname;
+      const sel = (currentFx === key) ? 'selected' : '';
+      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)">
+        <div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;" alt=""></div>
+        <span class="fx-card-label">${f.base}</span>
+      </div>`;
+    });
+  }
   g.innerHTML = html;
 }
 
@@ -547,7 +620,7 @@ function setFxAmount(v) {
 function buildAdvisoryGrid() {
   const g = document.getElementById('stickerGrid');
   if (!g) return;
-  if (!ADVISORY_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">Loading…</div>'; return; }
+  if (!ADVISORY_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">No files</div>'; return; }
   let html = '';
   ADVISORY_CONFIG.files.forEach(f => {
     html += `<div class="sticker-item" onclick="addSticker('${f.fname}')">
@@ -560,7 +633,7 @@ function buildAdvisoryGrid() {
 function buildBgImageGrid() {
   const g = document.getElementById('bgImageGrid');
   if (!g) return;
-  if (!BG_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">Loading…</div>'; return; }
+  if (!BG_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">No files</div>'; return; }
   let html = '';
   BG_CONFIG.files.forEach(f => {
     const sel = (currentBgImage && currentBgImage.src.endsWith(f.fname)) ? 'selected' : '';
@@ -646,7 +719,6 @@ function trimActiveSticker() {
     l.image = trimmed;
     l.height = Math.round(l.width * (th / tw));
     redraw(); saveState();
-    alert('Trimmed!');
   };
   trimmed.src = tc.toDataURL('image/png');
 }
@@ -790,7 +862,6 @@ function applyFilterByIndex(i, el) {
   saveState(); redraw();
 }
 
-// ============ projects ============
 function renderProjectsList() {
   const g = document.getElementById('gallery');
   const keys = Object.keys(localStorage).filter(k => k.startsWith('music_proj_'));
@@ -826,8 +897,8 @@ function setupCanvasFromImage(newImg) {
 function loadProject(key) {
   const p = JSON.parse(localStorage.getItem(key));
   currentProjectId = key.replace('music_', '');
-  if (p.textLayers) { textLayers = p.textLayers; activeLayerId = textLayers.length ? textLayers[0].id : null; }
-  else { textLayers = []; activeLayerId = null; }
+  textLayers = p.textLayers || [];
+  activeLayerId = null;
   textLayers.forEach(l => {
     if (l.isImage && l.imageUrl) { const im = new Image(); im.src = l.imageUrl; l.image = im; }
   });
@@ -856,7 +927,7 @@ function loadProject(key) {
     if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
     imgLoaded = true;
     buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-    buildFxGrid('grunge'); buildFxGrid('lightleak'); buildAdvisoryGrid(); buildBgImageGrid();
+    buildFxGrids(); buildAdvisoryGrid(); buildBgImageGrid();
     saveState(); redraw();
   };
   img.src = sourceImage;
@@ -945,7 +1016,6 @@ function resetEverything() {
   syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
 }
 
-// ============ undo/redo ============
 function saveState() {
   if (!imgLoaded) return;
   const state = canvas.toDataURL();
@@ -982,7 +1052,6 @@ function updateHistoryButtons() {
   document.getElementById('redoBtn').disabled = redoStack.length === 0;
 }
 
-// ============ touch handling ============
 function getCanvasCoordinates(e, touch) {
   const rect = canvas.getBoundingClientRect();
   const cx = touch ? touch.clientX : (e.touches ? e.touches[0].clientX : e.clientX);
@@ -1041,8 +1110,12 @@ function startTouch(e) {
     syncActiveInputs(); updateTextLayersUI();
     isDraggingText = true;
     showFloatingMenu(clickedLayer.x, clickedLayer.y);
+    redraw();
   } else {
+    activeLayerId = null;
     textMenu.style.display = 'none';
+    updateTextLayersUI();
+    redraw();
   }
 }
 
@@ -1067,8 +1140,6 @@ function onTouchMove(e) {
           l.width = newW; l.height = Math.round(newW * ratio); l.size = newW;
         } else {
           l.size = Math.max(8, Math.min(400, Math.round(gesture.startSize * scale)));
-          document.getElementById('fSizeVal').innerText = l.size;
-          sizeInput.value = l.size;
         }
         l.rotation = gesture.startRot + rotDelta;
       }
@@ -1086,7 +1157,7 @@ function onTouchMove(e) {
 function endTouch(e) {
   if (e && e.changedTouches) { for (const t of e.changedTouches) touches.delete(t.identifier); } else { touches.delete('mouse'); }
   if (touches.size < 2) gesture = null;
-  if (isDraggingText) { isDraggingText = false; saveState(); }
+  if (isDraggingText) { isDraggingText = false; saveState(); syncActiveInputs(); }
 }
 
 function showFloatingMenu(x, y) {
@@ -1102,12 +1173,12 @@ function showFloatingMenu(x, y) {
 
 function moveActiveText(dx, dy) {
   const l = textLayers.find(x => x.id === activeLayerId);
-  if (l) { l.x += dx; l.y += dy; showFloatingMenu(l.x, l.y); redraw(); saveState(); }
+  if (l) { l.x += dx; l.y += dy; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
 }
 
 function centerActiveTextHoriz() {
   const l = textLayers.find(x => x.id === activeLayerId);
-  if (l) { l.x = canvas.width / 2; showFloatingMenu(l.x, l.y); redraw(); saveState(); }
+  if (l) { l.x = canvas.width / 2; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
 }
 
 function addNewTextLayer() {
@@ -1134,6 +1205,7 @@ function selectLayer(id) {
   syncActiveInputs(); updateTextLayersUI();
   const l = textLayers.find(x => x.id === id);
   if (l) showFloatingMenu(l.x, l.y);
+  redraw();
 }
 
 function updateTextLayersUI() {
@@ -1154,13 +1226,45 @@ function updateTextLayersUI() {
 
 function syncActiveInputs() {
   const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l || l.isImage) { tInput.value = ''; sizeInput.value = 36; document.getElementById('fSizeVal').innerText = '36'; document.getElementById('fontRotation').value = 0; document.getElementById('fRotVal').innerText = 0; return; }
-  tInput.value = l.text;
-  sizeInput.value = l.size;
-  document.getElementById('fSizeVal').innerText = l.size;
+  const px = document.getElementById('posX');
+  const py = document.getElementById('posY');
+  px.max = Math.max(2000, canvas.width * 1.2);
+  py.max = Math.max(2000, canvas.height * 1.2);
+  if (!l) {
+    tInput.value = ''; sizeInput.value = 36;
+    document.getElementById('fSizeVal').innerText = '36';
+    document.getElementById('fontRotation').value = 0;
+    document.getElementById('fRotVal').innerText = '0°';
+    px.value = 0; py.value = 0;
+    document.getElementById('posXVal').innerText = '0';
+    document.getElementById('posYVal').innerText = '0';
+    return;
+  }
+  px.value = Math.round(l.x); py.value = Math.round(l.y);
+  document.getElementById('posXVal').innerText = Math.round(l.x);
+  document.getElementById('posYVal').innerText = Math.round(l.y);
+  if (l.isImage) {
+    tInput.value = '';
+    sizeInput.value = l.width || 100;
+    document.getElementById('fSizeVal').innerText = Math.round(l.width || 100);
+  } else {
+    tInput.value = l.text;
+    sizeInput.value = l.size;
+    document.getElementById('fSizeVal').innerText = l.size;
+  }
   const deg = Math.round((l.rotation || 0) * 180 / Math.PI);
   document.getElementById('fontRotation').value = deg;
-  document.getElementById('fRotVal').innerText = deg;
+  document.getElementById('fRotVal').innerText = deg + '°';
+}
+
+function setActivePos(axis, v) {
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l) return;
+  v = parseInt(v);
+  if (axis === 'x') { l.x = v; document.getElementById('posXVal').innerText = v; }
+  else { l.y = v; document.getElementById('posYVal').innerText = v; }
+  showFloatingMenu(l.x, l.y);
+  redraw(); saveState();
 }
 
 function updateActiveTextContent(v) {
@@ -1178,24 +1282,28 @@ function updateActiveTextContent(v) {
 function setActiveFontSize(v) {
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) { document.getElementById('fSizeVal').innerText = v; return; }
-  l.size = parseInt(v);
+  if (l.isImage) {
+    const ratio = l.height / l.width;
+    l.width = parseInt(v); l.height = Math.round(l.width * ratio);
+  } else {
+    l.size = parseInt(v);
+  }
   document.getElementById('fSizeVal').innerText = v;
   redraw(); saveState();
 }
 
 function setActiveFontRotation(v) {
-  document.getElementById('fRotVal').innerText = v;
+  document.getElementById('fRotVal').innerText = v + '°';
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) return;
   l.rotation = parseInt(v) * Math.PI / 180;
   redraw(); saveState();
 }
 
-function setActiveFont(f, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.font = f; redraw(); saveState(); }
-function setActiveTextColor(c, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.color = c; redraw(); saveState(); }
-function setActiveTextStyle(s, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.style = s; redraw(); saveState(); }
+function setActiveFont(f, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.font = f; redraw(); saveState(); }
+function setActiveTextColor(c, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.color = c; redraw(); saveState(); }
+function setActiveTextStyle(s, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.style = s; redraw(); saveState(); }
 
-// ============ save ============
 function saveProjectToHome() {
   if (!imgLoaded) return;
   if (!currentProjectId) currentProjectId = 'proj_' + Date.now();
@@ -1234,7 +1342,6 @@ function saveImage() {
   a.click();
 }
 
-// ============ panels ============
 function switchPanel(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1244,10 +1351,11 @@ function switchPanel(name, btn) {
   if (name === 'border') buildBorders();
   if (name === 'adjust') buildTemplates();
   if (name === 'color') buildBgColors();
-  if (name === 'fx') { buildFxGrid('grunge'); buildFxGrid('lightleak'); }
+  if (name === 'fx') { buildFxTabs(); buildFxGrids(); }
   if (name === 'advisory') buildAdvisoryGrid();
   if (name === 'bgimage') buildBgImageGrid();
   if (name === 'crop') showCropOverlay(true); else showCropOverlay(false);
+  syncActiveInputs();
 }
 
 function isCropPanelActive() { return document.getElementById('panel-crop').classList.contains('active'); }
@@ -1258,6 +1366,7 @@ function switchSubTab(name, el) {
   panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
   panel.querySelector('#subtab-' + name).classList.add('active');
   el.classList.add('active');
+  if (name === 'basic' || name === 'layers') syncActiveInputs();
 }
 
 function setSubjectMode(mode, el) { subjectMode = mode; updateSelection(el); redraw(); saveState(); }
@@ -1278,7 +1387,6 @@ function updateSelection(el) {
   input.addEventListener('change', saveState);
 });
 
-// ============ crop ============
 function showCropOverlay(show) {
   const ov = document.getElementById('cropOverlay');
   if (show && imgLoaded) { ov.classList.add('active'); crop = { x:0, y:0, w:1, h:1 }; updateCropBox(); }
@@ -1405,7 +1513,6 @@ function flipImage(dir) {
   newImg.src = url;
 }
 
-// ============ subject detection ============
 window.detectSubject = async function() {
   const status = document.getElementById('subjectStatus');
   const btn = document.getElementById('detectBtn');
@@ -1444,7 +1551,6 @@ window.detectSubject = async function() {
   } catch(err) { status.textContent = 'Failed: ' + err.message; btn.disabled = false; }
 };
 
-// ============ AI panel ============
 function openAIPanel() { document.getElementById('aiPanel').style.display = 'flex'; document.getElementById('aiGenStatus').textContent = ''; }
 function closeAIPanel() { document.getElementById('aiPanel').style.display = 'none'; }
 
@@ -1501,7 +1607,7 @@ async function generateAIImage() {
       document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
       syncActiveInputs(); updateTextLayersUI();
       buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-      buildFxGrid('grunge'); buildFxGrid('lightleak'); buildAdvisoryGrid(); buildBgImageGrid();
+      buildFxTabs(); buildFxGrids(); buildAdvisoryGrid(); buildBgImageGrid();
       redraw(); saveState();
       status.textContent = ''; btn.disabled = false;
     };
@@ -1511,7 +1617,6 @@ async function generateAIImage() {
   reader.readAsDataURL(blob);
 }
 
-// ============ drawing ============
 function drawBorder() {
   if (!imgLoaded || currentBorder === 'none') return;
   const w = canvas.width, h = canvas.height;
@@ -1566,11 +1671,11 @@ function drawFxLayer() {
   if (fname === 'none') return;
   const im = fxImages[catKey + ':' + fname];
   if (!im) return;
-  const cat = FX_CATEGORIES[catKey];
+  const cat = FX_CATEGORIES.find(c => c.key === catKey);
   const a = currentFxAmount / 100;
   ctx.save();
   ctx.globalAlpha = a;
-  ctx.globalCompositeOperation = cat.blend || 'screen';
+  ctx.globalCompositeOperation = (cat && cat.blend) ? cat.blend : 'screen';
   drawCover(0, 0, canvas.width, canvas.height, im);
   ctx.restore();
 }
@@ -1585,7 +1690,6 @@ function drawSelectionBox(bx, by, bw, bh) {
   ctx.beginPath(); ctx.arc(bx+bw,   by,      5, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.arc(bx,      by+bh,   5, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.arc(bx+bw,   by+bh,   5, 0, Math.PI*2); ctx.fill();
-  // rotate handle
   ctx.strokeStyle = 'rgba(255,255,255,.7)';
   ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(bx + bw/2, by); ctx.lineTo(bx + bw/2, by - 26); ctx.stroke();
@@ -1700,14 +1804,13 @@ function redraw() {
   });
 }
 
-// ============ boot ============
 window.onload = function() {
   buildFontGrid();
   buildTemplates();
   buildBorders();
   buildBgColors();
-  buildFxGrid('grunge');
-  buildFxGrid('lightleak');
+  buildFxTabs();
+  buildFxGrids();
   buildAdvisoryGrid();
   buildBgImageGrid();
   preloadEffects();
@@ -1723,28 +1826,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-
-<div id="aiPanel">
-  <div class="ai-card">
-    <div class="ai-header">
-      <h3 class="ai-title">AI GENERATOR</h3>
-      <button onclick="closeAIPanel()" style="background:none;border:none;color:#666;cursor:pointer;padding:0;display:inline-flex;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <input type="text" id="aiGenPrompt" class="ai-input" placeholder="Describe the image you want..." autocomplete="off">
-    <label class="section-label" style="margin-top:0;">Shape</label>
-    <div class="h-scroll" style="padding-bottom:8px;">
-      <div class="h-card selected" onclick="setGenShape('square', this)">Square</div>
-      <div class="h-card" onclick="setGenShape('portrait', this)">Portrait</div>
-      <div class="h-card" onclick="setGenShape('story', this)">Story</div>
-      <div class="h-card" onclick="setGenShape('wide', this)">Wide</div>
-      <div class="h-card" onclick="setGenShape('cover', this)">Cover</div>
-    </div>
-    <button id="aiGenBtn" class="ai-btn" onclick="generateAIImage()">GENERATE</button>
-    <div id="aiGenStatus" class="ai-status"></div>
-  </div>
-</div>
 
 </body>
 </html>
