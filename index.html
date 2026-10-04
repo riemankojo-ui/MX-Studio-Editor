@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>MX Studio · Photos</title>
+<link rel="manifest" href="./manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Audiowide&family=Alfa+Slab+One&family=Bebas+Neue&family=Black+Ops+One&family=Bungee&family=Bungee+Inline&family=Chango&family=Chewy&family=Cinzel:wght@700&family=Coiny&family=Creepster&family=Damion&family=Dancing+Script:wght@700&family=Diplomata+SC&family=Frijole&family=Gloria+Hallelujah&family=Great+Vibes&family=Gugi&family=Knewave&family=Lobster&family=Luckiest+Guy&family=Merriweather:wght@700&family=Monoton&family=Montserrat:wght@800&family=Orbitron:wght@900&family=Oswald:wght@700&family=Pacifico&family=Parisienne&family=Permanent+Marker&family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Press+Start+2P&family=Righteous&family=Russo+One&family=Rye&family=Satisfy&family=Special+Elite&family=Yellowtail&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<div id="view-home" class="view active">
+  <div class="home-container">
+    <div id="gallery" class="gallery"></div>
+  </div>
+  <input type="file" id="homeImageUpload" accept="image/*" multiple style="display:none;">
+</div>
+
+<div id="view-studio" class="view">
+  <div class="top-bar">
+    <div class="top-tools">
+      <button class="icon-btn" id="undoBtn" onclick="undo()" disabled><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6.36 2.64L3 13"/></svg></button>
+      <button class="icon-btn" id="redoBtn" onclick="redo()" disabled><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016.36 2.64L21 13"/></svg></button>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center;">
+      <button class="icon-action" onclick="resetEverything()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 8a9 9 0 1017 5"/></svg></button>
+      <button class="icon-action" onclick="saveProjectToHome()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+      <button class="icon-action" onclick="saveImage()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+    </div>
+  </div>
+
+  <div class="canvas-container">
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <div id="cropOverlay"><div id="cropBox">
+      <div class="crop-corner" data-corner="tl"></div>
+      <div class="crop-corner" data-corner="tr"></div>
+      <div class="crop-corner" data-corner="bl"></div>
+      <div class="crop-corner" data-corner="br"></div>
+    </div></div>
+    <div id="textFloatingMenu">
+      <div class="arrow-grid">
+        <div></div>
+        <button class="arrow-btn" onclick="moveActiveText(0,-5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        <div></div>
+        <button class="arrow-btn" onclick="moveActiveText(-5,0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <button class="arrow-btn" onclick="centerActiveTextHoriz()"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></button>
+        <button class="arrow-btn" onclick="moveActiveText(5,0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        <div></div>
+        <button class="arrow-btn" onclick="moveActiveText(0,5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
+        <div></div>
+      </div>
+      <div class="menu-actions">
+        <button class="menu-action-btn center-btn" onclick="centerActiveTextHoriz()">Center</button>
+        <button class="menu-action-btn delete" onclick="deleteActiveTextLayer()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-adjust" class="panel active">
+    <label class="section-label" style="margin-top:0;">TEMPLATES</label>
+    <div class="template-thumbs" id="templateContainer"></div>
+    <label class="section-label">FINE TUNE</label>
+    <div class="adjust-sliders">
+      <input type="range" id="brightness" min="0" max="200" value="100">
+      <input type="range" id="contrast" min="50" max="200" value="100">
+      <input type="range" id="saturation" min="0" max="200" value="100">
+      <input type="range" id="noise" min="0" max="100" value="0">
+    </div>
+  </div>
+
+  <div id="panel-crop" class="panel">
+    <label class="section-label" style="margin-top:0;">DRAG CORNERS TO CROP · TAP APPLY</label>
+    <div class="crop-toolbar">
+      <button class="crop-tool" onclick="setCropRect('free')">FREE</button>
+      <button class="crop-tool" onclick="setCropRect('1:1')">1:1</button>
+      <button class="crop-tool" onclick="setCropRect('4:5')">4:5</button>
+      <button class="crop-tool" onclick="setCropRect('9:16')">9:16</button>
+      <button class="crop-tool" onclick="setCropRect('16:9')">16:9</button>
+    </div>
+    <div class="crop-toolbar">
+      <button class="crop-tool" onclick="rotateImage(90)">↻ Rotate</button>
+      <button class="crop-tool" onclick="flipImage('h')">⇋ Flip H</button>
+      <button class="crop-tool" onclick="flipImage('v')">⇅ Flip V</button>
+    </div>
+    <div class="crop-toolbar">
+      <button class="crop-tool" onclick="resetCrop()">RESET</button>
+      <button class="crop-tool" onclick="applyCropNow()" style="background:#ff2c2c;color:#fff;flex:1;justify-content:center;">✂ APPLY CROP</button>
+    </div>
+  </div>
+
+  <div id="panel-filters" class="panel">
+    <div class="filter-thumbs" id="filterThumbsContainer" style="margin-top:8px;"></div>
+  </div>
+
+  <div id="panel-text" class="panel">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('layers', this)">TEXT</button>
+      <button class="sub-tab" onclick="switchSubTab('font', this)">FONTS</button>
+      <button class="sub-tab" onclick="switchSubTab('basic', this)">STYLE</button>
+      <button class="sub-tab" onclick="switchSubTab('featured', this)">EFFECTS</button>
+    </div>
+    <div id="subtab-layers" class="sub-view active">
+      <input type="text" id="textContent" placeholder="Type here..." oninput="updateActiveTextContent(this.value)">
+      <div id="textLayersList" class="text-layers-list"></div>
+      <button class="add-text-btn" onclick="addNewTextLayer()">+ ADD TEXT</button>
+      <div style="font-size:9px;color:#555;text-align:center;margin-top:8px;line-height:1.5;">Drag with 1 finger · Pinch with 2 to resize & rotate · Tap canvas to deselect</div>
+    </div>
+    <div id="subtab-font" class="sub-view">
+      <label style="margin:0 0 2px;">Select Font (40):</label>
+      <div class="font-grid" id="fontGridContainer"></div>
+    </div>
+    <div id="subtab-basic" class="sub-view">
+      <label style="margin:0 0 2px;">Text Color:</label>
+      <div class="color-row">
+        <div class="color-circle" style="background:#ffffff;" onclick="setActiveTextColor('#ffffff',this)"></div>
+        <div class="color-circle" style="background:#ff2c2c;" onclick="setActiveTextColor('#ff2c2c',this)"></div>
+        <div class="color-circle" style="background:#000000;" onclick="setActiveTextColor('#000000',this)"></div>
+      </div>
+      <label class="section-label" style="margin-top:12px;">POSITION & SIZE</label>
+      <div class="compact-sliders">
+        <div class="slider-row">
+          <span class="slider-label">X</span>
+          <input type="range" id="posX" min="-500" max="2500" value="0" oninput="setActivePos('x', this.value)">
+          <span class="slider-val" id="posXVal">0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Y</span>
+          <input type="range" id="posY" min="-500" max="2500" value="0" oninput="setActivePos('y', this.value)">
+          <span class="slider-val" id="posYVal">0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Size</span>
+          <input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)">
+          <span class="slider-val" id="fSizeVal">36</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Rot</span>
+          <input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)">
+          <span class="slider-val" id="fRotVal">0°</span>
+        </div>
+      </div>
+      <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:12px;width:100%;justify-content:center;">DELETE THIS LAYER</button>
+    </div>
+    <div id="subtab-featured" class="sub-view">
+      <div class="h-scroll">
+        <div class="h-card selected" onclick="setActiveTextStyle('normal', this)">Standard</div>
+        <div class="h-card" onclick="setActiveTextStyle('stroke', this)">Outline</div>
+        <div class="h-card" onclick="setActiveTextStyle('shadow', this)">Shadow</div>
+        <div class="h-card" onclick="setActiveTextStyle('glow', this)">Glow</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-color" class="panel">
+    <label class="section-label" style="margin-top:0;">BACKGROUND COLOR</label>
+    <div class="bgcolor-row" id="bgColorRow"></div>
+    <label class="section-label" style="margin-top:6px;">FRAME SIZE: <span id="bgColorSizeVal">8</span>%</label>
+    <input type="range" id="bgColorSizeInput" min="1" max="30" value="8" oninput="setBgColorSize(this.value)">
+  </div>
+
+  <div id="panel-bg" class="panel">
+    <div id="subjectStatus" style="font-size:10px;color:#666;margin-bottom:8px;line-height:1.4;">Tap DETECT SUBJECT. First run downloads a small model (5-15 sec).</div>
+    <button id="detectBtn" onclick="detectSubject()" style="background:#fff;color:#000;border:none;padding:10px;width:100%;border-radius:6px;font-weight:bold;font-size:12px;cursor:pointer;">DETECT SUBJECT</button>
+    <label class="section-label">Effect</label>
+    <div class="h-scroll">
+      <div class="h-card selected" onclick="setSubjectMode('none', this)">None</div>
+      <div class="h-card" onclick="setSubjectMode('blur', this)">BG Blur</div>
+      <div class="h-card" onclick="setSubjectMode('stroke', this)">Stroke</div>
+    </div>
+    <label class="section-label">Amount: <span id="subjectAmtVal">12</span></label>
+    <input type="range" id="subjectAmount" min="1" max="25" value="12">
+  </div>
+
+  <div id="panel-fx" class="panel">
+    <div class="sub-tabs" id="fxTabBar"></div>
+    <div id="fxGrids"></div>
+    <label class="section-label" style="margin-top:10px;">INTENSITY: <span id="fxVal">70</span>%</label>
+    <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
+    <div style="font-size:9px;color:#555;text-align:center;margin-top:10px;line-height:1.5;">Blend mode auto-set per category</div>
+  </div>
+
+  <div id="panel-border" class="panel">
+    <label class="section-label" style="margin-top:0;">FRAME STYLE</label>
+    <div class="border-thumbs" id="borderContainer"></div>
+    <label class="section-label">FRAME SIZE: <span id="borderSizeVal">5</span>%</label>
+    <input type="range" id="borderSizeInput" min="1" max="20" value="5" oninput="setBorderSize(this.value)">
+    <label class="section-label">FRAME COLOR</label>
+    <div class="border-color-row" style="display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;">
+      <div class="bcolor-circle selected" style="background:#ffffff;" onclick="setBorderColor('#ffffff', this)"></div>
+      <div class="bcolor-circle" style="background:#ff2c2c;" onclick="setBorderColor('#ff2c2c', this)"></div>
+      <div class="bcolor-circle" style="background:#000000;" onclick="setBorderColor('#000000', this)"></div>
+    </div>
+  </div>
+
+  <div id="panel-advisory" class="panel">
+    <label class="section-label" style="margin-top:0;">PARENTAL ADVISORY STICKERS</label>
+    <div class="sticker-grid" id="stickerGrid"></div>
+    <label class="section-label" style="margin-top:10px;">DEFAULT SIZE: <span id="advSizeVal">35</span>%</label>
+    <input type="range" id="advSizeInput" min="10" max="80" value="35" oninput="setAdvDefaultSize(this.value)">
+    <button class="crop-tool" onclick="trimActiveSticker()" style="margin-top:10px;width:100%;justify-content:center;">✂ CROP SELECTED STICKER</button>
+    <div style="font-size:9px;color:#555;text-align:center;margin-top:12px;line-height:1.5;">Tap a sticker to add it · Drag with 1 finger · Tap canvas to deselect</div>
+  </div>
+
+  <div id="panel-bgimage" class="panel">
+    <label class="section-label" style="margin-top:0;">BACKGROUNDS</label>
+    <div class="bg-grid" id="bgImageGrid"></div>
+    <label class="section-label" style="margin-top:10px;">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
+    <input type="range" id="bgImgSizeInput" min="0" max="30" value="8" oninput="setBgImageSize(this.value)">
+    <button class="crop-tool" onclick="clearBgImage()" style="margin-top:10px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="goHome()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="nav-btn active" data-panel="adjust" onclick="switchPanel('adjust', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Adjust</span></button>
+    <button class="nav-btn" data-panel="crop" onclick="switchPanel('crop', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/></svg><span>Crop</span></button>
+    <button class="nav-btn" data-panel="filters" onclick="switchPanel('filters', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg><span>Filter</span></button>
+    <button class="nav-btn" data-panel="text" onclick="switchPanel('text', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg><span>Text</span></button>
+    <button class="nav-btn" data-panel="color" onclick="switchPanel('color', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 .5-4.5 4 1.5 6.5L12 15.5 6 19l1.5-6.5L3 8.5 9 8z"/></svg><span>Color</span></button>
+    <button class="nav-btn" data-panel="bg" onclick="switchPanel('bg', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M5 19a7 7 0 0114 0"/></svg><span>Subject</span></button>
+    <button class="nav-btn" data-panel="fx" onclick="switchPanel('fx', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M19 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg><span>Effects</span></button>
+    <button class="nav-btn" data-panel="border" onclick="switchPanel('border', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg><span>Border</span></button>
+    <button class="nav-btn" data-panel="advisory" onclick="switchPanel('advisory', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="13" y2="17"/></svg><span>Advisory</span></button>
+    <button class="nav-btn" data-panel="bgimage" onclick="switchPanel('bgimage', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>BG</span></button>
+    <button class="nav-btn" onclick="openAIPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M19 5l-4 4M9 15l-4 4"/></svg><span>AI</span></button>
+  </div>
+</div>
+
+<div id="aiPanel">
+  <div class="ai-card">
+    <div class="ai-header">
+      <h3 class="ai-title">AI GENERATOR</h3>
+      <button onclick="closeAIPanel()" style="background:none;border:none;color:#666;cursor:pointer;padding:0;display:inline-flex;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <input type="text" id="aiGenPrompt" class="ai-input" placeholder="Describe the image you want..." autocomplete="off">
+    <label class="section-label" style="margin-top:0;">Shape</label>
+    <div class="h-scroll" style="padding-bottom:8px;">
+      <div class="h-card selected" onclick="setGenShape('square', this)">Square</div>
+      <div class="h-card" onclick="setGenShape('portrait', this)">Portrait</div>
+      <div class="h-card" onclick="setGenShape('story', this)">Story</div>
+      <div class="h-card" onclick="setGenShape('wide', this)">Wide</div>
+      <div class="h-card" onclick="setGenShape('cover', this)">Cover</div>
+    </div>
+    <button id="aiGenBtn" class="ai-btn" onclick="generateAIImage()">GENERATE</button>
+    <div id="aiGenStatus" class="ai-status"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous"></script>
+<script src="./app.js"></script>
+
+</body>
+</html>
