@@ -306,14 +306,12 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
     </div>
   </div>
 
-  <!-- NEW: Advisory sticker panel -->
   <div id="panel-advisory" class="panel">
     <label class="section-label" style="margin-top:0;">PARENTAL ADVISORY STICKERS</label>
     <div class="sticker-grid" id="stickerGrid"></div>
     <div style="font-size:9px;color:#555;text-align:center;margin-top:14px;line-height:1.5;">Tap a sticker to add it · Drag with 1 finger · Pinch with 2 to resize & rotate</div>
   </div>
 
-  <!-- NEW: Backgrounds panel -->
   <div id="panel-bgimage" class="panel">
     <label class="section-label" style="margin-top:0;">BACKGROUNDS</label>
     <div class="bg-grid" id="bgImageGrid"></div>
@@ -341,10 +339,19 @@ input[type="text"] { color:#fff; font-size:12px; width:100%; box-sizing:border-b
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous"></script>
 
 <script>
+// ============ DOM references (declared FIRST so nothing breaks) ============
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const textMenu = document.getElementById('textFloatingMenu');
+const bInput = document.getElementById('brightness');
+const cInput = document.getElementById('contrast');
+const sInput = document.getElementById('saturation');
+const nInput = document.getElementById('noise');
+const subjAmt = document.getElementById('subjectAmount');
+const tInput = document.getElementById('textContent');
+const sizeInput = document.getElementById('fontSize');
 
+// ============ app state ============
 let img = new Image();
 let imgLoaded = false;
 let originalImageSrc = null;
@@ -356,12 +363,27 @@ let currentBorderSize = 5;
 let currentTemplate = 'none';
 let currentBgColor = null;
 let currentBgColorSize = 8;
-let currentBgImage = null;         // NEW: background image
-let currentBgImageSize = 8;        // NEW
+let currentBgImage = null;
+let currentBgImageSize = 8;
 let currentProjectId = null;
 let currentFx = 'none';
 let currentFxAmount = 70;
 
+let textLayers = [];
+let activeLayerId = null;
+let isDraggingText = false;
+let undoStack = [], redoStack = [];
+let touches = new Map();
+let gesture = null;
+let subjectMode = 'none';
+let strokeColor = '#ffffff';
+let personMask = null;
+let subjectReady = false;
+let selfieSeg = null;
+let crop = { x:0, y:0, w:1, h:1 };
+let cropDrag = null;
+
+// ============ data ============
 const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
 
 const TEMPLATES = [
@@ -395,22 +417,22 @@ const BORDERS = [
   { name:'Shadow', code:'shadow' }
 ];
 
-// ============ NEW: effect categories from /effects/ folder ============
 const EFFECTS_BASE = './effects/';
 
 const FX_CATEGORIES = {
-  grunge:    { label: 'Grunge',    prefix: 'grunge',    max: 30, blend: 'screen',  files: [] },
-  lightleak: { label: 'Light Leak',prefix: 'lightleak', max: 20, blend: 'screen',  files: [] }
+  grunge:    { label:'Grunge',     prefix:'grunge',    max:30, blend:'screen', files:[] },
+  lightleak: { label:'Light Leak', prefix:'lightleak', max:20, blend:'screen', files:[] }
 };
 
-const ADVISORY_CONFIG = { prefix: 'advisory', max: 12, files: [] };
-const BG_CONFIG       = { prefix: 'background', max: 12, files: [] };
+const ADVISORY_CONFIG = { prefix:'advisory', max:12, files:[] };
+const BG_CONFIG       = { prefix:'background', max:12, files:[] };
 
-const fxImages = {};       // key: 'grunge:grunge1.jpg' -> HTMLImageElement
-const advisoryImages = {}; // key: filename -> HTMLImageElement
-const bgImages = {};       // key: filename -> HTMLImageElement
+const fxImages = {};
+const advisoryImages = {};
+const bgImages = {};
 
-async function loadImage(url) {
+// ============ effect loading ============
+function loadImage(url) {
   return new Promise(res => {
     const im = new Image();
     im.crossOrigin = 'anonymous';
@@ -421,10 +443,9 @@ async function loadImage(url) {
 }
 
 async function probeCategory(catKey, cfg) {
-  const prefix = cfg.prefix;
   const promises = [];
   for (let i = 1; i <= cfg.max; i++) {
-    const fname = prefix + i + '.jpg';
+    const fname = cfg.prefix + i + '.jpg';
     promises.push(loadImage(EFFECTS_BASE + fname).then(im => im ? { fname, im } : null));
   }
   const results = await Promise.all(promises);
@@ -443,7 +464,6 @@ async function probeSimple(cfg, store) {
   cfg.files.forEach(r => { store[r.fname] = r.im; });
 }
 
-// Also handle the Advisory4 lowercase quirk
 async function probeAdvisoryWithCase() {
   const cfg = ADVISORY_CONFIG;
   const promises = [];
@@ -451,7 +471,7 @@ async function probeAdvisoryWithCase() {
     const fn1 = 'Advisory' + i + '.jpg';
     const fn2 = 'advisory' + i + '.jpg';
     promises.push(
-      loadImage(EFFECTS_BASE + fn1).then(im => im ? { fname: fn1, im } : 
+      loadImage(EFFECTS_BASE + fn1).then(im => im ? { fname: fn1, im } :
         loadImage(EFFECTS_BASE + fn2).then(im2 => im2 ? { fname: fn2, im: im2 } : null))
     );
   }
@@ -473,8 +493,7 @@ async function preloadEffects() {
   buildBgImageGrid();
 }
 
-// ============ UI build functions ============
-
+// ============ UI ============
 function switchFxTab(cat, el) {
   const panel = el.closest('.panel');
   panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
@@ -494,9 +513,7 @@ function buildFxGrid(catKey) {
     </div>
     <span class="fx-card-label">Off</span>
   </div>`;
-  if (!cfg.files.length) {
-    html += `<div class="filter-empty">Loading…</div>`;
-  }
+  if (!cfg.files.length) html += `<div class="filter-empty">Loading…</div>`;
   cfg.files.forEach(f => {
     const key = catKey + ':' + f.fname;
     const sel = (currentFx === key) ? 'selected' : '';
@@ -512,24 +529,19 @@ function setFx(key, el) {
   currentFx = key;
   document.querySelectorAll('.fx-card').forEach(c => c.classList.remove('selected'));
   if (el) el.classList.add('selected');
-  redraw();
-  saveState();
+  redraw(); saveState();
 }
 
 function setFxAmount(v) {
   currentFxAmount = parseInt(v);
   document.getElementById('fxVal').innerText = v;
-  redraw();
-  saveState();
+  redraw(); saveState();
 }
 
 function buildAdvisoryGrid() {
   const g = document.getElementById('stickerGrid');
   if (!g) return;
-  if (!ADVISORY_CONFIG.files.length) {
-    g.innerHTML = '<div class="filter-empty">Loading…</div>';
-    return;
-  }
+  if (!ADVISORY_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">Loading…</div>'; return; }
   let html = '';
   ADVISORY_CONFIG.files.forEach(f => {
     html += `<div class="sticker-item" onclick="addSticker('${f.fname}')">
@@ -542,10 +554,7 @@ function buildAdvisoryGrid() {
 function buildBgImageGrid() {
   const g = document.getElementById('bgImageGrid');
   if (!g) return;
-  if (!BG_CONFIG.files.length) {
-    g.innerHTML = '<div class="filter-empty">Loading…</div>';
-    return;
-  }
+  if (!BG_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">Loading…</div>'; return; }
   let html = '';
   BG_CONFIG.files.forEach(f => {
     const sel = (currentBgImage && currentBgImage.src.endsWith(f.fname)) ? 'selected' : '';
@@ -563,7 +572,6 @@ function setBgImage(fname, el) {
   currentBgColor = null;
   document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
   if (el) el.classList.add('selected');
-  // Clear solid color swatches
   document.querySelectorAll('.bgcolor-swatch').forEach(s => s.classList.remove('selected'));
   redraw(); saveState();
 }
@@ -594,8 +602,7 @@ function addSticker(fname) {
   redraw(); saveState();
 }
 
-// ============ existing helpers ============
-
+// ============ builders ============
 function buildFontGrid() {
   const c = document.getElementById('fontGridContainer');
   const fontList = ["Impact","Bebas Neue","Oswald","Montserrat","Anton","Pacifico","Permanent Marker","Russo One","Press Start 2P","Righteous","Orbitron","Bungee","Bungee Inline","Creepster","Monoton","Luckiest Guy","Rye","Satisfy","Yellowtail","Chewy","Alfa Slab One","Cinzel","Audiowide","Black Ops One","Chango","Coiny","Damion","Diplomata SC","Frijole","Gloria Hallelujah","Gugi","Knewave","Lobster","Parisienne","Poppins","Playfair Display","Special Elite","Great Vibes","Merriweather","Dancing Script"];
@@ -731,6 +738,7 @@ function applyFilterByIndex(i, el) {
   saveState(); redraw();
 }
 
+// ============ projects ============
 function renderProjectsList() {
   const g = document.getElementById('gallery');
   const keys = Object.keys(localStorage).filter(k => k.startsWith('music_proj_'));
@@ -759,7 +767,7 @@ function setupCanvasFromImage(newImg) {
   img = newImg;
   const MAX = 1080;
   let w = newImg.width, h = newImg.height;
-  if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+  if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
   canvas.width = w; canvas.height = h;
 }
 
@@ -768,13 +776,8 @@ function loadProject(key) {
   currentProjectId = key.replace('music_', '');
   if (p.textLayers) { textLayers = p.textLayers; activeLayerId = textLayers.length ? textLayers[0].id : null; }
   else { textLayers = []; activeLayerId = null; }
-  // Re-attach image elements to image layers
   textLayers.forEach(l => {
-    if (l.isImage && l.imageUrl) {
-      const im = new Image();
-      im.src = l.imageUrl;
-      l.image = im;
-    }
+    if (l.isImage && l.imageUrl) { const im = new Image(); im.src = l.imageUrl; l.image = im; }
   });
   bInput.value = p.brightness ?? 100; cInput.value = p.contrast ?? 100; sInput.value = p.saturation ?? 100; nInput.value = p.noise ?? 0;
   subjAmt.value = p.subjectAmount ?? 12;
@@ -782,7 +785,7 @@ function loadProject(key) {
   currentBorder = p.border ?? 'none'; currentBorderColor = p.borderColor ?? '#ffffff'; currentBorderSize = p.borderSize ?? 5;
   currentBgColor = p.bgColor ?? null; currentBgColorSize = p.bgColorSize ?? 8;
   currentBgImageSize = p.bgImageSize ?? 8;
-  if (p.bgImageFile && bgImages[p.bgImageFile]) currentBgImage = bgImages[p.bgImageFile]; else currentBgImage = null;
+  currentBgImage = (p.bgImageFile && bgImages[p.bgImageFile]) ? bgImages[p.bgImageFile] : null;
   currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
   document.getElementById('fxAmount').value = currentFxAmount;
   document.getElementById('fxVal').innerText = currentFxAmount;
@@ -800,8 +803,8 @@ function loadProject(key) {
   img.onload = function() {
     if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
     imgLoaded = true;
-    buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors(); buildFxGrid('grunge'); buildFxGrid('lightleak');
-    buildAdvisoryGrid(); buildBgImageGrid();
+    buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
+    buildFxGrid('grunge'); buildFxGrid('lightleak'); buildAdvisoryGrid(); buildBgImageGrid();
     saveState(); redraw();
   };
   img.src = sourceImage;
@@ -890,6 +893,7 @@ function resetEverything() {
   syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
 }
 
+// ============ undo/redo ============
 function saveState() {
   if (!imgLoaded) return;
   const state = canvas.toDataURL();
@@ -926,6 +930,7 @@ function updateHistoryButtons() {
   document.getElementById('redoBtn').disabled = redoStack.length === 0;
 }
 
+// ============ touch / drag ============
 function getCanvasCoordinates(e, touch) {
   const rect = canvas.getBoundingClientRect();
   const cx = touch ? touch.clientX : (e.touches ? e.touches[0].clientX : e.clientX);
@@ -1127,6 +1132,7 @@ function setActiveFont(f, el) { const l = textLayers.find(x => x.id === activeLa
 function setActiveTextColor(c, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.color = c; redraw(); saveState(); }
 function setActiveTextStyle(s, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.style = s; redraw(); saveState(); }
 
+// ============ save ============
 function saveProjectToHome() {
   if (!imgLoaded) return;
   if (!currentProjectId) currentProjectId = 'proj_' + Date.now();
@@ -1146,8 +1152,7 @@ function saveProjectToHome() {
       canvasW: canvas.width, canvasH: canvas.height,
       textLayers: serializedLayers,
       brightness: bInput.value, contrast: cInput.value, saturation: sInput.value, noise: nInput.value,
-      filter: currentFilter,
-      border: currentBorder, borderColor: currentBorderColor, borderSize: currentBorderSize,
+      filter: currentFilter, border: currentBorder, borderColor: currentBorderColor, borderSize: currentBorderSize,
       bgColor: currentBgColor, bgColorSize: currentBgColorSize,
       bgImageFile: bgFile, bgImageSize: currentBgImageSize,
       template: currentTemplate, fx: currentFx, fxAmount: currentFxAmount,
@@ -1166,6 +1171,7 @@ function saveImage() {
   a.click();
 }
 
+// ============ panels ============
 function switchPanel(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1209,6 +1215,7 @@ function updateSelection(el) {
   input.addEventListener('change', saveState);
 });
 
+// ============ crop ============
 function showCropOverlay(show) {
   const ov = document.getElementById('cropOverlay');
   if (show && imgLoaded) { ov.classList.add('active'); crop = { x:0, y:0, w:1, h:1 }; updateCropBox(); }
@@ -1335,6 +1342,7 @@ function flipImage(dir) {
   newImg.src = url;
 }
 
+// ============ subject detection ============
 window.detectSubject = async function() {
   const status = document.getElementById('subjectStatus');
   const btn = document.getElementById('detectBtn');
@@ -1373,6 +1381,7 @@ window.detectSubject = async function() {
   } catch(err) { status.textContent = 'Failed: ' + err.message; btn.disabled = false; }
 };
 
+// ============ AI panel ============
 function openAIPanel() { document.getElementById('aiPanel').style.display = 'flex'; document.getElementById('aiGenStatus').textContent = ''; }
 function closeAIPanel() { document.getElementById('aiPanel').style.display = 'none'; }
 
@@ -1439,6 +1448,7 @@ async function generateAIImage() {
   reader.readAsDataURL(blob);
 }
 
+// ============ drawing ============
 function drawBorder() {
   if (!imgLoaded || currentBorder === 'none') return;
   const w = canvas.width, h = canvas.height;
@@ -1477,18 +1487,19 @@ function drawBorder() {
   }
 }
 
-function drawCover(ctx2, im, x, y, w, h) {
+function drawCover(x, y, w, h, im) {
   const sr = im.naturalWidth / im.naturalHeight;
   const dr = w / h;
   let sx = 0, sy = 0, sw = im.naturalWidth, sh = im.naturalHeight;
   if (sr > dr) { sw = sh * dr; sx = (im.naturalWidth - sw) / 2; }
   else { sh = sw / dr; sy = (im.naturalHeight - sh) / 2; }
-  ctx2.drawImage(im, sx, sy, sw, sh, x, y, w, h);
+  ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h);
 }
 
 function drawFxLayer() {
   if (!imgLoaded || currentFx === 'none' || currentFxAmount === 0) return;
-  const [catKey, fname] = currentFx.split(':');
+  const parts = currentFx.split(':');
+  const catKey = parts[0], fname = parts[1];
   if (fname === 'none') return;
   const im = fxImages[catKey + ':' + fname];
   if (!im) return;
@@ -1497,7 +1508,7 @@ function drawFxLayer() {
   ctx.save();
   ctx.globalAlpha = a;
   ctx.globalCompositeOperation = cat.blend || 'screen';
-  drawCover(ctx, im, 0, 0, canvas.width, canvas.height);
+  drawCover(0, 0, canvas.width, canvas.height, im);
   ctx.restore();
 }
 
@@ -1558,9 +1569,8 @@ function redraw() {
     plctx.filter = 'none';
   }
 
-  // Background: image takes priority, then solid color, else nothing
   if (currentBgImage) {
-    drawCover(ctx, currentBgImage, 0, 0, canvas.width, canvas.height);
+    drawCover(0, 0, canvas.width, canvas.height, currentBgImage);
     const pad = Math.round(Math.min(canvas.width, canvas.height) * (currentBgImageSize / 100));
     ctx.drawImage(photoLayer, 0, 0, canvas.width, canvas.height, pad, pad, canvas.width - pad*2, canvas.height - pad*2);
   } else if (currentBgColor) {
@@ -1577,10 +1587,8 @@ function redraw() {
 
   if (!currentBgColor && !currentBgImage) drawBorder();
 
-  // FX layer (grunge / light leak)
   drawFxLayer();
 
-  // Layers (text + stickers)
   textLayers.forEach(layer => {
     if (layer.isImage && layer.image && layer.image.complete) {
       ctx.save();
@@ -1619,29 +1627,6 @@ function redraw() {
     }
   });
 }
-
-// ============ state variables ============
-let textLayers = [];
-let activeLayerId = null;
-let isDraggingText = false;
-let undoStack = [], redoStack = [];
-let touches = new Map();
-let gesture = null;
-let subjectMode = 'none';
-let strokeColor = '#ffffff';
-let personMask = null;
-let subjectReady = false;
-let selfieSeg = null;
-let crop = { x:0, y:0, w:1, h:1 };
-let cropDrag = null;
-
-const bInput = document.getElementById('brightness');
-const cInput = document.getElementById('contrast');
-const sInput = document.getElementById('saturation');
-const nInput = document.getElementById('noise');
-const subjAmt = document.getElementById('subjectAmount');
-const tInput = document.getElementById('textContent');
-const sizeInput = document.getElementById('fontSize');
 
 // ============ boot ============
 window.onload = function() {
