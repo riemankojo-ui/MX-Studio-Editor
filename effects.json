@@ -1,0 +1,11 @@
+{
+  "categories": [
+    { "prefix": "grunge",      "label": "Grunge",       "blend": "screen" },
+    { "prefix": "lightleak",   "label": "Light Leak",   "blend": "screen" },
+    { "prefix": "fire",        "label": "Fire",         "blend": "screen" },
+    { "prefix": "noise",       "label": "Noise",        "blend": "overlay" },
+    { "prefix": "streetlight", "label": "Street Light", "blend": "screen" },
+    { "prefix": "af",          "label": "AF",           "blend": "screen" },
+    { "prefix": "heart",       "label": "Heart",        "blend": "normal" }
+  ]
+}
