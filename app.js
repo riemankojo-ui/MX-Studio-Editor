@@ -22,6 +22,7 @@ let currentBgColorSize = 8;
 let currentBgImage = null;
 let currentBgImageSize = 8;
 let currentProjectId = null;
+let currentProjectName = '';
 let currentFx = 'none';
 let currentFxAmount = 70;
 let advDefaultSize = 35;
@@ -39,6 +40,7 @@ let subjectReady = false;
 let selfieSeg = null;
 let crop = { x:0, y:0, w:1, h:1 };
 let cropDrag = null;
+let counterLocked = false;
 
 const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
 
@@ -74,14 +76,10 @@ const BORDERS = [
 ];
 
 const EFFECTS_BASE = './effects/';
-
-// Categories loaded from effects.json
 let FX_CATEGORIES = [];
 let currentFxTab = 'grunge';
-
 const ADVISORY_CONFIG = { prefix:'advisory', max:12, files:[] };
-const BG_CONFIG       = { prefix:'background', max:12, files:[] };
-
+const BG_CONFIG = { prefix:'background', max:12, files:[] };
 const fxImages = {};
 const advisoryImages = {};
 const bgImages = {};
@@ -103,16 +101,11 @@ async function loadCategoryConfig() {
     const data = await r.json();
     if (data && Array.isArray(data.categories)) {
       FX_CATEGORIES = data.categories.map(c => ({
-        key: c.prefix,
-        label: c.label || c.prefix,
-        prefix: c.prefix,
-        blend: c.blend || 'screen',
-        max: 60,
-        files: []
+        key: c.prefix, label: c.label || c.prefix, prefix: c.prefix,
+        blend: c.blend || 'screen', max: 60, files: []
       }));
     }
   } catch (e) {
-    console.warn('effects.json not found, using defaults');
     FX_CATEGORIES = [
       { key:'grunge', label:'Grunge', prefix:'grunge', blend:'screen', max:60, files:[] },
       { key:'lightleak', label:'Light Leak', prefix:'lightleak', blend:'screen', max:60, files:[] },
@@ -123,9 +116,7 @@ async function loadCategoryConfig() {
       { key:'heart', label:'Heart', prefix:'heart', blend:'normal', max:60, files:[] }
     ];
   }
-  if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) {
-    currentFxTab = FX_CATEGORIES[0].key;
-  }
+  if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) currentFxTab = FX_CATEGORIES[0].key;
 }
 
 async function probeOne(base) {
@@ -141,8 +132,7 @@ async function probeOne(base) {
 async function probeCategory(cat) {
   const promises = [];
   for (let i = 1; i <= cat.max; i++) {
-    const base = cat.prefix + i;
-    promises.push(probeOne(base).then(r => r ? { base, ...r } : null));
+    promises.push(probeOne(cat.prefix + i).then(r => r ? { base: cat.prefix + i, ...r } : null));
   }
   const results = await Promise.all(promises);
   cat.files = results.filter(r => r !== null);
@@ -168,9 +158,7 @@ async function probeAdvisory() {
 async function probeBackgrounds() {
   const cfg = BG_CONFIG;
   const promises = [];
-  for (let i = 1; i <= cfg.max; i++) {
-    promises.push(probeOne('background' + i));
-  }
+  for (let i = 1; i <= cfg.max; i++) promises.push(probeOne('background' + i));
   const results = await Promise.all(promises);
   cfg.files = results.filter(r => r !== null);
   cfg.files.forEach(r => { bgImages[r.fname] = r.im; });
@@ -187,6 +175,50 @@ async function preloadEffects() {
   buildFxGrids();
   buildAdvisoryGrid();
   buildBgImageGrid();
+}
+
+// ============ 5-SEC COUNT SPLASH (LOCKED) ============
+function playCount(callback) {
+  if (counterLocked) return;   // ignore taps mid-count
+  counterLocked = true;
+  const el = document.getElementById('splashScreen');
+  const c = document.getElementById('splashCount');
+  const b = document.getElementById('splashBarFill');
+  const s = document.getElementById('splashStatus');
+  if (!el) { counterLocked = false; if (callback) callback(); return; }
+  el.classList.remove('fade-out');
+  el.style.display = 'flex';
+  if (s) s.textContent = 'Loading…';
+
+  const DURATION = 5000;
+  const start = performance.now();
+  let callbackRun = false;
+
+  function step(now) {
+    const elapsed = now - start;
+    const pct = Math.min(100, Math.round((elapsed / DURATION) * 100));
+    if (c) c.textContent = pct;
+    if (b) b.style.width = pct + '%';
+
+    if (!callbackRun && pct >= 30 && callback) {
+      callbackRun = true;
+      try { callback(); } catch (e) { console.warn(e); }
+    }
+
+    if (pct < 100) {
+      requestAnimationFrame(step);
+    } else {
+      if (!callbackRun && callback) { try { callback(); } catch (e) {} }
+      setTimeout(() => {
+        el.classList.add('fade-out');
+        setTimeout(() => {
+          el.style.display = 'none';
+          counterLocked = false;
+        }, 500);
+      }, 200);
+    }
+  }
+  requestAnimationFrame(step);
 }
 
 function buildFxTabs() {
@@ -266,9 +298,7 @@ function buildAdvisoryGrid() {
   if (!ADVISORY_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">No files</div>'; return; }
   let html = '';
   ADVISORY_CONFIG.files.forEach(f => {
-    html += `<div class="sticker-item" onclick="addSticker('${f.fname}')">
-      <img src="${EFFECTS_BASE + f.fname}" alt="">
-    </div>`;
+    html += `<div class="sticker-item" onclick="addSticker('${f.fname}')"><img src="${EFFECTS_BASE + f.fname}" alt=""></div>`;
   });
   g.innerHTML = html;
 }
@@ -280,9 +310,7 @@ function buildBgImageGrid() {
   let html = '';
   BG_CONFIG.files.forEach(f => {
     const sel = (currentBgImage && currentBgImage.src.endsWith(f.fname)) ? 'selected' : '';
-    html += `<div class="bg-item ${sel}" onclick="setBgImage('${f.fname}', this)">
-      <img src="${EFFECTS_BASE + f.fname}" alt="">
-    </div>`;
+    html += `<div class="bg-item ${sel}" onclick="setBgImage('${f.fname}', this)"><img src="${EFFECTS_BASE + f.fname}" alt=""></div>`;
   });
   g.innerHTML = html;
 }
@@ -495,7 +523,9 @@ function buildFilterThumbs() {
     </div>`;
   });
   el.innerHTML = html;
-}function applyFilterByIndex(i, el) {
+}
+
+function applyFilterByIndex(i, el) {
   const f = FILTERS[i]; if (!f) return;
   currentFilter = f.code; currentTemplate = 'none';
   el.parentElement.querySelectorAll('.filter-thumb').forEach(t => t.classList.remove('selected'));
@@ -503,28 +533,90 @@ function buildFilterThumbs() {
   saveState(); redraw();
 }
 
+// ============ HOME SCREEN (NEW) ============
+function timeAgo(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return Math.floor(diff/60) + ' min ago';
+  if (diff < 86400) return Math.floor(diff/3600) + ' hr ago';
+  if (diff < 604800) return Math.floor(diff/86400) + 'd ago';
+  return d.toLocaleDateString();
+}
+
 function renderProjectsList() {
-  const g = document.getElementById('gallery');
+  const container = document.getElementById('gallery');
   const keys = Object.keys(localStorage).filter(k => k.startsWith('music_proj_'));
-  keys.sort().reverse();
-  let html = `<div class="gal-add" onclick="document.getElementById('homeImageUpload').click()">
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  </div>`;
+  const items = [];
   keys.forEach(key => {
     try {
       const p = JSON.parse(localStorage.getItem(key));
-      html += `<div class="gal-item" onclick="loadProject('${key}')">
-        <img src="${p.image}" alt="">
-        <button class="gal-del" onclick="event.stopPropagation();deleteProject('${key}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>`;
+      items.push({
+        key,
+        image: p.image,
+        name: p.name || 'Untitled',
+        date: p.date || null,
+        timestamp: p.savedAt || new Date(p.date || 0).getTime() || 0
+      });
     } catch(e) {}
   });
-  if (keys.length === 0) html += `<div class="gal-empty">Tap + to add photos</div>`;
-  g.innerHTML = html;
+  items.sort((a, b) => b.timestamp - a.timestamp);
+
+  let html = `<div class="home-header">
+    <div class="home-title">SAMARID <span>STUDIO</span></div>
+    <button class="home-new-btn" onclick="document.getElementById('homeImageUpload').click()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      NEW
+    </button>
+  </div>`;
+
+  if (items.length === 0) {
+    html += `<div class="home-empty">
+      <div class="home-empty-icon">🎨</div>
+      <div class="home-empty-title">START YOUR FIRST COVER</div>
+      <div class="home-empty-sub">Upload a photo and make something real.</div>
+      <button class="home-empty-btn" onclick="document.getElementById('homeImageUpload').click()">+ Create New</button>
+    </div>`;
+  } else {
+    const featured = items[0];
+    html += `<div class="featured-card" onclick="openProjectWithCount('${featured.key}')">
+      <div class="featured-img"><img src="${featured.image}" alt=""></div>
+      <div class="featured-info">
+        <div class="featured-name">${featured.name}</div>
+        <div class="featured-date">${timeAgo(featured.date)}</div>
+      </div>
+    </div>`;
+
+    if (items.length > 1) {
+      html += `<div class="section-title">All Projects</div><div class="projects-grid">`;
+      items.slice(1).forEach(it => {
+        html += `<div class="project-card" onclick="openProjectWithCount('${it.key}')">
+          <div class="project-card-img"><img src="${it.image}" alt=""></div>
+          <div class="project-card-info">
+            <div class="project-card-name">${it.name}</div>
+            <div class="project-card-date">${timeAgo(it.date)}</div>
+          </div>
+          <button class="project-card-del" onclick="event.stopPropagation();deleteProject('${it.key}')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+  }
+
+  container.innerHTML = html;
+}
+
+// Count wrapper with lock — never opens wrong project
+function openProjectWithCount(key) {
+  if (counterLocked) return;
+  playCount(() => { loadProject(key); });
 }
 
 function deleteProject(key) {
-  if (confirm("Delete this photo?")) { localStorage.removeItem(key); renderProjectsList(); }
+  if (confirm("Delete this project?")) { localStorage.removeItem(key); renderProjectsList(); }
 }
 
 function setupCanvasFromImage(newImg) {
@@ -535,9 +627,36 @@ function setupCanvasFromImage(newImg) {
   canvas.width = w; canvas.height = h;
 }
 
+// ============ CLEAR STATE — prevents old project flash ============
+function resetStudioState() {
+  img = new Image();
+  imgLoaded = false;
+  originalImageSrc = null;
+  textLayers = [];
+  activeLayerId = null;
+  currentFilter = 'none';
+  currentBorder = 'none';
+  currentBorderColor = '#ffffff';
+  currentBorderSize = 5;
+  currentTemplate = 'none';
+  currentBgColor = null;
+  currentBgImage = null;
+  currentFx = 'none';
+  currentFxAmount = 70;
+  crop = { x:0, y:0, w:1, h:1 };
+  subjectMode = 'none';
+  personMask = null;
+  subjectReady = false;
+  undoStack = []; redoStack = [];
+  updateHistoryButtons();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
 function loadProject(key) {
+  resetStudioState();   // ← clears canvas immediately, no old project flash
   const p = JSON.parse(localStorage.getItem(key));
   currentProjectId = key.replace('music_', '');
+  currentProjectName = p.name || 'Untitled';
   textLayers = p.textLayers || [];
   activeLayerId = null;
   textLayers.forEach(l => {
@@ -558,9 +677,6 @@ function loadProject(key) {
   document.getElementById('bgImgSizeInput').value = currentBgImageSize; document.getElementById('bgImgSizeVal').innerText = currentBgImageSize;
   currentTemplate = p.template ?? 'none';
   subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
-  personMask = null; subjectReady = false;
-  crop = { x:0, y:0, w:1, h:1 };
-  undoStack = []; redoStack = []; updateHistoryButtons();
 
   const sourceImage = p.originalImage || p.image;
   originalImageSrc = sourceImage;
@@ -580,9 +696,7 @@ function loadProject(key) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-adjust').classList.add('active');
   document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
-}
-
-function initHomeUpload() {
+}function initHomeUpload() {
   document.getElementById('homeImageUpload').addEventListener('change', async function(e) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
@@ -621,13 +735,19 @@ function importOnePhoto(file) {
         tmp.getContext('2d').drawImage(newImg, 0, 0, w, h);
         const dataURL = tmp.toDataURL('image/jpeg', 0.85);
         const id = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+        const now = new Date();
         try {
           localStorage.setItem('music_' + id, JSON.stringify({
-            name:'Photo', date:new Date().toLocaleDateString(), image:dataURL, originalImage:dataURL,
-            canvasW:w, canvasH:h, textLayers:[], brightness:100, contrast:100, saturation:100, noise:0,
-            filter:'none', border:'none', borderColor:'#ffffff', borderSize:5, bgColor:null, bgColorSize:8,
-            template:'none', fx:'none', fxAmount:70, subjectMode:'none', strokeColor:'#ffffff', subjectAmount:12,
-            bgImageFile:null, bgImageSize:8
+            name: 'Cover ' + (Object.keys(localStorage).filter(k => k.startsWith('music_proj_')).length + 1),
+            date: now.toISOString(),
+            savedAt: now.getTime(),
+            image: dataURL, originalImage: dataURL,
+            canvasW: w, canvasH: h, textLayers: [],
+            brightness: 100, contrast: 100, saturation: 100, noise: 0,
+            filter: 'none', border: 'none', borderColor: '#ffffff', borderSize: 5,
+            bgColor: null, bgColorSize: 8, template: 'none',
+            fx: 'none', fxAmount: 70, subjectMode: 'none', strokeColor: '#ffffff', subjectAmount: 12,
+            bgImageFile: null, bgImageSize: 8
           }));
         } catch(err) {}
         resolve();
@@ -645,6 +765,7 @@ function goHome() {
   document.getElementById('view-home').classList.add('active');
   textMenu.style.display = 'none';
   document.getElementById('cropOverlay').classList.remove('active');
+  resetStudioState();
   renderProjectsList();
 }
 
@@ -702,6 +823,7 @@ function getCanvasCoordinates(e, touch) {
 
 function touchDist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
 function touchAngle(a,b) { return Math.atan2(b.y-a.y, b.x-a.x); }
+function haptic(ms) { if (navigator.vibrate) try { navigator.vibrate(ms || 4); } catch(e) {} }
 
 canvas.addEventListener('mousedown', startTouch);
 canvas.addEventListener('touchstart', startTouch, {passive:false});
@@ -751,6 +873,7 @@ function startTouch(e) {
     syncActiveInputs(); updateTextLayersUI();
     isDraggingText = true;
     showFloatingMenu(clickedLayer.x, clickedLayer.y);
+    haptic(6);
     redraw();
   } else {
     activeLayerId = null;
@@ -822,6 +945,28 @@ function centerActiveTextHoriz() {
   if (l) { l.x = canvas.width / 2; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
 }
 
+// ============ ALIGN GRID (3x3) — snap text anywhere ============
+function alignText(horiz, vert) {
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l) return;
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const margin = Math.min(canvas.width, canvas.height) * 0.12;
+  const layerH = l.isImage ? l.height : (l.size || 40);
+  const layerW = l.isImage ? l.width : (() => { ctx.font = `bold ${l.size}px '${l.font}', sans-serif`; return ctx.measureText(l.text || '').width; })();
+
+  if (horiz === 'left')   l.x = layerW / 2 + margin;
+  if (horiz === 'center') l.x = cx;
+  if (horiz === 'right')  l.x = canvas.width - layerW / 2 - margin;
+
+  if (vert === 'top')     l.y = layerH / 2 + margin;
+  if (vert === 'middle')  l.y = cy;
+  if (vert === 'bottom')  l.y = canvas.height - layerH / 2 - margin;
+
+  showFloatingMenu(l.x, l.y);
+  haptic(6);
+  syncActiveInputs(); redraw(); saveState();
+}
+
 function addNewTextLayer() {
   const id = Date.now();
   const newLayer = { id, text:"TEXT", x:canvas.width/2, y:canvas.height/2, font:"Impact", size:Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
@@ -865,25 +1010,76 @@ function updateTextLayersUI() {
   el.innerHTML = html;
 }
 
+function hexToHsl(hex) {
+  hex = hex.replace('#','');
+  if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
+  const r = parseInt(hex.substr(0,2),16)/255, g = parseInt(hex.substr(2,2),16)/255, b = parseInt(hex.substr(4,2),16)/255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h = 0, s = 0, l = (max+min)/2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+    if (max === r) h = ((g-b)/d + (g<b?6:0)) / 6;
+    else if (max === g) h = ((b-r)/d + 2) / 6;
+    else h = ((r-g)/d + 4) / 6;
+  }
+  return { h: Math.round(h*360), s: Math.round(s*100), l: Math.round(l*100) };
+}
+
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const k = n => (n + h/30) % 12;
+  const a = s * Math.min(l, 1-l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n), 1)));
+  const toHex = x => { const v = Math.round(x*255).toString(16); return v.length === 1 ? '0'+v : v; };
+  return '#' + toHex(f(0)) + toHex(f(8)) + toHex(f(4));
+}
+
+function setActiveTextBrightness(v) {
+  v = parseInt(v);
+  document.getElementById('brVal').innerText = v;
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l || l.isImage) return;
+  const hsl = hexToHsl(l.color || '#ffffff');
+  l.color = hslToHex(hsl.h, hsl.s, v);
+  updateColorPreview();
+  redraw(); saveState();
+}
+
+function setActiveTextHue(v) {
+  v = parseInt(v);
+  document.getElementById('hueVal').innerText = v + '°';
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l || l.isImage) return;
+  const hsl = hexToHsl(l.color || '#ffffff');
+  l.color = hslToHex(v, Math.max(hsl.s, 70), hsl.l);
+  updateColorPreview();
+  redraw(); saveState();
+}
+
+function updateColorPreview() {
+  const l = textLayers.find(x => x.id === activeLayerId);
+  const prev = document.getElementById('colorPreview');
+  if (prev && l && !l.isImage) prev.style.background = l.color;
+}
+
 function syncActiveInputs() {
   const l = textLayers.find(x => x.id === activeLayerId);
   const px = document.getElementById('posX');
   const py = document.getElementById('posY');
-  px.max = Math.max(2000, canvas.width * 1.2);
-  py.max = Math.max(2000, canvas.height * 1.2);
+  if (px) px.max = Math.max(2000, canvas.width * 1.2);
+  if (py) py.max = Math.max(2000, canvas.height * 1.2);
   if (!l) {
     tInput.value = ''; sizeInput.value = 36;
     document.getElementById('fSizeVal').innerText = '36';
     document.getElementById('fontRotation').value = 0;
     document.getElementById('fRotVal').innerText = '0°';
-    px.value = 0; py.value = 0;
-    document.getElementById('posXVal').innerText = '0';
-    document.getElementById('posYVal').innerText = '0';
+    if (px) { px.value = 0; document.getElementById('posXVal').innerText = '0'; }
+    if (py) { py.value = 0; document.getElementById('posYVal').innerText = '0'; }
     return;
   }
-  px.value = Math.round(l.x); py.value = Math.round(l.y);
-  document.getElementById('posXVal').innerText = Math.round(l.x);
-  document.getElementById('posYVal').innerText = Math.round(l.y);
+  if (px) { px.value = Math.round(l.x); document.getElementById('posXVal').innerText = Math.round(l.x); }
+  if (py) { py.value = Math.round(l.y); document.getElementById('posYVal').innerText = Math.round(l.y); }
   if (l.isImage) {
     tInput.value = '';
     sizeInput.value = l.width || 100;
@@ -892,6 +1088,12 @@ function syncActiveInputs() {
     tInput.value = l.text;
     sizeInput.value = l.size;
     document.getElementById('fSizeVal').innerText = l.size;
+    const hsl = hexToHsl(l.color || '#ffffff');
+    document.getElementById('colorBrightness').value = hsl.l;
+    document.getElementById('brVal').innerText = hsl.l;
+    document.getElementById('colorHue').value = hsl.h;
+    document.getElementById('hueVal').innerText = hsl.h + '°';
+    updateColorPreview();
   }
   const deg = Math.round((l.rotation || 0) * 180 / Math.PI);
   document.getElementById('fontRotation').value = deg;
@@ -942,7 +1144,7 @@ function setActiveFontRotation(v) {
 }
 
 function setActiveFont(f, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.font = f; redraw(); saveState(); }
-function setActiveTextColor(c, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.color = c; redraw(); saveState(); }
+function setActiveTextColor(c, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.color = c; syncActiveInputs(); redraw(); saveState(); }
 function setActiveTextStyle(s, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.style = s; redraw(); saveState(); }
 
 function saveProjectToHome() {
@@ -956,9 +1158,15 @@ function saveProjectToHome() {
   if (currentBgImage) {
     for (const f of BG_CONFIG.files) if (bgImages[f.fname] === currentBgImage) { bgFile = f.fname; break; }
   }
+  const now = new Date();
+  let autoName = currentProjectName;
+  if (!autoName || autoName.startsWith('Cover ')) {
+    const firstText = textLayers.find(l => !l.isImage && l.text && l.text.trim());
+    autoName = firstText ? firstText.text.trim().slice(0, 24) : (currentProjectName || 'Cover');
+  }
   try {
     localStorage.setItem('music_' + currentProjectId, JSON.stringify({
-      name:'Cover', date:new Date().toLocaleDateString(),
+      name: autoName, date: now.toISOString(), savedAt: now.getTime(),
       image: canvas.toDataURL('image/jpeg', 0.85),
       originalImage: originalImageSrc,
       canvasW: canvas.width, canvasH: canvas.height,
@@ -972,15 +1180,19 @@ function saveProjectToHome() {
     }));
   } catch(e) { alert('Storage full — try saving fewer photos.'); return; }
   undoStack = []; redoStack = []; updateHistoryButtons();
-  goHome();
+  playCount(() => { goHome(); });
 }
 
 function saveImage() {
   if (!imgLoaded) return;
-  const a = document.createElement('a');
-  a.download = 'mx-studio-cover.png';
-  a.href = canvas.toDataURL('image/png');
-  a.click();
+  const dataUrl = canvas.toDataURL('image/png');
+  playCount(() => {
+    const a = document.createElement('a');
+    a.download = 'samarid-studio-' + Date.now() + '.png';
+    a.href = dataUrl;
+    a.click();
+    haptic(30);
+  });
 }
 
 function switchPanel(name, btn) {
@@ -1018,6 +1230,7 @@ function updateSelection(el) {
 }
 
 [bInput, cInput, sInput, nInput, subjAmt].forEach(input => {
+  if (!input) return;
   input.addEventListener('input', () => {
     document.getElementById('subjectAmtVal').innerText = subjAmt.value;
     currentTemplate = 'none';
@@ -1230,15 +1443,12 @@ async function generateAIImage() {
   reader.onload = function(e) {
     const newImg = new Image();
     newImg.onload = function() {
+      resetStudioState();
       img = newImg; originalImageSrc = e.target.result;
       setupCanvasFromImage(newImg);
       imgLoaded = true;
       currentProjectId = 'proj_' + Date.now();
-      personMask = null; subjectReady = false;
-      crop = { x:0, y:0, w:1, h:1 };
-      textLayers = []; activeLayerId = null;
-      currentBorder = 'none'; currentBorderColor = '#ffffff'; currentTemplate = 'none';
-      currentBgColor = null; currentBgImage = null; currentFx = 'none';
+      currentProjectName = 'AI ' + prompt.slice(0, 20);
       closeAIPanel();
       document.getElementById('view-home').classList.remove('active');
       document.getElementById('view-studio').classList.add('active');
@@ -1445,20 +1655,27 @@ function redraw() {
   });
 }
 
+// ============ BOOT ============
 window.onload = function() {
-  buildFontGrid();
-  buildTemplates();
-  buildBorders();
-  buildBgColors();
-  buildFxTabs();
-  buildFxGrids();
-  buildAdvisoryGrid();
-  buildBgImageGrid();
-  preloadEffects();
-  renderProjectsList();
-  updateTextLayersUI();
-  initCropOverlay();
-  initHomeUpload();
+  const el = document.getElementById('splashScreen');
+  if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
+
+  (async () => {
+    buildFontGrid();
+    buildTemplates();
+    buildBorders();
+    buildBgColors();
+    updateTextLayersUI();
+    initCropOverlay();
+    initHomeUpload();
+    renderProjectsList();
+
+    try {
+      if (typeof preloadEffects === 'function') await preloadEffects();
+    } catch (e) { console.warn(e); }
+
+    playCount(() => {});
+  })();
 };
 
 if ('serviceWorker' in navigator) {
