@@ -11,31 +11,35 @@
 html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none; position:fixed; top:0; left:0; margin:0; padding:0; background:#0a0a0a; color:#fff; font-family:-apple-system,'Segoe UI',sans-serif; text-align:center; touch-action:manipulation; }
 .view { display:none; }
 .view.active { display:flex; flex-direction:column; height:100vh; padding:8px 8px 78px 8px; overflow:hidden; }
-.home-container { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 8px 20px 8px; max-width:640px; margin:0 auto; width:100%; }
-.featured-card { width:100%; background:#141414; border-radius:16px; overflow:hidden; cursor:pointer; margin-bottom:24px; transition:transform .15s ease; box-shadow:0 6px 20px rgba(0,0,0,.5); border:1px solid #1f1f1f; }
-.featured-card:active { transform:scale(.98); }
-.featured-img { width:100%; aspect-ratio:1/1; background:#0f0f0f; }
+
+.home-container { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:20px 14px 30px 14px; max-width:520px; margin:0 auto; width:100%; }
+
+.featured-card { width:100%; cursor:pointer; margin-bottom:22px; }
+.featured-card:active { opacity:.9; }
+.featured-img { width:100%; aspect-ratio:1/1; background:#111; border-radius:6px; overflow:hidden; }
 .featured-img img { width:100%; height:100%; object-fit:cover; display:block; }
-.featured-info { padding:14px 16px; text-align:left; background:linear-gradient(180deg,#141414 0%,#0f0f0f 100%); }
-.featured-name { font-size:15px; font-weight:800; color:#fff; margin-bottom:3px; }
-.featured-date { font-size:11px; color:#666; letter-spacing:.3px; }
-.section-title { font-size:11px; font-weight:800; color:#666; letter-spacing:1.5px; text-transform:uppercase; padding:0 4px 12px 4px; text-align:left; }
-.projects-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; padding:0 4px; }
-.project-card { background:#141414; border-radius:14px; overflow:hidden; cursor:pointer; transition:transform .15s ease; border:1px solid #1f1f1f; position:relative; }
-.project-card:active { transform:scale(.96); }
-.project-card-img { width:100%; aspect-ratio:1/1; background:#0f0f0f; }
+.featured-info { padding:12px 0 0 0; text-align:left; }
+.featured-name { font-size:14px; font-weight:700; color:#fff; margin-bottom:2px; }
+.featured-date { font-size:11px; color:#666; }
+
+.section-title { font-size:12px; font-weight:600; color:#888; padding:8px 0 14px 0; text-align:left; }
+.projects-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; padding:0; }
+.project-card { cursor:pointer; position:relative; }
+.project-card:active { opacity:.9; }
+.project-card-img { width:100%; aspect-ratio:1/1; background:#111; border-radius:6px; overflow:hidden; }
 .project-card-img img { width:100%; height:100%; object-fit:cover; display:block; }
-.project-card-info { padding:10px 12px; text-align:left; }
-.project-card-name { font-size:12px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+.project-card-info { padding:8px 0 0 0; text-align:left; }
+.project-card-name { font-size:12px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:1px; }
 .project-card-date { font-size:10px; color:#666; }
-.project-card-del { position:absolute; top:8px; right:8px; width:26px; height:26px; background:rgba(0,0,0,.72); border:none; border-radius:50%; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+.project-card-del { position:absolute; top:6px; right:6px; width:24px; height:24px; background:rgba(0,0,0,.7); border:none; border-radius:50%; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
 .project-card-del svg { stroke:#fff; }
+
 .home-empty { padding:80px 20px; text-align:center; }
 .home-empty-icon { font-size:56px; margin-bottom:18px; opacity:.55; }
 .home-empty-title { font-size:22px; letter-spacing:2px; color:#fff; margin-bottom:8px; font-weight:900; }
 .home-empty-sub { font-size:13px; color:#666; line-height:1.6; margin-bottom:26px; }
-.home-empty-btn { background:#ff2c2c; color:#fff; border:none; padding:15px 32px; border-radius:28px; font-size:14px; font-weight:800; cursor:pointer; letter-spacing:.5px; box-shadow:0 6px 20px rgba(255,44,44,.35); transition:transform .15s ease; }
-.home-empty-btn:active { transform:scale(.95); }
+.home-empty-btn { background:#ff2c2c; color:#fff; border:none; padding:15px 32px; border-radius:28px; font-size:14px; font-weight:800; cursor:pointer; letter-spacing:.5px; }
+
 .canvas-container { position:relative; display:inline-block; max-width:100%; margin:0 auto 4px auto; flex-shrink:0; }
 canvas { max-width:100%; max-height:56vh; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; }
 #cropOverlay { position:absolute; inset:0; display:none; z-index:40; pointer-events:none; }
@@ -46,7 +50,8 @@ canvas { max-width:100%; max-height:56vh; height:auto; width:auto; background:#0
 .crop-corner[data-corner="tr"] { top:-16px; right:-16px; }
 .crop-corner[data-corner="bl"] { bottom:-16px; left:-16px; }
 .crop-corner[data-corner="br"] { bottom:-16px; right:-16px; }
-#textFloatingMenu { display:none; position:absolute; background:rgba(15,15,15,.96); padding:8px; border-radius:10px; z-index:50; transform:translate(-50%,-125%); width:150px; box-shadow:0 8px 24px rgba(0,0,0,.7); }
+
+#textFloatingMenu { display:none; position:absolute; background:rgba(15,15,15,.96); padding:8px; border-radius:10px; z-index:50; transform:translate(-50%,-125%); width:150px; }
 .arrow-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:6px; }
 .arrow-btn { background:#1a1a1a; color:#fff; border:none; padding:6px 0; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
 .arrow-btn svg { stroke:#fff; }
@@ -54,6 +59,7 @@ canvas { max-width:100%; max-height:56vh; height:auto; width:auto; background:#0
 .menu-action-btn { background:#222; color:#fff; border:none; padding:5px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer; flex:1; }
 .menu-action-btn.delete { background:#ff2c2c; }
 .menu-action-btn.center-btn { background:#333; }
+
 .top-bar { display:flex; justify-content:space-between; align-items:center; padding:6px 4px; margin-bottom:4px; gap:6px; flex-shrink:0; }
 .top-tools { display:flex; gap:4px; align-items:center; }
 .icon-btn { background:none; border:none; color:#fff; cursor:pointer; padding:8px; display:inline-flex; }
@@ -61,91 +67,109 @@ canvas { max-width:100%; max-height:56vh; height:auto; width:auto; background:#0
 .icon-btn:disabled { color:#333; cursor:not-allowed; }
 .icon-action { background:none; border:none; color:#fff; cursor:pointer; padding:6px; display:inline-flex; }
 .icon-action svg { stroke:#fff; }
+
 .bottom-nav { display:flex; justify-content:flex-start; align-items:stretch; background:#050505; border-top:1px solid #1a1a1a; padding:6px 0 8px; position:fixed; bottom:0; left:0; width:100%; z-index:100; overflow-x:auto; }
 .bottom-nav::-webkit-scrollbar { display:none; }
-.bottom-nav { scrollbar-width:none; }
 .nav-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; flex:1 0 58px; background:none; border:none; color:#555; font-size:7px; font-weight:bold; cursor:pointer; padding:3px 2px; text-transform:uppercase; }
 .nav-btn svg { stroke:currentColor; }
 .nav-btn.active { color:#fff; }
 .nav-btn.active svg { stroke:#fff; }
+
 .panel { display:none; background:transparent; padding:10px 4px; text-align:left; font-size:12px; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; }
-.panel.active { display:block; animation:slideUp .18s ease; }
-@keyframes slideUp { from { transform:translateY(10px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.panel.active { display:block; }
 .sub-tabs { display:flex; justify-content:flex-start; gap:14px; margin-bottom:14px; border-bottom:1px solid #1a1a1a; padding-bottom:10px; overflow-x:auto; }
 .sub-tabs::-webkit-scrollbar { display:none; }
 .sub-tab { background:none; border:none; color:#666; font-weight:bold; font-size:11px; cursor:pointer; padding:2px 0; white-space:nowrap; flex-shrink:0; }
 .sub-tab.active { color:#fff; border-bottom:2px solid #fff; }
 .sub-view { display:none; }
 .sub-view.active { display:block; }
+
 input[type="range"] { -webkit-appearance:none; appearance:none; width:100%; max-width:240px; height:4px; background:#242424; border-radius:2px; outline:none; }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.5); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; }
 input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; border:none; }
 .adjust-sliders { display:flex; flex-direction:column; gap:20px; padding:8px 4px; }
+
 .h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .fx-grid, .sticker-grid, .bg-grid { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
 .h-scroll::-webkit-scrollbar, .filter-thumbs::-webkit-scrollbar, .template-thumbs::-webkit-scrollbar, .border-thumbs::-webkit-scrollbar, .color-row::-webkit-scrollbar, .bgcolor-row::-webkit-scrollbar, .fx-grid::-webkit-scrollbar, .sticker-grid::-webkit-scrollbar, .bg-grid::-webkit-scrollbar { display:none; }
 .sticker-grid { flex-wrap:wrap; }
 .bg-grid { flex-wrap:wrap; }
 .h-card { flex:0 0 auto; padding:8px 16px; background:#161616; border:none; border-radius:18px; font-size:11px; font-weight:600; color:#aaa; cursor:pointer; white-space:nowrap; }
 .h-card.selected { color:#fff; background:#333; }
+
 .template-thumb { flex:0 0 auto; width:64px; cursor:pointer; text-align:center; }
 .template-thumb-img { width:64px; height:78px; border-radius:8px; background-size:cover; background-position:center; background-color:#111; }
 .template-thumb.selected .template-thumb-img { box-shadow:0 0 0 2px #fff; }
 .template-thumb-label { font-size:9px; color:#888; margin-top:4px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
 .template-thumb.selected .template-thumb-label { color:#fff; }
+
 .filter-thumb { flex:0 0 auto; width:62px; cursor:pointer; text-align:center; }
 .filter-thumb-img { width:62px; height:62px; border-radius:8px; background-size:cover; background-position:center; background-color:#111; }
 .filter-thumb.selected .filter-thumb-img { box-shadow:0 0 0 2px #fff; }
 .filter-thumb-label { font-size:9px; color:#888; margin-top:4px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
 .filter-thumb.selected .filter-thumb-label { color:#fff; }
 .filter-empty { color:#444; font-size:11px; padding:16px 8px; }
+
 .border-thumb { flex:0 0 auto; width:56px; cursor:pointer; text-align:center; }
 .border-thumb-img { width:56px; height:56px; border-radius:8px; background:#111; position:relative; overflow:hidden; }
 .border-thumb.selected .border-thumb-img { box-shadow:0 0 0 2px #fff; }
 .border-thumb-label { font-size:9px; color:#888; margin-top:4px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
 .border-thumb.selected .border-thumb-label { color:#fff; }
 .bt-inner { position:absolute; inset:0; background:#333; }
+
 .fx-card { flex:0 0 auto; width:68px; cursor:pointer; text-align:center; }
 .fx-card-preview { width:68px; height:68px; border-radius:8px; background:#0a0a0a; position:relative; overflow:hidden; border:1px solid #1f1f1f; }
 .fx-card.selected .fx-card-preview { box-shadow:0 0 0 2px #00d4ff; }
 .fx-card-label { font-size:9px; color:#888; margin-top:4px; display:block; font-weight:700; }
 .fx-card.selected .fx-card-label { color:#00d4ff; }
+
 .sticker-item { flex:0 0 auto; width:84px; height:84px; border-radius:10px; background:#111; overflow:hidden; cursor:pointer; display:flex; align-items:center; justify-content:center; border:2px solid transparent; }
 .sticker-item.selected { border-color:#fff; }
 .sticker-item img { max-width:90%; max-height:90%; object-fit:contain; }
+
 .bg-item { flex:0 0 auto; width:84px; height:84px; border-radius:10px; background:#111; overflow:hidden; cursor:pointer; border:2px solid transparent; }
 .bg-item.selected { border-color:#fff; }
 .bg-item img { width:100%; height:100%; object-fit:cover; }
+
 .bcolor-circle { width:36px; height:36px; border-radius:50%; cursor:pointer; flex-shrink:0; border:2px solid #333; }
 .bcolor-circle.selected { box-shadow:0 0 0 2px #fff; }
 .color-circle { width:36px; height:36px; border-radius:50%; cursor:pointer; flex-shrink:0; border:2px solid #333; }
 .color-circle.selected { box-shadow:0 0 0 2px #fff; }
+
 .font-grid { display:flex; flex-wrap:wrap; gap:8px; max-height:200px; overflow-y:auto; padding:4px 0; }
 .font-pill { background:#161616; border:none; color:#fff; padding:8px 12px; border-radius:16px; cursor:pointer; font-size:11px; font-weight:bold; white-space:nowrap; }
+
 .text-layers-list { max-height:120px; overflow-y:auto; margin-bottom:10px; }
 .text-layer-item { display:flex; justify-content:space-between; align-items:center; background:#141414; padding:8px 10px; border-radius:6px; margin-bottom:5px; }
 .text-layer-item.active { background:#333; }
-.add-text-btn { background:#fff; color:#000; border:none; padding:15px; width:100%; border-radius:10px; font-weight:bold; cursor:pointer; font-size:15px; margin-top:10px; letter-spacing:1px; display:flex; align-items:center; justify-content:center; gap:6px; }
+
+.add-text-btn { background:#fff; color:#000; border:none; padding:15px; width:100%; border-radius:10px; font-weight:bold; cursor:pointer; font-size:15px; margin-top:10px; letter-spacing:1px; }
+
 input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-box; padding:11px; background:#141414; border:none; border-radius:8px; margin-top:4px; }
 .section-label { font-size:10px; color:#666; margin:14px 0 4px; display:block; letter-spacing:.6px; font-weight:700; }
+
 .crop-toolbar { display:flex; gap:8px; padding:10px 4px; justify-content:center; flex-wrap:wrap; }
 .crop-tool { background:#161616; color:#ccc; border:none; padding:10px 16px; border-radius:22px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; }
 .crop-tool.active { background:#fff; color:#000; }
 .crop-tool svg { stroke:currentColor; width:14px; height:14px; }
+
 .bgcolor-row { display:flex; flex-wrap:wrap; gap:12px; padding:8px 4px; overflow:visible !important; }
 .bgcolor-swatch { width:68px; height:68px; border-radius:14px; cursor:pointer; position:relative; border:2px solid #333; }
 .bgcolor-swatch.selected { border-color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.4); }
+
 .compact-sliders { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
 .slider-row { display:flex; align-items:center; gap:12px; height:34px; }
 .slider-label { font-size:10px; color:#888; font-weight:700; width:44px; text-align:left; text-transform:uppercase; letter-spacing:.6px; flex-shrink:0; }
 .slider-row input[type="range"] { flex:1; }
 .slider-val { font-size:11px; color:#fff; width:44px; text-align:right; font-weight:700; flex-shrink:0; }
+
 .align-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:12px 0 8px 0; max-width:200px; margin:0 auto; }
 .align-cell { aspect-ratio:1/1; background:#161616; border:1px solid #242424; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-.align-cell:active { transform:scale(.88); background:#333; }
 .align-cell svg { stroke:#888; width:16px; height:16px; }
+
 .color-slider-wrap { display:flex; flex-direction:column; gap:14px; padding:8px 4px; }
 .color-slider-row { display:flex; align-items:center; gap:12px; }
 .color-slider-preview { width:38px; height:38px; border-radius:10px; border:2px solid #333; flex-shrink:0; }
+
 .bgremover-menu { padding:8px 0; }
 .bgremover-btn { width:100%; background:#161616; border:1px solid #242424; color:#fff; padding:20px 18px; border-radius:14px; font-size:14px; font-weight:700; cursor:pointer; text-align:left; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
 .bgremover-btn .label { display:flex; flex-direction:column; gap:3px; }
@@ -154,18 +178,19 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .bgremover-btn .arrow { color:#666; font-size:18px; }
 .bgremover-btn.fast .title { color:#00d4ff; }
 .bgremover-btn.best .title { color:#ff2c2c; }
+
 #splashScreen { position:fixed; inset:0; background:#0a0a0a; z-index:99999; display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .4s ease; }
 #splashScreen.fade-out { opacity:0; pointer-events:none; }
 .splash-inner { display:flex; flex-direction:column; align-items:center; gap:20px; padding:20px; width:100%; }
 .splash-bar { width:160px; height:3px; background:#1a1a1a; border-radius:2px; overflow:hidden; }
 .splash-bar-fill { height:100%; width:0%; background:#fff; border-radius:2px; transition:width .2s linear; }
+
 .gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
 .gal-item { position:relative; aspect-ratio:1/1; border-radius:6px; overflow:hidden; background:#141414; cursor:pointer; }
 .gal-item img { width:100%; height:100%; object-fit:cover; display:block; }
 .gal-del { position:absolute; top:4px; right:4px; width:22px; height:22px; background:rgba(255,44,44,.92); border:none; border-radius:50%; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
 .gal-del svg { stroke:#fff; }
 .gal-add { display:flex; align-items:center; justify-content:center; background:transparent; border:1px dashed #2a2a2a; border-radius:6px; aspect-ratio:1/1; color:#444; cursor:pointer; }
-.gal-add:active { border-color:#fff; color:#fff; }
 .gal-empty { grid-column:1/-1; text-align:center; color:#444; font-size:11px; padding:20px 0; }
 </style>
 </head>
@@ -271,20 +296,19 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
       <input type="text" id="textContent" placeholder="Type here..." oninput="updateActiveTextContent(this.value)">
       <div id="textLayersList" class="text-layers-list"></div>
       <button class="add-text-btn" onclick="addNewTextLayer()">+ ADD TEXT</button>
-      <div style="font-size:9px;color:#555;text-align:center;margin-top:8px;line-height:1.5;">Drag with 1 finger · Pinch with 2 to resize & rotate</div>
     </div>
     <div id="subtab-font" class="sub-view">
-      <label style="margin:0 0 2px;">Select Font (40):</label>
+      <label>Select Font (40):</label>
       <div class="font-grid" id="fontGridContainer"></div>
     </div>
     <div id="subtab-basic" class="sub-view">
-      <label style="margin:0 0 2px;">Text Color:</label>
+      <label>Text Color:</label>
       <div class="color-row">
         <div class="color-circle" style="background:#ffffff;" onclick="setActiveTextColor('#ffffff',this)"></div>
         <div class="color-circle" style="background:#ff2c2c;" onclick="setActiveTextColor('#ff2c2c',this)"></div>
         <div class="color-circle" style="background:#000000;" onclick="setActiveTextColor('#000000',this)"></div>
       </div>
-      <label class="section-label" style="margin-top:12px;">ALIGN</label>
+      <label class="section-label">ALIGN</label>
       <div class="align-grid">
         <div class="align-cell" onclick="alignText('left','top')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3h18M3 8h12M3 13h18M3 18h12"/></svg></div>
         <div class="align-cell" onclick="alignText('center','top')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3h18M6 8h12M3 13h18M6 18h12"/></svg></div>
@@ -296,7 +320,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
         <div class="align-cell" onclick="alignText('center','bottom')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 21h18M6 6h12M6 16h12"/></svg></div>
         <div class="align-cell" onclick="alignText('right','bottom')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 21h18M9 6h12M9 16h12"/></svg></div>
       </div>
-      <label class="section-label" style="margin-top:12px;">COLOR TUNE</label>
+      <label class="section-label">COLOR TUNE</label>
       <div class="color-slider-wrap">
         <div class="color-slider-row">
           <div class="color-slider-preview" id="colorPreview" style="background:#ffffff;"></div>
@@ -313,28 +337,12 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
           </div>
         </div>
       </div>
-      <label class="section-label" style="margin-top:12px;">POSITION & SIZE</label>
+      <label class="section-label">POSITION & SIZE</label>
       <div class="compact-sliders">
-        <div class="slider-row">
-          <span class="slider-label">X</span>
-          <input type="range" id="posX" min="-500" max="2500" value="0" oninput="setActivePos('x', this.value)">
-          <span class="slider-val" id="posXVal">0</span>
-        </div>
-        <div class="slider-row">
-          <span class="slider-label">Y</span>
-          <input type="range" id="posY" min="-500" max="2500" value="0" oninput="setActivePos('y', this.value)">
-          <span class="slider-val" id="posYVal">0</span>
-        </div>
-        <div class="slider-row">
-          <span class="slider-label">Size</span>
-          <input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)">
-          <span class="slider-val" id="fSizeVal">36</span>
-        </div>
-        <div class="slider-row">
-          <span class="slider-label">Rot</span>
-          <input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)">
-          <span class="slider-val" id="fRotVal">0°</span>
-        </div>
+        <div class="slider-row"><span class="slider-label">X</span><input type="range" id="posX" min="-500" max="2500" value="0" oninput="setActivePos('x', this.value)"><span class="slider-val" id="posXVal">0</span></div>
+        <div class="slider-row"><span class="slider-label">Y</span><input type="range" id="posY" min="-500" max="2500" value="0" oninput="setActivePos('y', this.value)"><span class="slider-val" id="posYVal">0</span></div>
+        <div class="slider-row"><span class="slider-label">Size</span><input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)"><span class="slider-val" id="fSizeVal">36</span></div>
+        <div class="slider-row"><span class="slider-label">Rot</span><input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)"><span class="slider-val" id="fRotVal">0°</span></div>
       </div>
       <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:12px;width:100%;justify-content:center;">DELETE THIS LAYER</button>
     </div>
@@ -349,9 +357,9 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   </div>
 
   <div id="panel-color" class="panel">
-    <label class="section-label" style="margin-top:0;">BACKGROUND COLOR</label>
+    <label class="section-label">BACKGROUND COLOR</label>
     <div class="bgcolor-row" id="bgColorRow"></div>
-    <label class="section-label" style="margin-top:6px;">FRAME SIZE: <span id="bgColorSizeVal">8</span>%</label>
+    <label class="section-label">FRAME SIZE: <span id="bgColorSizeVal">8</span>%</label>
     <input type="range" id="bgColorSizeInput" min="1" max="30" value="8" oninput="setBgColorSize(this.value)">
   </div>
 
@@ -371,17 +379,17 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   <div id="panel-fx" class="panel">
     <div class="sub-tabs" id="fxTabBar"></div>
     <div id="fxGrids"></div>
-    <label class="section-label" style="margin-top:10px;">INTENSITY: <span id="fxVal">70</span>%</label>
+    <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
     <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
   </div>
 
   <div id="panel-border" class="panel">
-    <label class="section-label" style="margin-top:0;">FRAME STYLE</label>
+    <label class="section-label">FRAME STYLE</label>
     <div class="border-thumbs" id="borderContainer"></div>
     <label class="section-label">FRAME SIZE: <span id="borderSizeVal">5</span>%</label>
     <input type="range" id="borderSizeInput" min="1" max="20" value="5" oninput="setBorderSize(this.value)">
     <label class="section-label">FRAME COLOR</label>
-    <div class="border-color-row" style="display:flex;gap:12px;padding:4px 2px 8px;">
+    <div style="display:flex;gap:12px;padding:4px 2px 8px;">
       <div class="bcolor-circle selected" style="background:#ffffff;" onclick="setBorderColor('#ffffff', this)"></div>
       <div class="bcolor-circle" style="background:#ff2c2c;" onclick="setBorderColor('#ff2c2c', this)"></div>
       <div class="bcolor-circle" style="background:#000000;" onclick="setBorderColor('#000000', this)"></div>
@@ -403,17 +411,17 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   </div>
 
   <div id="panel-bgimage" class="panel">
-    <label class="section-label" style="margin-top:0;">BACKGROUNDS</label>
+    <label class="section-label">BACKGROUNDS</label>
     <div class="bg-grid" id="bgImageGrid"></div>
-    <label class="section-label" style="margin-top:10px;">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
+    <label class="section-label">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
     <input type="range" id="bgImgSizeInput" min="0" max="30" value="8" oninput="setBgImageSize(this.value)">
     <button class="crop-tool" onclick="clearBgImage()" style="margin-top:10px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
   </div>
 
   <div id="panel-advisory" class="panel">
-    <label class="section-label" style="margin-top:0;">PARENTAL ADVISORY STICKERS</label>
+    <label class="section-label">PARENTAL ADVISORY STICKERS</label>
     <div class="sticker-grid" id="stickerGrid"></div>
-    <label class="section-label" style="margin-top:10px;">DEFAULT SIZE: <span id="advSizeVal">35</span>%</label>
+    <label class="section-label">DEFAULT SIZE: <span id="advSizeVal">35</span>%</label>
     <input type="range" id="advSizeInput" min="10" max="80" value="35" oninput="setAdvDefaultSize(this.value)">
     <button class="crop-tool" onclick="trimActiveSticker()" style="margin-top:10px;width:100%;justify-content:center;">✂ CROP SELECTED STICKER</button>
   </div>
@@ -536,10 +544,7 @@ async function loadCategoryConfig() {
     if (!r.ok) throw new Error('not found');
     const data = await r.json();
     if (data && Array.isArray(data.categories)) {
-      FX_CATEGORIES = data.categories.map(c => ({
-        key: c.prefix, label: c.label || c.prefix, prefix: c.prefix,
-        blend: c.blend || 'screen', max: 60, files: []
-      }));
+      FX_CATEGORIES = data.categories.map(c => ({ key: c.prefix, label: c.label || c.prefix, prefix: c.prefix, blend: c.blend || 'screen', max: 60, files: [] }));
     }
   } catch (e) {
     FX_CATEGORIES = [
@@ -567,9 +572,7 @@ async function probeOne(base) {
 
 async function probeCategory(cat) {
   const promises = [];
-  for (let i = 1; i <= cat.max; i++) {
-    promises.push(probeOne(cat.prefix + i).then(r => r ? { base: cat.prefix + i, ...r } : null));
-  }
+  for (let i = 1; i <= cat.max; i++) promises.push(probeOne(cat.prefix + i).then(r => r ? { base: cat.prefix + i, ...r } : null));
   const results = await Promise.all(promises);
   cat.files = results.filter(r => r !== null);
   cat.files.forEach(r => { fxImages[cat.key + ':' + r.fname] = r.im; });
@@ -689,10 +692,7 @@ function buildFxGrid(catKey) {
     cat.files.forEach(f => {
       const key = catKey + ':' + f.fname;
       const sel = (currentFx === key) ? 'selected' : '';
-      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)">
-        <div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;" alt=""></div>
-        <span class="fx-card-label">${f.base}</span>
-      </div>`;
+      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${f.base}</span></div>`;
     });
   }
   g.innerHTML = html;
@@ -717,7 +717,7 @@ function buildAdvisoryGrid() {
   if (!ADVISORY_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">No files</div>'; return; }
   let html = '';
   ADVISORY_CONFIG.files.forEach(f => {
-    html += `<div class="sticker-item" onclick="addSticker('${f.fname}')"><img src="${EFFECTS_BASE + f.fname}" alt=""></div>`;
+    html += `<div class="sticker-item" onclick="addSticker('${f.fname}')"><img src="${EFFECTS_BASE + f.fname}"></div>`;
   });
   g.innerHTML = html;
 }
@@ -729,7 +729,7 @@ function buildBgImageGrid() {
   let html = '';
   BG_CONFIG.files.forEach(f => {
     const sel = (currentBgImage && currentBgImage.src.endsWith(f.fname)) ? 'selected' : '';
-    html += `<div class="bg-item ${sel}" onclick="setBgImage('${f.fname}', this)"><img src="${EFFECTS_BASE + f.fname}" alt=""></div>`;
+    html += `<div class="bg-item ${sel}" onclick="setBgImage('${f.fname}', this)"><img src="${EFFECTS_BASE + f.fname}"></div>`;
   });
   g.innerHTML = html;
 }
@@ -769,8 +769,7 @@ function addSticker(fname) {
   const h = Math.round(w * (im.naturalHeight / im.naturalWidth));
   const id = Date.now() + Math.random();
   const layer = { id, image: im, imageUrl: EFFECTS_BASE + fname, isImage: true, x: canvas.width/2, y: canvas.height/2, width: w, height: h, rotation: 0, size: w };
-  textLayers.push(layer);
-  activeLayerId = id;
+  textLayers.push(layer); activeLayerId = id;
   updateTextLayersUI(); showFloatingMenu(layer.x, layer.y);
   redraw(); saveState();
 }
@@ -790,10 +789,7 @@ function trimActiveSticker() {
     for (let x = 0; x < c.width; x += 2) {
       const i = (y * c.width + x) * 4;
       const bright = (d[i] + d[i+1] + d[i+2]) / 3;
-      if (bright < 200) {
-        if (x < minX) minX = x; if (x > maxX) maxX = x;
-        if (y < minY) minY = y; if (y > maxY) maxY = y;
-      }
+      if (bright < 200) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
     }
   }
   if (minX >= maxX || minY >= maxY) { alert('Nothing to trim'); return; }
@@ -802,11 +798,7 @@ function trimActiveSticker() {
   tc.width = tw; tc.height = th;
   tc.getContext('2d').drawImage(c, minX, minY, tw, th, 0, 0, tw, th);
   const trimmed = new Image();
-  trimmed.onload = () => {
-    l.image = trimmed;
-    l.height = Math.round(l.width * (th / tw));
-    redraw(); saveState();
-  };
+  trimmed.onload = () => { l.image = trimmed; l.height = Math.round(l.width * (th / tw)); redraw(); saveState(); };
   trimmed.src = tc.toDataURL('image/png');
 }
 
@@ -840,11 +832,7 @@ async function removeBgFast() {
       cx.drawImage(mask, 0, 0);
       const url = c.toDataURL('image/png');
       const newImg = new Image();
-      newImg.onload = () => {
-        img = newImg; originalImageSrc = url; imgLoaded = true;
-        currentBgColor = '#ffffff'; buildBgColors();
-        redraw(); saveState();
-      };
+      newImg.onload = () => { img = newImg; originalImageSrc = url; imgLoaded = true; currentBgColor = '#ffffff'; buildBgColors(); redraw(); saveState(); };
       newImg.src = url;
     } catch (e) { alert('Fast failed: ' + e.message); }
   });
@@ -858,25 +846,12 @@ async function removeBgBest() {
       tmp.width = canvas.width; tmp.height = canvas.height;
       tmp.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
       const dataUrl = tmp.toDataURL('image/jpeg', 0.9);
-      const r = await fetch('/api/remove-bg', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: dataUrl })
-      });
-      if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        alert('Best failed: ' + (err.error || r.status));
-        return;
-      }
+      const r = await fetch('/api/remove-bg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: dataUrl }) });
+      if (!r.ok) { const err = await r.json().catch(() => ({})); alert('Best failed: ' + (err.error || r.status)); return; }
       const data = await r.json();
       if (!data.image) { alert('No image returned'); return; }
       const newImg = new Image();
-      newImg.onload = () => {
-        img = newImg; originalImageSrc = data.image;
-        canvas.width = newImg.width; canvas.height = newImg.height;
-        imgLoaded = true; currentBgColor = '#ffffff';
-        buildBgColors(); redraw(); saveState();
-      };
+      newImg.onload = () => { img = newImg; originalImageSrc = data.image; canvas.width = newImg.width; canvas.height = newImg.height; imgLoaded = true; currentBgColor = '#ffffff'; buildBgColors(); redraw(); saveState(); };
       newImg.src = data.image;
     } catch (e) { alert('Best failed: ' + e.message); }
   });
@@ -899,7 +874,7 @@ function buildBgColors() {
   if (!c) return;
   let html = '';
   const noneSel = (!currentBgColor && !currentBgImage) ? 'selected' : '';
-  html += `<div class="bgcolor-swatch ${noneSel}" style="background:linear-gradient(135deg,#2a2a2a 45%,#111 45%,#111 55%,#2a2a2a 55%);display:flex;align-items:center;justify-content:center;" onclick="setBgColor(null, this)"><span style="color:#888;font-size:11px;font-weight:700;letter-spacing:1px;">NONE</span></div>`;
+  html += `<div class="bgcolor-swatch ${noneSel}" style="background:linear-gradient(135deg,#2a2a2a 45%,#111 45%,#111 55%,#2a2a2a 55%);display:flex;align-items:center;justify-content:center;" onclick="setBgColor(null, this)"><span style="color:#888;font-size:11px;font-weight:700;">NONE</span></div>`;
   BG_COLORS.forEach(col => {
     const sel = (currentBgColor === col) ? 'selected' : '';
     html += `<div class="bgcolor-swatch ${sel}" style="background:${col};" onclick="setBgColor('${col}', this)"></div>`;
@@ -925,16 +900,13 @@ function setBgColorSize(v) {
 function buildTemplates() {
   const c = document.getElementById('templateContainer');
   if (!c) return;
-  if (!imgLoaded || !img.src) { c.innerHTML = '<div class="filter-empty">Load a photo to see templates</div>'; return; }
+  if (!imgLoaded || !img.src) { c.innerHTML = '<div class="filter-empty">Load a photo</div>'; return; }
   const src = img.src;
   let html = '';
   TEMPLATES.forEach((t, i) => {
     const sel = (currentTemplate === t.name) ? 'selected' : '';
     const filterStyle = `brightness(${t.b}%) contrast(${t.c}%) saturate(${t.s}%) ${t.f !== 'none' ? t.f : ''}`;
-    html += `<div class="template-thumb ${sel}" onclick="applyTemplate(${i}, this)">
-      <div class="template-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div>
-      <span class="template-thumb-label">${t.name}</span>
-    </div>`;
+    html += `<div class="template-thumb ${sel}" onclick="applyTemplate(${i}, this)"><div class="template-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div><span class="template-thumb-label">${t.name}</span></div>`;
   });
   c.innerHTML = html;
 }
@@ -954,10 +926,7 @@ function buildBorders() {
   let html = '';
   BORDERS.forEach(b => {
     const sel = (currentBorder === b.code) ? 'selected' : '';
-    html += `<div class="border-thumb ${sel}" onclick="setBorder('${b.code}', this)">
-      <div class="border-thumb-img">${borderPreviewHTML(b.code)}</div>
-      <span class="border-thumb-label">${b.name}</span>
-    </div>`;
+    html += `<div class="border-thumb ${sel}" onclick="setBorder('${b.code}', this)"><div class="border-thumb-img">${borderPreviewHTML(b.code)}</div><span class="border-thumb-label">${b.name}</span></div>`;
   });
   c.innerHTML = html;
 }
@@ -998,16 +967,13 @@ function setBorderSize(v) {
 function buildFilterThumbs() {
   const el = document.getElementById('filterThumbsContainer');
   if (!el) return;
-  if (!imgLoaded || !img.src) { el.innerHTML = '<div class="filter-empty">Load a photo to see filters</div>'; return; }
+  if (!imgLoaded || !img.src) { el.innerHTML = '<div class="filter-empty">Load a photo</div>'; return; }
   const src = img.src;
   let html = '';
   FILTERS.forEach((f, i) => {
     const sel = (currentFilter === f.code) ? 'selected' : '';
     const filterStyle = f.code === 'none' ? 'none' : f.code;
-    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)">
-      <div class="filter-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div>
-      <span class="filter-thumb-label">${f.name}</span>
-    </div>`;
+    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
   });
   el.innerHTML = html;
 }
@@ -1048,11 +1014,11 @@ function renderProjectsList() {
     html = `<div class="home-empty"><div class="home-empty-icon">🎨</div><div class="home-empty-title">START YOUR FIRST COVER</div><div class="home-empty-sub">Upload a photo and make something real.</div><button class="home-empty-btn" onclick="document.getElementById('homeImageUpload').click()">+ Create New</button></div>`;
   } else {
     const featured = items[0];
-    html += `<div class="featured-card" onclick="openProjectWithCount('${featured.key}')"><div class="featured-img"><img src="${featured.image}" alt=""></div><div class="featured-info"><div class="featured-name">${featured.name}</div><div class="featured-date">${timeAgo(featured.date)}</div></div></div>`;
+    html += `<div class="featured-card" onclick="openProjectWithCount('${featured.key}')"><div class="featured-img"><img src="${featured.image}"></div><div class="featured-info"><div class="featured-name">${featured.name}</div><div class="featured-date">${timeAgo(featured.date)}</div></div></div>`;
     if (items.length > 1) {
-      html += `<div class="section-title">All Projects</div><div class="projects-grid">`;
+      html += `<div class="section-title">ALL PROJECTS</div><div class="projects-grid">`;
       items.slice(1).forEach(it => {
-        html += `<div class="project-card" onclick="openProjectWithCount('${it.key}')"><div class="project-card-img"><img src="${it.image}" alt=""></div><div class="project-card-info"><div class="project-card-name">${it.name}</div><div class="project-card-date">${timeAgo(it.date)}</div></div><button class="project-card-del" onclick="event.stopPropagation();deleteProject('${it.key}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
+        html += `<div class="project-card" onclick="openProjectWithCount('${it.key}')"><div class="project-card-img"><img src="${it.image}"></div><div class="project-card-info"><div class="project-card-name">${it.name}</div><div class="project-card-date">${timeAgo(it.date)}</div></div><button class="project-card-del" onclick="event.stopPropagation();deleteProject('${it.key}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
       });
       html += `</div>`;
     }
@@ -1092,6 +1058,7 @@ function resetStudioState() {
 function saveState() {
   if (!imgLoaded) return;
   const state = canvas.toDataURL();
+  if (state.length < 500) return;
   if (undoStack.length && undoStack[undoStack.length - 1] === state) return;
   undoStack.push(state);
   if (undoStack.length > 25) undoStack.shift();
@@ -1103,6 +1070,7 @@ function undo() {
   if (undoStack.length > 1) {
     redoStack.push(undoStack.pop());
     const prev = undoStack[undoStack.length - 1];
+    if (!prev || prev.length < 500) { updateHistoryButtons(); return; }
     const t = new Image();
     t.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(t, 0, 0); updateHistoryButtons(); };
     t.src = prev;
@@ -1283,7 +1251,7 @@ function updateTextLayersUI() {
   let html = '';
   textLayers.forEach(l => {
     const act = l.id === activeLayerId ? 'active' : '';
-    const label = l.isImage ? '🖼 Sticker' : (l.text || '(Empty)');
+    const label = l.isImage ? 'Sticker' : (l.text || '(Empty)');
     html += `<div class="text-layer-item ${act}" onclick="selectLayer(${l.id})"><span style="font-weight:bold;font-size:11px;">${label}</span><span style="font-size:10px;color:#666;">${l.isImage ? 'IMG' : l.font}</span></div>`;
   });
   el.innerHTML = html;
@@ -1447,7 +1415,7 @@ function saveProjectToHome() {
       template: currentTemplate, fx: currentFx, fxAmount: currentFxAmount,
       subjectMode, strokeColor, subjectAmount: subjAmt.value
     }));
-  } catch(e) { alert('Storage full — try saving fewer photos.'); return; }
+  } catch(e) { alert('Storage full.'); return; }
   undoStack = []; redoStack = []; updateHistoryButtons();
   playCount(() => { goHome(); });
 }
@@ -1926,11 +1894,14 @@ function loadProject(key) {
   currentBgImageSize = p.bgImageSize ?? 8;
   currentBgImage = (p.bgImageFile && bgImages[p.bgImageFile]) ? bgImages[p.bgImageFile] : null;
   currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
-  document.getElementById('fxAmount').value = currentFxAmount;
-  document.getElementById('fxVal').innerText = currentFxAmount;
-  document.getElementById('borderSizeInput').value = currentBorderSize; document.getElementById('borderSizeVal').innerText = currentBorderSize;
-  document.getElementById('bgColorSizeInput').value = currentBgColorSize; document.getElementById('bgColorSizeVal').innerText = currentBgColorSize;
-  document.getElementById('bgImgSizeInput').value = currentBgImageSize; document.getElementById('bgImgSizeVal').innerText = currentBgImageSize;
+  const fxAmt = document.getElementById('fxAmount'); if (fxAmt) fxAmt.value = currentFxAmount;
+  const fxV = document.getElementById('fxVal'); if (fxV) fxV.innerText = currentFxAmount;
+  const bsi = document.getElementById('borderSizeInput'); if (bsi) bsi.value = currentBorderSize;
+  const bsv = document.getElementById('borderSizeVal'); if (bsv) bsv.innerText = currentBorderSize;
+  const bcsi = document.getElementById('bgColorSizeInput'); if (bcsi) bcsi.value = currentBgColorSize;
+  const bcsv = document.getElementById('bgColorSizeVal'); if (bcsv) bcsv.innerText = currentBgColorSize;
+  const bgsi = document.getElementById('bgImgSizeInput'); if (bgsi) bgsi.value = currentBgImageSize;
+  const bgsv = document.getElementById('bgImgSizeVal'); if (bgsv) bgsv.innerText = currentBgImageSize;
   currentTemplate = p.template ?? 'none';
   subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
   const sourceImage = p.originalImage || p.image;
