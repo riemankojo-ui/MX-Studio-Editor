@@ -26,6 +26,7 @@ let currentProjectName = '';
 let currentFx = 'none';
 let currentFxAmount = 70;
 let advDefaultSize = 35;
+let removedSubjectImage = null;
 
 let textLayers = [];
 let activeLayerId = null;
@@ -179,7 +180,7 @@ async function preloadEffects() {
 
 // ============ 5-SEC COUNT SPLASH (LOCKED) ============
 function playCount(callback) {
-  if (counterLocked) return;   // ignore taps mid-count
+  if (counterLocked) return;
   counterLocked = true;
   const el = document.getElementById('splashScreen');
   const c = document.getElementById('splashCount');
@@ -394,6 +395,103 @@ function trimActiveSticker() {
   trimmed.src = tc.toDataURL('image/png');
 }
 
+// ============ BG REMOVER (NEW) ============
+function showBGRemoverPanel() {
+  const menu = document.getElementById('bgRemoverMenu');
+  if (menu) menu.style.display = 'block';
+  const out = document.getElementById('bgRemoverOutput');
+  if (out) out.style.display = 'none';
+}
+
+function hideBGRemoverPanel() {
+  const menu = document.getElementById('bgRemoverMenu');
+  if (menu) menu.style.display = 'none';
+  const out = document.getElementById('bgRemoverOutput');
+  if (out) out.style.display = 'block';
+}
+
+async function removeBgFast() {
+  if (!imgLoaded) { alert('Load a photo first'); return; }
+  if (typeof SelfieSegmentation === 'undefined') { alert('Model not loaded'); return; }
+  playCount(async () => {
+    try {
+      if (!selfieSeg) {
+        selfieSeg = new SelfieSegmentation({ locateFile:f => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/${f}` });
+        selfieSeg.setOptions({ modelSelection:1 });
+      }
+      const result = await new Promise((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error('Timed out')), 30000);
+        selfieSeg.onResults(r => { clearTimeout(t); resolve(r); });
+        selfieSeg.send({ image: img });
+      });
+      const c = document.createElement('canvas');
+      c.width = canvas.width; c.height = canvas.height;
+      const cx = c.getContext('2d');
+      cx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const mask = document.createElement('canvas');
+      mask.width = canvas.width; mask.height = canvas.height;
+      const mctx = mask.getContext('2d');
+      mctx.drawImage(result.segmentationMask, 0, 0, canvas.width, canvas.height);
+      const id = mctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = id.data;
+      for (let i = 0; i < d.length; i += 4) d[i+3] = d[i];
+      mctx.putImageData(id, 0, 0);
+      cx.globalCompositeOperation = 'destination-in';
+      cx.drawImage(mask, 0, 0);
+      const url = c.toDataURL('image/png');
+      const newImg = new Image();
+      newImg.onload = () => {
+        removedSubjectImage = newImg;
+        img = newImg;
+        originalImageSrc = url;
+        imgLoaded = true;
+        currentBgColor = '#ffffff';
+        buildBgColors();
+        redraw(); saveState();
+      };
+      newImg.src = url;
+    } catch (e) { alert('Fast remove failed: ' + e.message); }
+  });
+}
+
+async function removeBgBest() {
+  if (!imgLoaded) { alert('Load a photo first'); return; }
+  playCount(async () => {
+    try {
+      const tmp = document.createElement('canvas');
+      tmp.width = canvas.width; tmp.height = canvas.height;
+      tmp.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = tmp.toDataURL('image/jpeg', 0.9);
+      const r = await fetch('/api/remove-bg', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataUrl })
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        alert('Best remove failed: ' + (err.error || r.status));
+        return;
+      }
+      const data = await r.json();
+      if (!data.image) { alert('No image returned'); return; }
+      const newImg = new Image();
+      newImg.onload = () => {
+        removedSubjectImage = newImg;
+        img = newImg;
+        originalImageSrc = data.image;
+        canvas.width = newImg.width;
+        canvas.height = newImg.height;
+        imgLoaded = true;
+        currentBgColor = '#ffffff';
+        buildBgColors();
+        redraw(); saveState();
+      };
+      newImg.src = data.image;
+    } catch (e) { alert('Best remove failed: ' + e.message); }
+  });
+}
+
+// ============ TEXT PANEL ============
 function buildFontGrid() {
   const c = document.getElementById('fontGridContainer');
   const fontList = ["Impact","Bebas Neue","Oswald","Montserrat","Anton","Pacifico","Permanent Marker","Russo One","Press Start 2P","Righteous","Orbitron","Bungee","Bungee Inline","Creepster","Monoton","Luckiest Guy","Rye","Satisfy","Yellowtail","Chewy","Alfa Slab One","Cinzel","Audiowide","Black Ops One","Chango","Coiny","Damion","Diplomata SC","Frijole","Gloria Hallelujah","Gugi","Knewave","Lobster","Parisienne","Poppins","Playfair Display","Special Elite","Great Vibes","Merriweather","Dancing Script"];
@@ -533,7 +631,7 @@ function applyFilterByIndex(i, el) {
   saveState(); redraw();
 }
 
-// ============ HOME SCREEN (NEW) ============
+// ============ HOME SCREEN ============
 function timeAgo(iso) {
   if (!iso) return '';
   const d = new Date(iso);
@@ -553,9 +651,7 @@ function renderProjectsList() {
     try {
       const p = JSON.parse(localStorage.getItem(key));
       items.push({
-        key,
-        image: p.image,
-        name: p.name || 'Untitled',
+        key, image: p.image, name: p.name || 'Untitled',
         date: p.date || null,
         timestamp: p.savedAt || new Date(p.date || 0).getTime() || 0
       });
@@ -563,16 +659,9 @@ function renderProjectsList() {
   });
   items.sort((a, b) => b.timestamp - a.timestamp);
 
-  let html = `<div class="home-header">
-    <div class="home-title">SAMARID <span>STUDIO</span></div>
-    <button class="home-new-btn" onclick="document.getElementById('homeImageUpload').click()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      NEW
-    </button>
-  </div>`;
-
+  let html = '';
   if (items.length === 0) {
-    html += `<div class="home-empty">
+    html = `<div class="home-empty">
       <div class="home-empty-icon">🎨</div>
       <div class="home-empty-title">START YOUR FIRST COVER</div>
       <div class="home-empty-sub">Upload a photo and make something real.</div>
@@ -605,11 +694,9 @@ function renderProjectsList() {
       html += `</div>`;
     }
   }
-
   container.innerHTML = html;
 }
 
-// Count wrapper with lock — never opens wrong project
 function openProjectWithCount(key) {
   if (counterLocked) return;
   playCount(() => { loadProject(key); });
@@ -617,9 +704,7 @@ function openProjectWithCount(key) {
 
 function deleteProject(key) {
   if (confirm("Delete this project?")) { localStorage.removeItem(key); renderProjectsList(); }
-}
-
-function setupCanvasFromImage(newImg) {
+}function setupCanvasFromImage(newImg) {
   img = newImg;
   const MAX = 1080;
   let w = newImg.width, h = newImg.height;
@@ -627,7 +712,7 @@ function setupCanvasFromImage(newImg) {
   canvas.width = w; canvas.height = h;
 }
 
-// ============ CLEAR STATE — prevents old project flash ============
+// ============ UNDO — WISE (never removes photo) ============
 function resetStudioState() {
   img = new Image();
   imgLoaded = false;
@@ -647,155 +732,37 @@ function resetStudioState() {
   subjectMode = 'none';
   personMask = null;
   subjectReady = false;
+  removedSubjectImage = null;
   undoStack = []; redoStack = [];
   updateHistoryButtons();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function loadProject(key) {
-  resetStudioState();   // ← clears canvas immediately, no old project flash
-  const p = JSON.parse(localStorage.getItem(key));
-  currentProjectId = key.replace('music_', '');
-  currentProjectName = p.name || 'Untitled';
-  textLayers = p.textLayers || [];
-  activeLayerId = null;
-  textLayers.forEach(l => {
-    if (l.isImage && l.imageUrl) { const im = new Image(); im.src = l.imageUrl; l.image = im; }
-  });
-  bInput.value = p.brightness ?? 100; cInput.value = p.contrast ?? 100; sInput.value = p.saturation ?? 100; nInput.value = p.noise ?? 0;
-  subjAmt.value = p.subjectAmount ?? 12;
-  currentFilter = p.filter ?? 'none';
-  currentBorder = p.border ?? 'none'; currentBorderColor = p.borderColor ?? '#ffffff'; currentBorderSize = p.borderSize ?? 5;
-  currentBgColor = p.bgColor ?? null; currentBgColorSize = p.bgColorSize ?? 8;
-  currentBgImageSize = p.bgImageSize ?? 8;
-  currentBgImage = (p.bgImageFile && bgImages[p.bgImageFile]) ? bgImages[p.bgImageFile] : null;
-  currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
-  document.getElementById('fxAmount').value = currentFxAmount;
-  document.getElementById('fxVal').innerText = currentFxAmount;
-  document.getElementById('borderSizeInput').value = currentBorderSize; document.getElementById('borderSizeVal').innerText = currentBorderSize;
-  document.getElementById('bgColorSizeInput').value = currentBgColorSize; document.getElementById('bgColorSizeVal').innerText = currentBgColorSize;
-  document.getElementById('bgImgSizeInput').value = currentBgImageSize; document.getElementById('bgImgSizeVal').innerText = currentBgImageSize;
-  currentTemplate = p.template ?? 'none';
-  subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
-
-  const sourceImage = p.originalImage || p.image;
-  originalImageSrc = sourceImage;
-  img.onload = function() {
-    if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
-    imgLoaded = true;
-    buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-    buildFxGrids(); buildAdvisoryGrid(); buildBgImageGrid();
-    saveState(); redraw();
-  };
-  img.src = sourceImage;
-
-  document.getElementById('view-home').classList.remove('active');
-  document.getElementById('view-studio').classList.add('active');
-  document.getElementById('cropOverlay').classList.remove('active');
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-adjust').classList.add('active');
-  document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
-}function initHomeUpload() {
-  document.getElementById('homeImageUpload').addEventListener('change', async function(e) {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    e.target.value = '';
-    let overlay = document.getElementById('importOverlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'importOverlay';
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:14px;';
-      overlay.innerHTML = '<div id="importCount" style="margin-bottom:12px;">Importing...</div><div style="width:180px;height:3px;background:#1a1a1a;border-radius:2px;overflow:hidden;"><div id="importBar" style="height:100%;width:0;background:#fff;transition:width .2s;"></div></div>';
-      document.body.appendChild(overlay);
-    }
-    overlay.style.display = 'flex';
-    let done = 0;
-    for (const file of files) {
-      await importOnePhoto(file);
-      done++;
-      document.getElementById('importBar').style.width = Math.round((done / files.length) * 100) + '%';
-      document.getElementById('importCount').textContent = 'Importing ' + done + ' / ' + files.length;
-    }
-    overlay.style.display = 'none';
-    renderProjectsList();
-  });
-}
-
-function importOnePhoto(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const newImg = new Image();
-      newImg.onload = function() {
-        const MAX = 1080; let w = newImg.width, h = newImg.height;
-        if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
-        const tmp = document.createElement('canvas');
-        tmp.width = w; tmp.height = h;
-        tmp.getContext('2d').drawImage(newImg, 0, 0, w, h);
-        const dataURL = tmp.toDataURL('image/jpeg', 0.85);
-        const id = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-        const now = new Date();
-        try {
-          localStorage.setItem('music_' + id, JSON.stringify({
-            name: 'Cover ' + (Object.keys(localStorage).filter(k => k.startsWith('music_proj_')).length + 1),
-            date: now.toISOString(),
-            savedAt: now.getTime(),
-            image: dataURL, originalImage: dataURL,
-            canvasW: w, canvasH: h, textLayers: [],
-            brightness: 100, contrast: 100, saturation: 100, noise: 0,
-            filter: 'none', border: 'none', borderColor: '#ffffff', borderSize: 5,
-            bgColor: null, bgColorSize: 8, template: 'none',
-            fx: 'none', fxAmount: 70, subjectMode: 'none', strokeColor: '#ffffff', subjectAmount: 12,
-            bgImageFile: null, bgImageSize: 8
-          }));
-        } catch(err) {}
-        resolve();
-      };
-      newImg.onerror = () => resolve();
-      newImg.src = ev.target.result;
-    };
-    reader.onerror = () => resolve();
-    reader.readAsDataURL(file);
-  });
-}
-
-function goHome() {
-  document.getElementById('view-studio').classList.remove('active');
-  document.getElementById('view-home').classList.add('active');
-  textMenu.style.display = 'none';
-  document.getElementById('cropOverlay').classList.remove('active');
-  resetStudioState();
-  renderProjectsList();
-}
-
-function resetEverything() {
-  bInput.value = 100; cInput.value = 100; sInput.value = 100; nInput.value = 0;
-  currentFilter = 'none'; currentBorder = 'none'; currentBgColor = null; currentBgImage = null;
-  currentFx = 'none'; textLayers = []; activeLayerId = null;
-  subjectMode = 'none'; personMask = null; subjectReady = false;
-  document.querySelectorAll('.template-thumb, .filter-thumb, .border-thumb, .bgcolor-swatch, .bg-item, .fx-card').forEach(c => c.classList.remove('selected'));
-  syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
-}
-
 function saveState() {
   if (!imgLoaded) return;
   const state = canvas.toDataURL();
-  if (!undoStack.length || undoStack[undoStack.length - 1] !== state) {
-    undoStack.push(state);
-    if (undoStack.length > 15) undoStack.shift();
-    redoStack = [];
-    updateHistoryButtons();
-  }
+  // Skip if same as last
+  if (undoStack.length && undoStack[undoStack.length - 1] === state) return;
+  // Only keep last 25
+  undoStack.push(state);
+  if (undoStack.length > 25) undoStack.shift();
+  redoStack = [];
+  updateHistoryButtons();
 }
 
 function undo() {
+  // Wise: never go past the state where photo was loaded
   if (undoStack.length > 1) {
     redoStack.push(undoStack.pop());
     const prev = undoStack[undoStack.length - 1];
     const t = new Image();
-    t.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(t,0,0); updateHistoryButtons(); };
+    t.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(t, 0, 0);
+      updateHistoryButtons();
+    };
     t.src = prev;
+    haptic(6);
   }
 }
 
@@ -804,8 +771,13 @@ function redo() {
     const nxt = redoStack.pop();
     undoStack.push(nxt);
     const t = new Image();
-    t.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(t,0,0); updateHistoryButtons(); };
+    t.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(t, 0, 0);
+      updateHistoryButtons();
+    };
     t.src = nxt;
+    haptic(6);
   }
 }
 
@@ -945,7 +917,6 @@ function centerActiveTextHoriz() {
   if (l) { l.x = canvas.width / 2; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
 }
 
-// ============ ALIGN GRID (3x3) — snap text anywhere ============
 function alignText(horiz, vert) {
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) return;
@@ -953,15 +924,12 @@ function alignText(horiz, vert) {
   const margin = Math.min(canvas.width, canvas.height) * 0.12;
   const layerH = l.isImage ? l.height : (l.size || 40);
   const layerW = l.isImage ? l.width : (() => { ctx.font = `bold ${l.size}px '${l.font}', sans-serif`; return ctx.measureText(l.text || '').width; })();
-
   if (horiz === 'left')   l.x = layerW / 2 + margin;
   if (horiz === 'center') l.x = cx;
   if (horiz === 'right')  l.x = canvas.width - layerW / 2 - margin;
-
   if (vert === 'top')     l.y = layerH / 2 + margin;
   if (vert === 'middle')  l.y = cy;
   if (vert === 'bottom')  l.y = canvas.height - layerH / 2 - margin;
-
   showFloatingMenu(l.x, l.y);
   haptic(6);
   syncActiveInputs(); redraw(); saveState();
@@ -1011,7 +979,7 @@ function updateTextLayersUI() {
 }
 
 function hexToHsl(hex) {
-  hex = hex.replace('#','');
+  hex = (hex || '#ffffff').replace('#','');
   if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
   const r = parseInt(hex.substr(0,2),16)/255, g = parseInt(hex.substr(2,2),16)/255, b = parseInt(hex.substr(4,2),16)/255;
   const max = Math.max(r,g,b), min = Math.min(r,g,b);
@@ -1070,10 +1038,11 @@ function syncActiveInputs() {
   if (px) px.max = Math.max(2000, canvas.width * 1.2);
   if (py) py.max = Math.max(2000, canvas.height * 1.2);
   if (!l) {
-    tInput.value = ''; sizeInput.value = 36;
-    document.getElementById('fSizeVal').innerText = '36';
-    document.getElementById('fontRotation').value = 0;
-    document.getElementById('fRotVal').innerText = '0°';
+    if (tInput) tInput.value = '';
+    if (sizeInput) sizeInput.value = 36;
+    const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = '36';
+    const fr = document.getElementById('fontRotation'); if (fr) fr.value = 0;
+    const frv = document.getElementById('fRotVal'); if (frv) frv.innerText = '0°';
     if (px) { px.value = 0; document.getElementById('posXVal').innerText = '0'; }
     if (py) { py.value = 0; document.getElementById('posYVal').innerText = '0'; }
     return;
@@ -1081,23 +1050,29 @@ function syncActiveInputs() {
   if (px) { px.value = Math.round(l.x); document.getElementById('posXVal').innerText = Math.round(l.x); }
   if (py) { py.value = Math.round(l.y); document.getElementById('posYVal').innerText = Math.round(l.y); }
   if (l.isImage) {
-    tInput.value = '';
-    sizeInput.value = l.width || 100;
-    document.getElementById('fSizeVal').innerText = Math.round(l.width || 100);
+    if (tInput) tInput.value = '';
+    if (sizeInput) sizeInput.value = l.width || 100;
+    const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = Math.round(l.width || 100);
   } else {
-    tInput.value = l.text;
-    sizeInput.value = l.size;
-    document.getElementById('fSizeVal').innerText = l.size;
-    const hsl = hexToHsl(l.color || '#ffffff');
-    document.getElementById('colorBrightness').value = hsl.l;
-    document.getElementById('brVal').innerText = hsl.l;
-    document.getElementById('colorHue').value = hsl.h;
-    document.getElementById('hueVal').innerText = hsl.h + '°';
-    updateColorPreview();
+    if (tInput) tInput.value = l.text;
+    if (sizeInput) sizeInput.value = l.size;
+    const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = l.size;
+    const cb = document.getElementById('colorBrightness');
+    if (cb) {
+      const hsl = hexToHsl(l.color || '#ffffff');
+      cb.value = hsl.l;
+      document.getElementById('brVal').innerText = hsl.l;
+      document.getElementById('colorHue').value = hsl.h;
+      document.getElementById('hueVal').innerText = hsl.h + '°';
+      updateColorPreview();
+    }
   }
-  const deg = Math.round((l.rotation || 0) * 180 / Math.PI);
-  document.getElementById('fontRotation').value = deg;
-  document.getElementById('fRotVal').innerText = deg + '°';
+  const fr = document.getElementById('fontRotation');
+  if (fr) {
+    const deg = Math.round((l.rotation || 0) * 180 / Math.PI);
+    fr.value = deg;
+    document.getElementById('fRotVal').innerText = deg + '°';
+  }
 }
 
 function setActivePos(axis, v) {
@@ -1124,19 +1099,19 @@ function updateActiveTextContent(v) {
 
 function setActiveFontSize(v) {
   const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) { document.getElementById('fSizeVal').innerText = v; return; }
+  if (!l) { const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v; return; }
   if (l.isImage) {
     const ratio = l.height / l.width;
     l.width = parseInt(v); l.height = Math.round(l.width * ratio);
   } else {
     l.size = parseInt(v);
   }
-  document.getElementById('fSizeVal').innerText = v;
+  const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v;
   redraw(); saveState();
 }
 
 function setActiveFontRotation(v) {
-  document.getElementById('fRotVal').innerText = v + '°';
+  const frv = document.getElementById('fRotVal'); if (frv) frv.innerText = v + '°';
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) return;
   l.rotation = parseInt(v) * Math.PI / 180;
@@ -1207,6 +1182,7 @@ function switchPanel(name, btn) {
   if (name === 'fx') { buildFxTabs(); buildFxGrids(); }
   if (name === 'advisory') buildAdvisoryGrid();
   if (name === 'bgimage') buildBgImageGrid();
+  if (name === 'bgremover') showBGRemoverPanel();
   if (name === 'crop') showCropOverlay(true); else showCropOverlay(false);
   syncActiveInputs();
 }
@@ -1232,7 +1208,8 @@ function updateSelection(el) {
 [bInput, cInput, sInput, nInput, subjAmt].forEach(input => {
   if (!input) return;
   input.addEventListener('input', () => {
-    document.getElementById('subjectAmtVal').innerText = subjAmt.value;
+    const sa = document.getElementById('subjectAmtVal');
+    if (sa) sa.innerText = subjAmt.value;
     currentTemplate = 'none';
     const tmpl = document.getElementById('templateContainer');
     if (tmpl) tmpl.querySelectorAll('.template-thumb').forEach(c => c.classList.remove('selected'));
@@ -1261,6 +1238,7 @@ function updateCropBox() {
 
 function initCropOverlay() {
   const box = document.getElementById('cropBox');
+  if (!box) return;
   box.addEventListener('pointerdown', e => {
     if (!isCropPanelActive()) return;
     e.preventDefault(); e.stopPropagation();
@@ -1404,69 +1382,6 @@ window.detectSubject = async function() {
     redraw(); saveState();
   } catch(err) { status.textContent = 'Failed: ' + err.message; btn.disabled = false; }
 };
-
-function openAIPanel() { document.getElementById('aiPanel').style.display = 'flex'; document.getElementById('aiGenStatus').textContent = ''; }
-function closeAIPanel() { document.getElementById('aiPanel').style.display = 'none'; }
-
-let aiGenShape = 'square';
-function setGenShape(shape, el) {
-  aiGenShape = shape;
-  el.parentElement.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-}
-const GEN_SHAPES = { square:{w:768,h:768}, portrait:{w:768,h:960}, story:{w:720,h:1280}, wide:{w:1280,h:720}, cover:{w:1024,h:1024} };
-
-async function generateAIImage() {
-  const prompt = document.getElementById('aiGenPrompt').value.trim();
-  const status = document.getElementById('aiGenStatus');
-  const btn = document.getElementById('aiGenBtn');
-  if (!prompt) { status.textContent = 'Please describe the image.'; return; }
-  btn.disabled = true;
-  const dims = GEN_SHAPES[aiGenShape] || GEN_SHAPES.square;
-  const seed = Math.floor(Math.random() * 1000000);
-  const models = ['flux-realism','flux','flux-pro'];
-  let blob = null;
-  for (const model of models) {
-    status.innerHTML = '<span class="spinner"></span>Generating...';
-    try {
-      const params = new URLSearchParams({ width:String(dims.w), height:String(dims.h), seed:String(seed), model, nologo:'true', referrer:'mxstudio', enhance:'true' });
-      const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?' + params.toString();
-      const r = await fetch(url, { mode:'cors' });
-      if (!r.ok) continue;
-      const b = await r.blob();
-      if (b.size < 1000) continue;
-      blob = b; break;
-    } catch(e) {}
-  }
-  if (!blob) { status.textContent = 'All models busy. Try again in 30s.'; btn.disabled = false; return; }
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const newImg = new Image();
-    newImg.onload = function() {
-      resetStudioState();
-      img = newImg; originalImageSrc = e.target.result;
-      setupCanvasFromImage(newImg);
-      imgLoaded = true;
-      currentProjectId = 'proj_' + Date.now();
-      currentProjectName = 'AI ' + prompt.slice(0, 20);
-      closeAIPanel();
-      document.getElementById('view-home').classList.remove('active');
-      document.getElementById('view-studio').classList.add('active');
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('panel-adjust').classList.add('active');
-      document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
-      syncActiveInputs(); updateTextLayersUI();
-      buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-      buildFxTabs(); buildFxGrids(); buildAdvisoryGrid(); buildBgImageGrid();
-      redraw(); saveState();
-      status.textContent = ''; btn.disabled = false;
-    };
-    newImg.onerror = function() { status.textContent = 'Failed.'; btn.disabled = false; };
-    newImg.src = e.target.result;
-  };
-  reader.readAsDataURL(blob);
-}
 
 function drawBorder() {
   if (!imgLoaded || currentBorder === 'none') return;
@@ -1655,7 +1570,133 @@ function redraw() {
   });
 }
 
-// ============ BOOT ============
+function initHomeUpload() {
+  document.getElementById('homeImageUpload').addEventListener('change', async function(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    e.target.value = '';
+    let overlay = document.getElementById('importOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'importOverlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:14px;';
+      overlay.innerHTML = '<div id="importCount" style="margin-bottom:12px;">Importing...</div><div style="width:180px;height:3px;background:#1a1a1a;border-radius:2px;overflow:hidden;"><div id="importBar" style="height:100%;width:0;background:#fff;transition:width .2s;"></div></div>';
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    let done = 0;
+    for (const file of files) {
+      await importOnePhoto(file);
+      done++;
+      document.getElementById('importBar').style.width = Math.round((done / files.length) * 100) + '%';
+      document.getElementById('importCount').textContent = 'Importing ' + done + ' / ' + files.length;
+    }
+    overlay.style.display = 'none';
+    renderProjectsList();
+  });
+}
+
+function importOnePhoto(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const newImg = new Image();
+      newImg.onload = function() {
+        const MAX = 1080; let w = newImg.width, h = newImg.height;
+        if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
+        const tmp = document.createElement('canvas');
+        tmp.width = w; tmp.height = h;
+        tmp.getContext('2d').drawImage(newImg, 0, 0, w, h);
+        const dataURL = tmp.toDataURL('image/jpeg', 0.85);
+        const id = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+        const now = new Date();
+        try {
+          localStorage.setItem('music_' + id, JSON.stringify({
+            name: 'Cover ' + (Object.keys(localStorage).filter(k => k.startsWith('music_proj_')).length + 1),
+            date: now.toISOString(), savedAt: now.getTime(),
+            image: dataURL, originalImage: dataURL,
+            canvasW: w, canvasH: h, textLayers: [],
+            brightness: 100, contrast: 100, saturation: 100, noise: 0,
+            filter: 'none', border: 'none', borderColor: '#ffffff', borderSize: 5,
+            bgColor: null, bgColorSize: 8, template: 'none',
+            fx: 'none', fxAmount: 70, subjectMode: 'none', strokeColor: '#ffffff', subjectAmount: 12,
+            bgImageFile: null, bgImageSize: 8
+          }));
+        } catch(err) {}
+        resolve();
+      };
+      newImg.onerror = () => resolve();
+      newImg.src = ev.target.result;
+    };
+    reader.onerror = () => resolve();
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadProject(key) {
+  resetStudioState();
+  const p = JSON.parse(localStorage.getItem(key));
+  currentProjectId = key.replace('music_', '');
+  currentProjectName = p.name || 'Untitled';
+  textLayers = p.textLayers || [];
+  activeLayerId = null;
+  textLayers.forEach(l => {
+    if (l.isImage && l.imageUrl) { const im = new Image(); im.src = l.imageUrl; l.image = im; }
+  });
+  bInput.value = p.brightness ?? 100; cInput.value = p.contrast ?? 100; sInput.value = p.saturation ?? 100; nInput.value = p.noise ?? 0;
+  subjAmt.value = p.subjectAmount ?? 12;
+  currentFilter = p.filter ?? 'none';
+  currentBorder = p.border ?? 'none'; currentBorderColor = p.borderColor ?? '#ffffff'; currentBorderSize = p.borderSize ?? 5;
+  currentBgColor = p.bgColor ?? null; currentBgColorSize = p.bgColorSize ?? 8;
+  currentBgImageSize = p.bgImageSize ?? 8;
+  currentBgImage = (p.bgImageFile && bgImages[p.bgImageFile]) ? bgImages[p.bgImageFile] : null;
+  currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
+  document.getElementById('fxAmount').value = currentFxAmount;
+  document.getElementById('fxVal').innerText = currentFxAmount;
+  document.getElementById('borderSizeInput').value = currentBorderSize; document.getElementById('borderSizeVal').innerText = currentBorderSize;
+  document.getElementById('bgColorSizeInput').value = currentBgColorSize; document.getElementById('bgColorSizeVal').innerText = currentBgColorSize;
+  document.getElementById('bgImgSizeInput').value = currentBgImageSize; document.getElementById('bgImgSizeVal').innerText = currentBgImageSize;
+  currentTemplate = p.template ?? 'none';
+  subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
+
+  const sourceImage = p.originalImage || p.image;
+  originalImageSrc = sourceImage;
+  img.onload = function() {
+    if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
+    imgLoaded = true;
+    buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
+    buildFxGrids(); buildAdvisoryGrid(); buildBgImageGrid();
+    saveState(); redraw();
+  };
+  img.src = sourceImage;
+
+  document.getElementById('view-home').classList.remove('active');
+  document.getElementById('view-studio').classList.add('active');
+  document.getElementById('cropOverlay').classList.remove('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-adjust').classList.add('active');
+  document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
+}
+
+function goHome() {
+  document.getElementById('view-studio').classList.remove('active');
+  document.getElementById('view-home').classList.add('active');
+  textMenu.style.display = 'none';
+  document.getElementById('cropOverlay').classList.remove('active');
+  resetStudioState();
+  renderProjectsList();
+}
+
+function resetEverything() {
+  bInput.value = 100; cInput.value = 100; sInput.value = 100; nInput.value = 0;
+  currentFilter = 'none'; currentBorder = 'none'; currentBgColor = null; currentBgImage = null;
+  currentFx = 'none'; textLayers = []; activeLayerId = null;
+  subjectMode = 'none'; personMask = null; subjectReady = false;
+  document.querySelectorAll('.template-thumb, .filter-thumb, .border-thumb, .bgcolor-swatch, .bg-item, .fx-card').forEach(c => c.classList.remove('selected'));
+  syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
+}
+
 window.onload = function() {
   const el = document.getElementById('splashScreen');
   if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
