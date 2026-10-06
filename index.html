@@ -38,7 +38,8 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .home-empty-sub { font-size:12px; color:#666; line-height:1.6; margin-bottom:22px; }
 
 .canvas-container { position:relative; display:inline-block; max-width:100%; margin:0 auto 4px auto; flex-shrink:0; }
-canvas { max-width:100%; max-height:50vh; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; }
+canvas { max-width:100%; max-height:52vh; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; transition:max-height .3s ease; }
+#view-studio.expanded canvas { max-height:44vh; }
 
 #textFloatingMenu { display:none; position:absolute; background:rgba(15,15,15,.96); padding:8px; border-radius:10px; z-index:50; transform:translate(-50%,-125%); width:150px; }
 .arrow-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:6px; }
@@ -66,7 +67,8 @@ canvas { max-width:100%; max-height:50vh; height:auto; width:auto; background:#0
 
 .panel { display:none; background:transparent; padding:8px 4px; text-align:left; font-size:12px; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; position:relative; }
 .panel.active { display:block; }
-.sub-tabs { display:flex; justify-content:flex-start; gap:14px; margin-bottom:14px; border-bottom:1px solid #1a1a1a; padding-bottom:10px; overflow-x:auto; }
+
+.sub-tabs { display:flex; justify-content:flex-start; gap:16px; margin-bottom:10px; border-bottom:1px solid #1a1a1a; padding-bottom:10px; overflow-x:auto; }
 .sub-tabs::-webkit-scrollbar { display:none; }
 .sub-tab { background:none; border:none; color:#666; font-weight:bold; font-size:11px; cursor:pointer; padding:2px 0; white-space:nowrap; flex-shrink:0; }
 .sub-tab.active { color:#fff; border-bottom:2px solid #fff; }
@@ -156,7 +158,9 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .bgremover-btn { width:100%; background:#161616; border:1px solid #242424; color:#fff; padding:24px 18px; border-radius:14px; font-size:14px; font-weight:700; cursor:pointer; text-align:center; margin-bottom:12px; display:flex; justify-content:center; align-items:center; }
 .bgremover-btn .label { display:flex; flex-direction:column; gap:3px; align-items:center; }
 .bgremover-btn .title { font-size:18px; font-weight:800; color:#ff2c2c; letter-spacing:1px; }
-.bgremover-btn:active { background:#1f1f1f; }#toast { position:fixed; left:50%; bottom:110px; transform:translateX(-50%) translateY(20px); background:#161616; color:#fff; font-size:13px; font-weight:700; padding:12px 22px; border-radius:24px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:600; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
+.bgremover-btn:active { background:#1f1f1f; }
+
+#toast { position:fixed; left:50%; bottom:110px; transform:translateX(-50%) translateY(20px); background:#161616; color:#fff; font-size:13px; font-weight:700; padding:12px 22px; border-radius:24px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:600; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 #confirmModal { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
 #confirmModal.active { display:flex; }
@@ -167,6 +171,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .confirm-btn { flex:1; border:none; padding:12px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; text-transform:uppercase; }
 .confirm-btn.keep { background:#242424; color:#fff; }
 .confirm-btn.delete { background:#ff2c2c; color:#fff; }
+
 #splashScreen { position:fixed; inset:0; background:#0a0a0a; z-index:99999; display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .3s ease; }
 #splashScreen.fade-out { opacity:0; pointer-events:none; }
 .splash-inner { display:flex; flex-direction:column; align-items:center; gap:20px; padding:20px; width:100%; }
@@ -207,7 +212,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 <div id="splashScreen">
   <div class="splash-inner">
     <svg width="48" height="48" viewBox="0 0 90 90" style="transform:rotate(-90deg);">
-   <circle cx="45" cy="45" r="38" fill="none" stroke="#0a0a0a" stroke-width="7"/>
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#0a0a0a" stroke-width="7"/>
       <circle id="splashRing" cx="45" cy="45" r="38" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
     </svg>
   </div>
@@ -255,14 +260,24 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   </div>
 
   <div id="panel-adjust" class="panel active">
-    <label class="section-label" style="margin-top:0;">TEMPLATES</label>
-    <div class="template-thumbs" id="templateContainer"></div>
-    <label class="section-label">FINE TUNE</label>
-    <div class="adjust-sliders">
-      <input type="range" id="brightness" min="0" max="200" value="100">
-      <input type="range" id="contrast" min="50" max="200" value="100">
-      <input type="range" id="saturation" min="0" max="200" value="100">
-      <input type="range" id="noise" min="0" max="100" value="0">
+    <div class="sub-tabs" id="adjustSubTabs">
+      <button class="sub-tab active" onclick="switchAdjustCat('templates', this)">TEMPLATES</button>
+      <button class="sub-tab" onclick="switchAdjustCat('presets', this)">PRESETS</button>
+      <button class="sub-tab" onclick="switchAdjustCat('sliders', this)">SLIDERS</button>
+    </div>
+    <div id="adjust-templates" class="sub-view active">
+      <div class="template-thumbs" id="templateContainer"></div>
+    </div>
+    <div id="adjust-presets" class="sub-view">
+      <div class="filter-thumbs" id="presetThumbsContainer"></div>
+    </div>
+    <div id="adjust-sliders" class="sub-view">
+      <div class="adjust-sliders">
+        <input type="range" id="brightness" min="0" max="200" value="100">
+        <input type="range" id="contrast" min="50" max="200" value="100">
+        <input type="range" id="saturation" min="0" max="200" value="100">
+        <input type="range" id="noise" min="0" max="100" value="0">
+      </div>
     </div>
   </div>
 
@@ -452,6 +467,19 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   </div>
 </div>
 
+<div id="confirmModal">
+  <div class="confirm-card">
+    <div class="confirm-title">Delete this project?</div>
+    <div class="confirm-sub">This can't be undone.</div>
+    <div class="confirm-actions">
+      <button class="confirm-btn keep" onclick="closeConfirm()">Keep</button>
+      <button class="confirm-btn delete" id="confirmDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast">Saved</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
 <script>
 const canvas = document.getElementById('canvas');
@@ -500,7 +528,6 @@ let subjectReady = false;
 let selfieSeg = null;
 let counterLocked = false;
 
-const PANEL_ORDER = ['adjust','crop','filters','fx','text','bg','border','bgremover','bgimage'];
 const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
 
 const TEMPLATES = [
@@ -556,14 +583,19 @@ function loadImage(url) {
 }
 
 async function loadCategoryConfig() {
-  try {
-    const r = await fetch('./effects.json', { cache: 'no-cache' });
-    if (!r.ok) throw new Error('not found');
-    const data = await r.json();
-    if (data && Array.isArray(data.categories)) {
-      FX_CATEGORIES = data.categories.map(c => ({ key: c.prefix, label: c.label || c.prefix, prefix: c.prefix, blend: c.blend || 'screen', max: 60, files: [] }));
-    }
-  } catch (e) {
+  const isLocal = location.protocol === 'content:' || location.protocol === 'file:';
+  if (!isLocal) {
+    try {
+      const r = await fetch('./effects.json', { cache: 'no-cache' });
+      if (r.ok) {
+        const data = await r.json();
+        if (data && Array.isArray(data.categories)) {
+          FX_CATEGORIES = data.categories.map(c => ({ key: c.prefix, label: c.label || c.prefix, prefix: c.prefix, blend: c.blend || 'screen', max: 60, files: [] }));
+        }
+      }
+    } catch (e) {}
+  }
+  if (!FX_CATEGORIES.length) {
     FX_CATEGORIES = [
       { key:'grunge', label:'Grunge', prefix:'grunge', blend:'screen', max:60, files:[] },
       { key:'lightleak', label:'Light Leak', prefix:'lightleak', blend:'screen', max:60, files:[] },
@@ -640,6 +672,41 @@ function playCount(callback) {
     }
   }
   requestAnimationFrame(step);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.innerText = msg || 'Saved';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+/* Adjust categories */
+function switchAdjustCat(name, el) {
+  const panel = el.closest('.panel');
+  panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+  panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  const sv = panel.querySelector('#adjust-' + name);
+  if (sv) sv.classList.add('active');
+  el.classList.add('active');
+  if (name === 'templates') buildTemplates();
+  if (name === 'presets') buildPresetThumbs();
+}
+
+function buildPresetThumbs() {
+  const el = document.getElementById('presetThumbsContainer');
+  if (!el) return;
+  if (!imgLoaded || !img.src) { el.innerHTML = '<div class="filter-empty">Load a photo</div>'; return; }
+  const src = img.src;
+  let html = '';
+  FILTERS.forEach((f, i) => {
+    const sel = (currentFilter === f.code) ? 'selected' : '';
+    const filterStyle = f.code === 'none' ? 'none' : f.code;
+    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
+  });
+  el.innerHTML = html;
 }
 
 /* FX */
@@ -799,9 +866,10 @@ function buildFontGrid() {
   const c = document.getElementById('fontGridContainer');
   if (!c) return;
   const fontList = ["Impact","Bebas Neue","Oswald","Montserrat","Anton","Pacifico","Permanent Marker","Russo One","Press Start 2P","Righteous","Orbitron","Bungee","Bungee Inline","Creepster","Monoton","Luckiest Guy","Rye","Satisfy","Yellowtail","Chewy","Alfa Slab One","Cinzel","Audiowide","Black Ops One","Chango","Coiny","Damion","Diplomata SC","Frijole","Gloria Hallelujah","Gugi","Knewave","Lobster","Parisienne","Poppins","Playfair Display","Special Elite","Great Vibes","Merriweather","Dancing Script"];
+  const activeFont = (textLayers.find(l => l.id === activeLayerId) || {}).font;
   let html = '';
   fontList.forEach(f => {
-    const sel = (f === 'Impact') ? 'selected' : '';
+    const sel = (f === (activeFont || 'Impact')) ? 'selected' : '';
     html += `<div class="font-pill ${sel}" style="font-family:'${f}',sans-serif" onclick="setActiveFont('${f}', this)">${f}</div>`;
   });
   c.innerHTML = html;
@@ -851,7 +919,7 @@ function applyTemplate(i, el) {
   currentFilter = t.f; currentTemplate = t.name;
   el.parentElement.querySelectorAll('.template-thumb').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  buildFilterThumbs(); redraw(); saveState();
+  buildFilterThumbs(); buildPresetThumbs(); redraw(); saveState();
 }
 
 function buildBorders() {
@@ -961,7 +1029,6 @@ function openProjectWithCount(key) {
 }
 
 let pendingDeleteKey = null;
-
 function deleteProject(key) {
   pendingDeleteKey = key;
   const modal = document.getElementById('confirmModal');
@@ -1071,7 +1138,7 @@ function startTouch(e) {
     const arr = Array.from(touches.values());
     if (activeLayerId !== null) {
       const l = textLayers.find(x => x.id === activeLayerId);
-      if (l) { gesture = { type:'text', id:l.id, startDist:touchDist(arr[0],arr[1]), startAngle:touchAngle(arr[0],arr[1]), startSize:l.size||l.width||100, startRot:l.rotation||0 }; return; }
+      if (l) { gesture = { type:'text', id:l.id, startDist:touchDist(arr[0],arr[1]), startAngle:touchAngle(arr[0],arr[1]), startSize:l.size||100, startRot:l.rotation||0 }; return; }
     }
     return;
   }
@@ -1087,7 +1154,7 @@ function startTouch(e) {
   }
   if (clickedLayer) {
     activeLayerId = clickedLayer.id;
-    syncActiveInputs(); updateTextLayersUI();
+    syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
     isDraggingText = true;
     showFloatingMenu(clickedLayer.x, clickedLayer.y);
     redraw();
@@ -1152,7 +1219,7 @@ function addNewTextLayer() {
   const id = Date.now();
   const newLayer = { id, text:"TEXT", x:canvas.width/2, y:canvas.height/2, font:"Impact", size:Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
   textLayers.push(newLayer); activeLayerId = id;
-  syncActiveInputs(); updateTextLayersUI();
+  syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
   showFloatingMenu(newLayer.x, newLayer.y);
   redraw(); saveState();
   setTimeout(() => { tInput.focus(); tInput.select(); }, 60);
@@ -1168,7 +1235,7 @@ function deleteActiveTextLayer() {
 
 function selectLayer(id) {
   activeLayerId = id;
-  syncActiveInputs(); updateTextLayersUI();
+  syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
   const l = textLayers.find(x => x.id === id);
   if (l) showFloatingMenu(l.x, l.y);
   redraw();
@@ -1285,6 +1352,7 @@ function updateActiveTextContent(v) {
     const id = Date.now();
     l = { id, text:v, x:canvas.width/2, y:canvas.height/2, font:"Impact", size:Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
     textLayers.push(l); activeLayerId = id; showFloatingMenu(l.x, l.y);
+    buildFontGrid();
   } else { l.text = v; }
   updateTextLayersUI(); redraw(); saveState();
 }
@@ -1340,17 +1408,7 @@ function saveProjectToHome() {
   } catch(e) { alert('Storage full.'); return; }
   undoStack = []; redoStack = []; updateHistoryButtons();
   showToast('Saved');
-  showToast('Saved');
   playCount(() => { goHome(); });
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.innerText = msg || 'Saved';
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 1500);
 }
 
 function saveImage() {
@@ -1370,7 +1428,6 @@ function saveImage() {
     if (!blob) { showToast('Save failed'); return; }
     const file = new File([blob], filename, { type: 'image/png' });
 
-    // Try native share sheet first (works on Android/iOS)
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: filename });
@@ -1381,7 +1438,6 @@ function saveImage() {
       }
     }
 
-    // Fallback — blob download
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1399,6 +1455,11 @@ function saveImage() {
 
 /* Panel switching */
 function switchPanel(name, btn) {
+  const view = document.getElementById('view-studio');
+  if (view) {
+    if (name === 'adjust') view.classList.remove('expanded');
+    else view.classList.add('expanded');
+  }
   if (name === 'crop') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
@@ -1413,7 +1474,7 @@ function switchPanel(name, btn) {
   if (btn) btn.classList.add('active');
   if (name === 'filters') buildFilterThumbs();
   if (name === 'border') buildBorders();
-  if (name === 'adjust') buildTemplates();
+  if (name === 'adjust') { buildTemplates(); buildPresetThumbs(); }
   if (name === 'color') buildBgColors();
   if (name === 'bgimage') buildBgImageGrid();
   if (name === 'fx') { buildFxTabs(); buildFxGrids(); }
@@ -1428,6 +1489,7 @@ function switchSubTab(name, el) {
   if (sv) sv.classList.add('active');
   el.classList.add('active');
   if (name === 'basic' || name === 'layers') syncActiveInputs();
+  if (name === 'font') buildFontGrid();
 }
 
 function setSubjectMode(mode, el) { subjectMode = mode; updateSelection(el); redraw(); saveState(); }
@@ -1483,7 +1545,6 @@ function cancelCropMode() {
 
 function applyCropMode() {
   if (!imgLoaded) return;
-  // Save pre-crop state only the first time
   if (preCropImageSrc === null) {
     preCropImageSrc = canvas.toDataURL('image/png');
     preCropCanvasW = canvas.width;
@@ -1639,7 +1700,7 @@ window.detectSubject = async function() {
   const status = document.getElementById('subjectStatus');
   const btn = document.getElementById('detectBtn');
   if (!imgLoaded) { status.textContent = 'Upload an image first.'; return; }
-  if (typeof SelfieSegmentation === 'undefined') { status.textContent = 'Model failed to load.'; return; }
+  if (typeof SelfieSegmentation === 'undefined') { status.textContent = 'Model failed to load — tap again in a moment.'; return; }
   btn.disabled = true; status.textContent = 'Loading model...';
   try {
     if (!selfieSeg) {
@@ -1672,7 +1733,7 @@ window.detectSubject = async function() {
   } catch(err) { status.textContent = 'Failed: ' + err.message; btn.disabled = false; }
 };
 
-/* Border + Cover + Selection */
+/* Border / Cover / Selection */
 function drawBorder() {
   if (!imgLoaded || currentBorder === 'none') return;
   const w = canvas.width, h = canvas.height;
@@ -1935,8 +1996,13 @@ function loadProject(key) {
     if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
     imgLoaded = true;
     buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-    buildFxGrids(); buildBgImageGrid();
-    saveState(); redraw();
+    buildFxGrids(); buildBgImageGrid(); buildFontGrid(); buildPresetThumbs();
+    redraw();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
+    }
+    setTimeout(() => { if (imgLoaded) redraw(); }, 400);
+    saveState();
   };
   img.src = sourceImage;
   document.getElementById('view-home').classList.remove('active');
@@ -1945,6 +2011,7 @@ function loadProject(key) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-adjust').classList.add('active');
   document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
+  document.getElementById('view-studio').classList.remove('expanded');
 }
 
 function goHome() {
@@ -1968,21 +2035,25 @@ function resetEverything() {
 }
 
 /* Boot */
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', function() {
   const el = document.getElementById('splashScreen');
   if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
   (async () => {
     buildFontGrid(); buildTemplates(); buildBorders(); buildBgColors();
+    buildPresetThumbs();
     updateTextLayersUI(); initHomeUpload(); renderProjectsList();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
+    }
     setTimeout(() => {
-  try { if (typeof preloadEffects === 'function') preloadEffects(); } catch (e) { console.warn(e); }
-}, 2000);
+      try { if (typeof preloadEffects === 'function') preloadEffects(); } catch (e) { console.warn(e); }
+    }, 2000);
     setTimeout(() => {
       const s = document.getElementById('splashScreen');
       if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 300); }
     }, 400);
   })();
-};
+});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -1990,17 +2061,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<div id="toast">Saved</div>
-<div id="confirmModal">
-  <div class="confirm-card">
-    <div class="confirm-title">Delete this project?</div>
-    <div class="confirm-sub">This can't be undone.</div>
-    <div class="confirm-actions">
-      <button class="confirm-btn keep" onclick="closeConfirm()">Keep</button>
-      <button class="confirm-btn delete" id="confirmDeleteBtn">Delete</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
