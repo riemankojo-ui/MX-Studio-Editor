@@ -10,16 +10,16 @@
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none; position:fixed; top:0; left:0; margin:0; padding:0; background:#0a0a0a; color:#fff; font-family:-apple-system,'Segoe UI',sans-serif; text-align:center; touch-action:manipulation; }
 .view { display:none; }
-.view.active { display:flex; flex-direction:column; height:100vh; padding:8px 8px 92px 8px; overflow:hidden; }
+.view.active { display:flex; flex-direction:column; height:100vh; padding:8px 8px 88px 8px; overflow:hidden; }
 
-.home-container { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:20px 14px 30px 14px; max-width:520px; margin:0 auto; width:100%; }
-.home-top-bar { padding:0 0 20px 0; }
-.home-new-btn { width:100%; background:linear-gradient(135deg, #FFA55C 0%, #FF6B6B 50%, #FF4B7B 100%); color:#fff; border:none; padding:28px 20px; border-radius:16px; font-size:16px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; box-shadow:0 8px 24px rgba(255,107,107,.35); transition:transform .1s ease; }
+.home-container { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 14px 24px 14px; max-width:520px; margin:0 auto; width:100%; }
+.home-top-bar { padding:0 0 16px 0; }
+.home-new-btn { width:100%; background:linear-gradient(135deg, #FFA55C 0%, #FF6B6B 50%, #FF4B7B 100%); color:#fff; border:none; padding:16px 16px; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:8px; box-shadow:0 6px 18px rgba(255,107,107,.35); transition:transform .1s ease; }
 .home-new-btn:active { transform:scale(.98); }
-.home-new-btn .plus-icon { width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; }
+.home-new-btn .plus-icon { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; }
 .home-new-btn svg { stroke:#fff; }
 
-.section-title { font-size:20px; font-weight:800; color:#fff; padding:4px 0 14px 0; text-align:left; }
+.section-title { font-size:16px; font-weight:800; color:#fff; padding:4px 0 10px 0; text-align:left; }
 
 .projects-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:0 0 20px 0; }
 .project-card { cursor:pointer; position:relative; }
@@ -32,13 +32,13 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .project-card-del { position:absolute; top:4px; right:4px; width:22px; height:22px; background:rgba(0,0,0,.7); border:none; border-radius:50%; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
 .project-card-del svg { stroke:#fff; }
 
-.home-empty { padding:60px 20px; text-align:center; }
-.home-empty-icon { font-size:56px; margin-bottom:18px; opacity:.55; }
-.home-empty-title { font-size:22px; letter-spacing:2px; color:#fff; margin-bottom:8px; font-weight:900; }
-.home-empty-sub { font-size:13px; color:#666; line-height:1.6; margin-bottom:26px; }
+.home-empty { padding:50px 20px; text-align:center; }
+.home-empty-icon { font-size:48px; margin-bottom:14px; opacity:.55; }
+.home-empty-title { font-size:18px; letter-spacing:2px; color:#fff; margin-bottom:8px; font-weight:900; }
+.home-empty-sub { font-size:12px; color:#666; line-height:1.6; margin-bottom:22px; }
 
 .canvas-container { position:relative; display:inline-block; max-width:100%; margin:0 auto 4px auto; flex-shrink:0; }
-canvas { max-width:100%; max-height:52vh; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; }
+canvas { max-width:100%; max-height:50vh; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; }
 #cropOverlay { position:absolute; inset:0; display:none; z-index:40; pointer-events:none; }
 #cropOverlay.active { display:block; pointer-events:auto; }
 #cropBox { position:absolute; border:2px solid #fff; box-shadow:0 0 0 9999px rgba(0,0,0,0.7); cursor:move; touch-action:none; pointer-events:auto; }
@@ -57,22 +57,23 @@ canvas { max-width:100%; max-height:52vh; height:auto; width:auto; background:#0
 .menu-action-btn.delete { background:#ff2c2c; }
 .menu-action-btn.center-btn { background:#333; }
 
-.top-bar { display:flex; justify-content:space-between; align-items:center; padding:6px 4px; margin-bottom:4px; gap:6px; flex-shrink:0; }
+.top-bar { display:flex; justify-content:space-between; align-items:center; padding:4px 4px; margin-bottom:2px; gap:6px; flex-shrink:0; }
 .top-tools { display:flex; gap:4px; align-items:center; }
-.icon-btn { background:none; border:none; color:#fff; cursor:pointer; padding:8px; display:inline-flex; }
-.icon-btn svg { stroke:currentColor; width:24px; height:24px; }
+.icon-btn { background:none; border:none; color:#fff; cursor:pointer; padding:6px; display:inline-flex; }
+.icon-btn svg { stroke:currentColor; width:22px; height:22px; }
 .icon-btn:disabled { color:#333; cursor:not-allowed; }
 .icon-action { background:none; border:none; color:#fff; cursor:pointer; padding:6px; display:inline-flex; }
 .icon-action svg { stroke:#fff; }
 
-.bottom-nav { display:flex; justify-content:flex-start; align-items:stretch; background:#050505; border-top:1px solid #1a1a1a; padding:8px 0 10px; position:fixed; bottom:0; left:0; width:100%; z-index:100; overflow-x:auto; }
+/* ==== BIG bottom nav ==== */
+.bottom-nav { display:flex; justify-content:flex-start; align-items:stretch; background:#050505; border-top:1px solid #1a1a1a; padding:6px 0 8px; position:fixed; bottom:0; left:0; width:100%; z-index:100; overflow-x:auto; }
 .bottom-nav::-webkit-scrollbar { display:none; }
-.nav-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; flex:1 0 74px; background:none; border:none; color:#ffffff; font-size:9px; font-weight:800; cursor:pointer; padding:6px 4px; text-transform:uppercase; letter-spacing:.3px; opacity:.75; transition:opacity .15s ease, transform .15s ease; }
+.nav-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; flex:1 0 72px; background:none; border:none; color:#ffffff; font-size:9px; font-weight:800; cursor:pointer; padding:6px 4px; text-transform:uppercase; letter-spacing:.3px; opacity:.72; transition:opacity .15s ease, transform .15s ease; }
 .nav-btn svg { stroke:#ffffff; width:24px; height:24px; }
 .nav-btn.active { color:#ffffff; opacity:1; transform:translateY(-2px); }
 .nav-btn.active svg { stroke:#ffffff; }
 
-.panel { display:none; background:transparent; padding:10px 4px; text-align:left; font-size:12px; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; }
+.panel { display:none; background:transparent; padding:8px 4px; text-align:left; font-size:12px; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; position:relative; }
 .panel.active { display:block; }
 .sub-tabs { display:flex; justify-content:flex-start; gap:14px; margin-bottom:14px; border-bottom:1px solid #1a1a1a; padding-bottom:10px; overflow-x:auto; }
 .sub-tabs::-webkit-scrollbar { display:none; }
@@ -86,8 +87,8 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px;
 input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; border:none; }
 .adjust-sliders { display:flex; flex-direction:column; gap:20px; padding:8px 4px; }
 
-.h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .sticker-grid, .bg-grid { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
-.h-scroll::-webkit-scrollbar, .filter-thumbs::-webkit-scrollbar, .template-thumbs::-webkit-scrollbar, .border-thumbs::-webkit-scrollbar, .color-row::-webkit-scrollbar, .bgcolor-row::-webkit-scrollbar, .sticker-grid::-webkit-scrollbar, .bg-grid::-webkit-scrollbar { display:none; }
+.h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .sticker-grid, .bg-grid, .fx-grid { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
+.h-scroll::-webkit-scrollbar, .filter-thumbs::-webkit-scrollbar, .template-thumbs::-webkit-scrollbar, .border-thumbs::-webkit-scrollbar, .color-row::-webkit-scrollbar, .bgcolor-row::-webkit-scrollbar, .sticker-grid::-webkit-scrollbar, .bg-grid::-webkit-scrollbar, .fx-grid::-webkit-scrollbar { display:none; }
 .sticker-grid { flex-wrap:wrap; }
 .bg-grid { flex-wrap:wrap; }
 .h-card { flex:0 0 auto; padding:8px 16px; background:#161616; border:none; border-radius:18px; font-size:11px; font-weight:600; color:#aaa; cursor:pointer; white-space:nowrap; }
@@ -113,6 +114,12 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .border-thumb.selected .border-thumb-label { color:#fff; }
 .bt-inner { position:absolute; inset:0; background:#333; }
 
+.fx-card { flex:0 0 auto; width:68px; cursor:pointer; text-align:center; }
+.fx-card-preview { width:68px; height:68px; border-radius:8px; background:#0a0a0a; position:relative; overflow:hidden; border:1px solid #1f1f1f; }
+.fx-card.selected .fx-card-preview { box-shadow:0 0 0 2px #00d4ff; }
+.fx-card-label { font-size:9px; color:#888; margin-top:4px; display:block; font-weight:700; }
+.fx-card.selected .fx-card-label { color:#00d4ff; }
+
 .sticker-item { flex:0 0 auto; width:84px; height:84px; border-radius:10px; background:#111; overflow:hidden; cursor:pointer; display:flex; align-items:center; justify-content:center; border:2px solid transparent; }
 .sticker-item.selected { border-color:#fff; }
 .sticker-item img { max-width:90%; max-height:90%; object-fit:contain; }
@@ -136,9 +143,32 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .text-layer-item { display:flex; justify-content:space-between; align-items:center; background:#141414; padding:8px 10px; border-radius:6px; margin-bottom:5px; }
 .text-layer-item.active { background:#333; }
 
-.add-text-btn { background:#fff; color:#000; border:none; padding:15px; width:100%; border-radius:10px; font-weight:bold; cursor:pointer; font-size:15px; margin-top:10px; letter-spacing:1px; }
 input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-box; padding:11px; background:#141414; border:none; border-radius:8px; margin-top:4px; }
 .section-label { font-size:10px; color:#666; margin:14px 0 4px; display:block; letter-spacing:.6px; font-weight:700; }
+
+.corner-btn {
+  position:absolute;
+  right:12px;
+  bottom:12px;
+  background:#ffffff;
+  color:#000;
+  border:none;
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  font-size:24px;
+  font-weight:900;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.6);
+  z-index:20;
+  line-height:1;
+  transition:transform .1s ease;
+}
+.corner-btn:active { transform:scale(.92); }
+.corner-btn.small { width:44px; height:44px; font-size:11px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; }
 
 .crop-toolbar { display:flex; gap:8px; padding:10px 4px; justify-content:center; flex-wrap:wrap; }
 .crop-tool { background:#161616; color:#ccc; border:none; padding:10px 16px; border-radius:22px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; }
@@ -170,7 +200,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .bgremover-btn.best .title { color:#ff2c2c; }
 .bgremover-btn:active { background:#1f1f1f; }
 
-#splashScreen { position:fixed; inset:0; background:#0a0a0a; z-index:99999; display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .4s ease; }
+#splashScreen { position:fixed; inset:0; background:#0a0a0a; z-index:99999; display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .3s ease; }
 #splashScreen.fade-out { opacity:0; pointer-events:none; }
 .splash-inner { display:flex; flex-direction:column; align-items:center; gap:20px; padding:20px; width:100%; }
 
@@ -187,7 +217,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 
 <div id="splashScreen">
   <div class="splash-inner">
-    <svg width="90" height="90" viewBox="0 0 90 90" style="transform:rotate(-90deg);">
+    <svg width="80" height="80" viewBox="0 0 90 90" style="transform:rotate(-90deg);">
       <circle cx="45" cy="45" r="38" fill="none" stroke="#1a1a1a" stroke-width="5"/>
       <circle id="splashRing" cx="45" cy="45" r="38" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
     </svg>
@@ -208,9 +238,9 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
       <button class="icon-btn" id="redoBtn" onclick="redo()" disabled><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016.36 2.64L21 13"/></svg></button>
     </div>
     <div style="display:flex;gap:4px;align-items:center;">
-      <button class="icon-action" onclick="resetEverything()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 8a9 9 0 1017 5"/></svg></button>
-      <button class="icon-action" onclick="saveProjectToHome()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
-      <button class="icon-action" onclick="saveImage()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+      <button class="icon-action" onclick="resetEverything()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 8a9 9 0 1017 5"/></svg></button>
+      <button class="icon-action" onclick="saveProjectToHome()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+      <button class="icon-action" onclick="saveImage()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
     </div>
   </div>
 
@@ -277,22 +307,30 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <div class="filter-thumbs" id="filterThumbsContainer" style="margin-top:8px;"></div>
   </div>
 
+  <div id="panel-fx" class="panel">
+    <div class="sub-tabs" id="fxTabBar"></div>
+    <div id="fxGrids"></div>
+    <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
+    <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
+  </div>
+
   <div id="panel-text" class="panel">
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="switchSubTab('layers', this)">TEXT</button>
       <button class="sub-tab" onclick="switchSubTab('font', this)">FONTS</button>
       <button class="sub-tab" onclick="switchSubTab('basic', this)">STYLE</button>
+      <button class="sub-tab" onclick="switchSubTab('featured', this)">EFFECTS</button>
     </div>
-    <div id="subtab-layers" class="sub-view active">
+    <div id="subtab-layers" class="sub-view active" style="padding-bottom:70px;">
       <input type="text" id="textContent" placeholder="Type here..." oninput="updateActiveTextContent(this.value)">
       <div id="textLayersList" class="text-layers-list"></div>
-      <button class="add-text-btn" onclick="addNewTextLayer()">+ ADD TEXT</button>
+      <button class="corner-btn" onclick="addNewTextLayer()">+</button>
     </div>
     <div id="subtab-font" class="sub-view">
       <label>Select Font (40):</label>
       <div class="font-grid" id="fontGridContainer"></div>
     </div>
-    <div id="subtab-basic" class="sub-view">
+    <div id="subtab-basic" class="sub-view" style="padding-bottom:70px;">
       <label>Text Color:</label>
       <div class="color-row">
         <div class="color-circle" style="background:#ffffff;" onclick="setActiveTextColor('#ffffff',this)"></div>
@@ -337,6 +375,14 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
       </div>
       <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:12px;width:100%;justify-content:center;">DELETE THIS LAYER</button>
     </div>
+    <div id="subtab-featured" class="sub-view">
+      <div class="h-scroll">
+        <div class="h-card selected" onclick="setActiveTextStyle('normal', this)">Standard</div>
+        <div class="h-card" onclick="setActiveTextStyle('stroke', this)">Outline</div>
+        <div class="h-card" onclick="setActiveTextStyle('shadow', this)">Shadow</div>
+        <div class="h-card" onclick="setActiveTextStyle('glow', this)">Glow</div>
+      </div>
+    </div>
   </div>
 
   <div id="panel-color" class="panel">
@@ -347,8 +393,10 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   </div>
 
   <div id="panel-bg" class="panel">
-    <div id="subjectStatus" style="font-size:11px;color:#666;margin-bottom:10px;line-height:1.5;">Tap DETECT SUBJECT. First run downloads a small model (5-15 sec).</div>
-    <button id="detectBtn" onclick="detectSubject()" style="background:#fff;color:#000;border:none;padding:12px;width:100%;border-radius:10px;font-weight:bold;font-size:13px;cursor:pointer;">DETECT SUBJECT</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
+      <div id="subjectStatus" style="font-size:11px;color:#666;line-height:1.5;flex:1;">Tap DETECT. First run downloads a small model.</div>
+      <button class="corner-btn small" style="position:static;flex-shrink:0;" id="detectBtn" onclick="detectSubject()">Detect</button>
+    </div>
     <label class="section-label">Effect</label>
     <div class="h-scroll">
       <div class="h-card selected" onclick="setSubjectMode('none', this)">None</div>
@@ -410,6 +458,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <button class="nav-btn active" data-panel="adjust" onclick="switchPanel('adjust', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Adjust</span></button>
     <button class="nav-btn" data-panel="crop" onclick="switchPanel('crop', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/></svg><span>Crop</span></button>
     <button class="nav-btn" data-panel="filters" onclick="switchPanel('filters', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg><span>Filter</span></button>
+    <button class="nav-btn" data-panel="fx" onclick="switchPanel('fx', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M19 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg><span>Effects</span></button>
     <button class="nav-btn" data-panel="text" onclick="switchPanel('text', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg><span>Text</span></button>
     <button class="nav-btn" data-panel="bg" onclick="switchPanel('bg', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M5 19a7 7 0 0114 0"/></svg><span>Subject</span></button>
     <button class="nav-btn" data-panel="border" onclick="switchPanel('border', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg><span>Border</span></button>
@@ -449,6 +498,8 @@ let currentBgImageX = 0;
 let currentBgImageY = 0;
 let currentProjectId = null;
 let currentProjectName = '';
+let currentFx = 'none';
+let currentFxAmount = 70;
 let advDefaultSize = 35;
 let textLayers = [];
 let activeLayerId = null;
@@ -465,7 +516,7 @@ let crop = { x:0, y:0, w:1, h:1 };
 let cropDrag = null;
 let counterLocked = false;
 
-const PANEL_ORDER = ['adjust','crop','filters','text','bg','border','bgremover','bgimage','advisory'];
+const PANEL_ORDER = ['adjust','crop','filters','fx','text','bg','border','bgremover','bgimage','advisory'];
 
 const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
 
@@ -505,8 +556,11 @@ const BG_LABELS = {
 };
 
 const EFFECTS_BASE = './effects/';
+let FX_CATEGORIES = [];
+let currentFxTab = 'grunge';
 const ADVISORY_CONFIG = { prefix:'advisory', max:12, files:[] };
 const BG_CONFIG = { prefix:'background', max:20, files:[] };
+const fxImages = {};
 const advisoryImages = {};
 const bgImages = {};
 
@@ -520,6 +574,28 @@ function loadImage(url) {
   });
 }
 
+async function loadCategoryConfig() {
+  try {
+    const r = await fetch('./effects.json', { cache: 'no-cache' });
+    if (!r.ok) throw new Error('not found');
+    const data = await r.json();
+    if (data && Array.isArray(data.categories)) {
+      FX_CATEGORIES = data.categories.map(c => ({ key: c.prefix, label: c.label || c.prefix, prefix: c.prefix, blend: c.blend || 'screen', max: 60, files: [] }));
+    }
+  } catch (e) {
+    FX_CATEGORIES = [
+      { key:'grunge', label:'Grunge', prefix:'grunge', blend:'screen', max:60, files:[] },
+      { key:'lightleak', label:'Light Leak', prefix:'lightleak', blend:'screen', max:60, files:[] },
+      { key:'fire', label:'Fire', prefix:'fire', blend:'screen', max:60, files:[] },
+      { key:'noise', label:'Noise', prefix:'noise', blend:'overlay', max:60, files:[] },
+      { key:'streetlight', label:'Street Light', prefix:'streetlight', blend:'screen', max:60, files:[] },
+      { key:'af', label:'AF', prefix:'af', blend:'screen', max:60, files:[] },
+      { key:'heart', label:'Heart', prefix:'heart', blend:'normal', max:60, files:[] }
+    ];
+  }
+  if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) currentFxTab = FX_CATEGORIES[0].key;
+}
+
 async function probeOne(base) {
   let im = await loadImage(EFFECTS_BASE + base + '.jpg');
   if (im) return { fname: base + '.jpg', im };
@@ -528,6 +604,14 @@ async function probeOne(base) {
   im = await loadImage(EFFECTS_BASE + base + '.png');
   if (im) return { fname: base + '.png', im };
   return null;
+}
+
+async function probeCategory(cat) {
+  const promises = [];
+  for (let i = 1; i <= cat.max; i++) promises.push(probeOne(cat.prefix + i).then(r => r ? { base: cat.prefix + i, ...r } : null));
+  const results = await Promise.all(promises);
+  cat.files = results.filter(r => r !== null);
+  cat.files.forEach(r => { fxImages[cat.key + ':' + r.fname] = r.im; });
 }
 
 async function probeAdvisory() {
@@ -556,7 +640,14 @@ async function probeBackgrounds() {
 }
 
 async function preloadEffects() {
-  await Promise.all([ probeAdvisory(), probeBackgrounds() ]);
+  await loadCategoryConfig();
+  await Promise.all([
+    ...FX_CATEGORIES.map(c => probeCategory(c)),
+    probeAdvisory(),
+    probeBackgrounds()
+  ]);
+  buildFxTabs();
+  buildFxGrids();
   buildAdvisoryGrid();
   buildBgImageGrid();
 }
@@ -569,7 +660,7 @@ function playCount(callback) {
   if (!el) { counterLocked = false; if (callback) callback(); return; }
   el.classList.remove('fade-out');
   el.style.display = 'flex';
-  const DURATION = 4000;
+  const DURATION = 1500;
   const CIRC = 238.76;
   const start = performance.now();
   let cb = false;
@@ -584,15 +675,102 @@ function playCount(callback) {
       if (!cb && callback) { try { callback(); } catch(e){} }
       setTimeout(() => {
         el.classList.add('fade-out');
-        setTimeout(() => { el.style.display = 'none'; counterLocked = false; }, 400);
-      }, 150);
+        setTimeout(() => { el.style.display = 'none'; counterLocked = false; }, 300);
+      }, 100);
     }
   }
   requestAnimationFrame(step);
 }
 
 /* ============================================================
-   SWIPE GESTURES — slide between panels
+   FX (EFFECTS TAB)
+   ============================================================ */
+
+function buildFxTabs() {
+  const bar = document.getElementById('fxTabBar');
+  if (!bar) return;
+  let html = '';
+  FX_CATEGORIES.forEach(cat => {
+    const sel = (currentFxTab === cat.key) ? 'active' : '';
+    html += `<button class="sub-tab ${sel}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
+  });
+  bar.innerHTML = html;
+}
+
+function buildFxGrids() {
+  const container = document.getElementById('fxGrids');
+  if (!container) return;
+  let html = '';
+  FX_CATEGORIES.forEach(cat => {
+    const active = (currentFxTab === cat.key) ? 'active' : '';
+    html += `<div id="fx-tab-${cat.key}" class="sub-view ${active}"><div class="fx-grid" id="fxGrid-${cat.key}"></div></div>`;
+  });
+  container.innerHTML = html;
+  FX_CATEGORIES.forEach(cat => buildFxGrid(cat.key));
+}
+
+function switchFxTab(key, el) {
+  currentFxTab = key;
+  const panel = el.closest('.panel');
+  panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+  panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('fx-tab-' + key).classList.add('active');
+  el.classList.add('active');
+}
+
+function buildFxGrid(catKey) {
+  const cat = FX_CATEGORIES.find(c => c.key === catKey);
+  if (!cat) return;
+  const g = document.getElementById('fxGrid-' + catKey);
+  if (!g) return;
+  let html = `<div class="fx-card ${currentFx === catKey + ':none' ? 'selected' : ''}" onclick="setFx('${catKey}:none', this)">
+    <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <span class="fx-card-label">Off</span>
+  </div>`;
+  if (!cat.files || !cat.files.length) html += `<div class="filter-empty">No files</div>`;
+  else {
+    cat.files.forEach(f => {
+      const key = catKey + ':' + f.fname;
+      const sel = (currentFx === key) ? 'selected' : '';
+      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${f.base}</span></div>`;
+    });
+  }
+  g.innerHTML = html;
+}
+
+function setFx(key, el) {
+  currentFx = key;
+  document.querySelectorAll('.fx-card').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  redraw(); saveState();
+}
+
+function setFxAmount(v) {
+  currentFxAmount = parseInt(v);
+  const fv = document.getElementById('fxVal'); if (fv) fv.innerText = v;
+  redraw(); saveState();
+}
+
+function drawFxLayer() {
+  if (!imgLoaded || currentFx === 'none' || currentFxAmount === 0) return;
+  const parts = currentFx.split(':');
+  const catKey = parts[0], fname = parts[1];
+  if (fname === 'none') return;
+  const im = fxImages[catKey + ':' + fname];
+  if (!im) return;
+  const cat = FX_CATEGORIES.find(c => c.key === catKey);
+  const a = currentFxAmount / 100;
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.globalCompositeOperation = (cat && cat.blend) ? cat.blend : 'screen';
+  drawCover(0, 0, canvas.width, canvas.height, im);
+  ctx.restore();
+}
+
+/* ============================================================
+   SWIPE GESTURES
    ============================================================ */
 
 let swipeStartX = 0, swipeStartY = 0, swipeStartTime = 0, swipeActive = false;
@@ -604,7 +782,25 @@ function initSwipeGestures() {
     if (e.touches.length !== 1) { swipeActive = false; return; }
     const t = e.touches[0];
     const target = e.target;
-    if (target.closest('.canvas-container') || target.closest('.bottom-nav') || target.closest('input') || target.closest('.crop-tool') || target.closest('.tool-pill')) {
+    // Ignore swipes that start on interactive / scrollable things
+    if (
+      target.closest('.canvas-container') ||
+      target.closest('.bottom-nav') ||
+      target.closest('input') ||
+      target.closest('.crop-tool') ||
+      target.closest('.corner-btn') ||
+      target.closest('.h-scroll') ||
+      target.closest('.fx-grid') ||
+      target.closest('.filter-thumbs') ||
+      target.closest('.template-thumbs') ||
+      target.closest('.border-thumbs') ||
+      target.closest('.color-row') ||
+      target.closest('.bgcolor-row') ||
+      target.closest('.sticker-grid') ||
+      target.closest('.bg-grid') ||
+      target.closest('.sub-tabs') ||
+      target.closest('.sub-tab')
+    ) {
       swipeActive = false; return;
     }
     swipeStartX = t.clientX; swipeStartY = t.clientY;
@@ -638,9 +834,7 @@ function initSwipeGestures() {
     const nextKey = PANEL_ORDER[nextIdx];
     const btn = document.querySelector('.nav-btn[data-panel="' + nextKey + '"]');
     switchPanel(nextKey, btn);
-    if (btn) {
-      btn.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
-    }
+    if (btn) btn.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
   }, { passive:true });
 }
 
@@ -748,42 +942,6 @@ function trimActiveSticker() {
   trimmed.src = tc.toDataURL('image/png');
 }
 
-async function removeBgFast() {
-  if (!imgLoaded) { alert('Load a photo first'); return; }
-  if (typeof SelfieSegmentation === 'undefined') { alert('Model not loaded'); return; }
-  playCount(async () => {
-    try {
-      if (!selfieSeg) {
-        selfieSeg = new SelfieSegmentation({ locateFile:f => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/${f}` });
-        selfieSeg.setOptions({ modelSelection:1 });
-      }
-      const result = await new Promise((resolve, reject) => {
-        const t = setTimeout(() => reject(new Error('Timed out')), 30000);
-        selfieSeg.onResults(r => { clearTimeout(t); resolve(r); });
-        selfieSeg.send({ image: img });
-      });
-      const c = document.createElement('canvas');
-      c.width = canvas.width; c.height = canvas.height;
-      const cx = c.getContext('2d');
-      cx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const mask = document.createElement('canvas');
-      mask.width = canvas.width; mask.height = canvas.height;
-      const mctx = mask.getContext('2d');
-      mctx.drawImage(result.segmentationMask, 0, 0, canvas.width, canvas.height);
-      const id = mctx.getImageData(0, 0, canvas.width, canvas.height);
-      const d = id.data;
-      for (let i = 0; i < d.length; i += 4) d[i+3] = d[i];
-      mctx.putImageData(id, 0, 0);
-      cx.globalCompositeOperation = 'destination-in';
-      cx.drawImage(mask, 0, 0);
-      const url = c.toDataURL('image/png');
-      const newImg = new Image();
-      newImg.onload = () => { img = newImg; originalImageSrc = url; imgLoaded = true; currentBgColor = '#ffffff'; buildBgColors(); redraw(); saveState(); };
-      newImg.src = url;
-    } catch (e) { alert('Fast failed: ' + e.message); }
-  });
-}
-
 async function removeBgBest() {
   if (!imgLoaded) { alert('Load a photo first'); return; }
   playCount(async () => {
@@ -793,13 +951,13 @@ async function removeBgBest() {
       tmp.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
       const dataUrl = tmp.toDataURL('image/jpeg', 0.9);
       const r = await fetch('/api/remove-bg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: dataUrl }) });
-      if (!r.ok) { const err = await r.json().catch(() => ({})); alert('Best failed: ' + (err.error || r.status)); return; }
+      if (!r.ok) { const err = await r.json().catch(() => ({})); alert('Failed: ' + (err.error || r.status)); return; }
       const data = await r.json();
       if (!data.image) { alert('No image returned'); return; }
       const newImg = new Image();
       newImg.onload = () => { img = newImg; originalImageSrc = data.image; canvas.width = newImg.width; canvas.height = newImg.height; imgLoaded = true; currentBgColor = '#ffffff'; buildBgColors(); redraw(); saveState(); };
       newImg.src = data.image;
-    } catch (e) { alert('Best failed: ' + e.message); }
+    } catch (e) { alert('Failed: ' + e.message); }
   });
 }
 
@@ -956,7 +1114,7 @@ function renderProjectsList() {
   });
   items.sort((a, b) => b.timestamp - a.timestamp);
 
-  let html = `<div class="home-top-bar"><button class="home-new-btn" onclick="document.getElementById('homeImageUpload').click()"><div class="plus-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>New Project</span></button></div>`;
+  let html = `<div class="home-top-bar"><button class="home-new-btn" onclick="document.getElementById('homeImageUpload').click()"><div class="plus-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>New Project</span></button></div>`;
 
   if (items.length === 0) {
     html += `<div class="home-empty"><div class="home-empty-icon">🎨</div><div class="home-empty-title">START YOUR FIRST COVER</div><div class="home-empty-sub">Upload a photo and make something real.</div></div>`;
@@ -993,6 +1151,7 @@ function resetStudioState() {
   currentFilter = 'none'; currentBorder = 'none'; currentBorderColor = '#ffffff'; currentBorderSize = 5;
   currentTemplate = 'none'; currentBgColor = null; currentBgImage = null;
   currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
+  currentFx = 'none'; currentFxAmount = 70;
   crop = { x:0, y:0, w:1, h:1 };
   subjectMode = 'none'; personMask = null; subjectReady = false;
   undoStack = []; redoStack = []; updateHistoryButtons();
@@ -1369,7 +1528,7 @@ function saveProjectToHome() {
       bgColor: currentBgColor, bgColorSize: currentBgColorSize,
       bgImageFile: bgFile, bgImageSize: currentBgImageSize,
       bgImageZoom: currentBgImageZoom, bgImageX: currentBgImageX, bgImageY: currentBgImageY,
-      template: currentTemplate,
+      template: currentTemplate, fx: currentFx, fxAmount: currentFxAmount,
       subjectMode, strokeColor, subjectAmount: subjAmt.value
     }));
   } catch(e) { alert('Storage full.'); return; }
@@ -1397,9 +1556,7 @@ function switchPanel(name, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const panel = document.getElementById('panel-' + name);
   if (panel) panel.classList.add('active');
-  if (!btn) {
-    btn = document.querySelector('.nav-btn[data-panel="' + name + '"]');
-  }
+  if (!btn) btn = document.querySelector('.nav-btn[data-panel="' + name + '"]');
   if (btn) btn.classList.add('active');
   if (name === 'filters') buildFilterThumbs();
   if (name === 'border') buildBorders();
@@ -1407,6 +1564,7 @@ function switchPanel(name, btn) {
   if (name === 'color') buildBgColors();
   if (name === 'advisory') buildAdvisoryGrid();
   if (name === 'bgimage') buildBgImageGrid();
+  if (name === 'fx') { buildFxTabs(); buildFxGrids(); }
   if (name === 'crop') showCropOverlay(true); else showCropOverlay(false);
   syncActiveInputs();
 }
@@ -1609,8 +1767,8 @@ window.detectSubject = async function() {
     sctx.filter = 'blur(3px)';
     sctx.drawImage(raw, 0, 0);
     personMask = soft; subjectReady = true;
-    status.textContent = 'Subject detected. Pick Blur or Stroke below.';
-    btn.textContent = 'RE-DETECT'; btn.disabled = false;
+    status.textContent = 'Detected! Pick Blur or Stroke below.';
+    btn.textContent = 'Redo'; btn.disabled = false;
     redraw(); saveState();
   } catch(err) { status.textContent = 'Failed: ' + err.message; btn.disabled = false; }
 };
@@ -1756,6 +1914,7 @@ function redraw() {
   const fade = parseInt(nInput.value);
   if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${(fade/100)*0.4})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   if (!currentBgColor && !currentBgImage) drawBorder();
+  drawFxLayer();
   textLayers.forEach(layer => {
     if (layer.isImage && layer.image && layer.image.complete) {
       ctx.save();
@@ -1837,7 +1996,7 @@ function importOnePhoto(file) {
             canvasW: w, canvasH: h, textLayers: [],
             brightness: 100, contrast: 100, saturation: 100, noise: 0,
             filter: 'none', border: 'none', borderColor: '#ffffff', borderSize: 5,
-            bgColor: null, bgColorSize: 8, template: 'none',
+            bgColor: null, bgColorSize: 8, template: 'none', fx: 'none', fxAmount: 70,
             subjectMode: 'none', strokeColor: '#ffffff', subjectAmount: 12,
             bgImageFile: null, bgImageSize: 8,
             bgImageZoom: 100, bgImageX: 0, bgImageY: 0
@@ -1874,6 +2033,9 @@ function loadProject(key) {
   currentBgImageZoom = p.bgImageZoom ?? 100;
   currentBgImageX = p.bgImageX ?? 0;
   currentBgImageY = p.bgImageY ?? 0;
+  currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
+  const fxAmt = document.getElementById('fxAmount'); if (fxAmt) fxAmt.value = currentFxAmount;
+  const fxV = document.getElementById('fxVal'); if (fxV) fxV.innerText = currentFxAmount;
   const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
   const zV = document.getElementById('bgImgZoomVal'); if (zV) zV.innerText = currentBgImageZoom;
   const xIn = document.getElementById('bgImgXInput'); if (xIn) xIn.value = currentBgImageX;
@@ -1895,7 +2057,7 @@ function loadProject(key) {
     if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
     imgLoaded = true;
     buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-    buildAdvisoryGrid(); buildBgImageGrid();
+    buildFxGrids(); buildAdvisoryGrid(); buildBgImageGrid();
     saveState(); redraw();
   };
   img.src = sourceImage;
@@ -1921,9 +2083,10 @@ function resetEverything() {
   bInput.value = 100; cInput.value = 100; sInput.value = 100; nInput.value = 0;
   currentFilter = 'none'; currentBorder = 'none'; currentBgColor = null; currentBgImage = null;
   currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
+  currentFx = 'none'; currentFxAmount = 70;
   textLayers = []; activeLayerId = null;
   subjectMode = 'none'; personMask = null; subjectReady = false;
-  document.querySelectorAll('.template-thumb, .filter-thumb, .border-thumb, .bgcolor-swatch, .bg-item').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.template-thumb, .filter-thumb, .border-thumb, .bgcolor-swatch, .bg-item, .fx-card').forEach(c => c.classList.remove('selected'));
   syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
 }
 
@@ -1940,8 +2103,8 @@ window.onload = function() {
     try { if (typeof preloadEffects === 'function') await preloadEffects(); } catch (e) { console.warn(e); }
     setTimeout(() => {
       const s = document.getElementById('splashScreen');
-      if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 400); }
-    }, 1200);
+      if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 300); }
+    }, 400);
   })();
 };
 
