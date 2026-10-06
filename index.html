@@ -39,14 +39,6 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 
 .canvas-container { position:relative; display:inline-block; max-width:100%; margin:0 auto 4px auto; flex-shrink:0; }
 canvas { max-width:100%; max-height:50vh; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; }
-#cropOverlay { position:absolute; inset:0; display:none; z-index:40; pointer-events:none; }
-#cropOverlay.active { display:block; pointer-events:auto; }
-#cropBox { position:absolute; border:2px solid #fff; box-shadow:0 0 0 9999px rgba(0,0,0,0.7); cursor:move; touch-action:none; pointer-events:auto; }
-.crop-corner { position:absolute; width:32px; height:32px; background:#fff; border-radius:50%; box-shadow:0 0 10px rgba(0,0,0,.7); touch-action:none; pointer-events:auto; }
-.crop-corner[data-corner="tl"] { top:-16px; left:-16px; }
-.crop-corner[data-corner="tr"] { top:-16px; right:-16px; }
-.crop-corner[data-corner="bl"] { bottom:-16px; left:-16px; }
-.crop-corner[data-corner="br"] { bottom:-16px; right:-16px; }
 
 #textFloatingMenu { display:none; position:absolute; background:rgba(15,15,15,.96); padding:8px; border-radius:10px; z-index:50; transform:translate(-50%,-125%); width:150px; }
 .arrow-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:6px; }
@@ -65,7 +57,6 @@ canvas { max-width:100%; max-height:50vh; height:auto; width:auto; background:#0
 .icon-action { background:none; border:none; color:#fff; cursor:pointer; padding:6px; display:inline-flex; }
 .icon-action svg { stroke:#fff; }
 
-/* ==== BIG bottom nav ==== */
 .bottom-nav { display:flex; justify-content:flex-start; align-items:stretch; background:#050505; border-top:1px solid #1a1a1a; padding:6px 0 8px; position:fixed; bottom:0; left:0; width:100%; z-index:100; overflow-x:auto; }
 .bottom-nav::-webkit-scrollbar { display:none; }
 .nav-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; flex:1 0 72px; background:none; border:none; color:#ffffff; font-size:9px; font-weight:800; cursor:pointer; padding:6px 4px; text-transform:uppercase; letter-spacing:.3px; opacity:.72; transition:opacity .15s ease, transform .15s ease; }
@@ -87,10 +78,9 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px;
 input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; border:none; }
 .adjust-sliders { display:flex; flex-direction:column; gap:20px; padding:8px 4px; }
 
-.h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .sticker-grid, .bg-grid, .fx-grid { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
-.h-scroll::-webkit-scrollbar, .filter-thumbs::-webkit-scrollbar, .template-thumbs::-webkit-scrollbar, .border-thumbs::-webkit-scrollbar, .color-row::-webkit-scrollbar, .bgcolor-row::-webkit-scrollbar, .sticker-grid::-webkit-scrollbar, .bg-grid::-webkit-scrollbar, .fx-grid::-webkit-scrollbar { display:none; }
-.sticker-grid { flex-wrap:wrap; }
-.bg-grid { flex-wrap:wrap; }
+.h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .fx-grid { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
+.h-scroll::-webkit-scrollbar, .filter-thumbs::-webkit-scrollbar, .template-thumbs::-webkit-scrollbar, .border-thumbs::-webkit-scrollbar, .color-row::-webkit-scrollbar, .bgcolor-row::-webkit-scrollbar, .fx-grid::-webkit-scrollbar { display:none; }
+.bg-grid { display:flex; flex-wrap:wrap; gap:8px; padding:4px 2px 8px; }
 .h-card { flex:0 0 auto; padding:8px 16px; background:#161616; border:none; border-radius:18px; font-size:11px; font-weight:600; color:#aaa; cursor:pointer; white-space:nowrap; }
 .h-card.selected { color:#fff; background:#333; }
 
@@ -120,10 +110,6 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .fx-card-label { font-size:9px; color:#888; margin-top:4px; display:block; font-weight:700; }
 .fx-card.selected .fx-card-label { color:#00d4ff; }
 
-.sticker-item { flex:0 0 auto; width:84px; height:84px; border-radius:10px; background:#111; overflow:hidden; cursor:pointer; display:flex; align-items:center; justify-content:center; border:2px solid transparent; }
-.sticker-item.selected { border-color:#fff; }
-.sticker-item img { max-width:90%; max-height:90%; object-fit:contain; }
-
 .bg-item { flex:0 0 auto; width:72px; cursor:pointer; text-align:center; }
 .bg-item-img { width:72px; height:72px; border-radius:10px; background:#111; overflow:hidden; border:2px solid transparent; }
 .bg-item.selected .bg-item-img { border-color:#fff; }
@@ -146,34 +132,11 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-box; padding:11px; background:#141414; border:none; border-radius:8px; margin-top:4px; }
 .section-label { font-size:10px; color:#666; margin:14px 0 4px; display:block; letter-spacing:.6px; font-weight:700; }
 
-.corner-btn {
-  position:absolute;
-  right:12px;
-  bottom:12px;
-  background:#ffffff;
-  color:#000;
-  border:none;
-  width:52px;
-  height:52px;
-  border-radius:50%;
-  font-size:24px;
-  font-weight:900;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 6px 18px rgba(0,0,0,.6);
-  z-index:20;
-  line-height:1;
-  transition:transform .1s ease;
-}
+.corner-btn { position:absolute; right:12px; bottom:12px; background:#ffffff; color:#000; border:none; width:52px; height:52px; border-radius:50%; font-size:24px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.6); z-index:20; line-height:1; transition:transform .1s ease; }
 .corner-btn:active { transform:scale(.92); }
 .corner-btn.small { width:44px; height:44px; font-size:11px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; }
 
-.crop-toolbar { display:flex; gap:8px; padding:10px 4px; justify-content:center; flex-wrap:wrap; }
 .crop-tool { background:#161616; color:#ccc; border:none; padding:10px 16px; border-radius:22px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; }
-.crop-tool.active { background:#fff; color:#000; }
-.crop-tool svg { stroke:currentColor; width:14px; height:14px; }
 
 .bgcolor-row { display:flex; flex-wrap:wrap; gap:12px; padding:8px 4px; overflow:visible !important; }
 .bgcolor-swatch { width:68px; height:68px; border-radius:14px; cursor:pointer; position:relative; border:2px solid #333; }
@@ -185,10 +148,6 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .slider-row input[type="range"] { flex:1; }
 .slider-val { font-size:11px; color:#fff; width:44px; text-align:right; font-weight:700; flex-shrink:0; }
 
-.align-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:12px 0 8px 0; max-width:200px; margin:0 auto; }
-.align-cell { aspect-ratio:1/1; background:#161616; border:1px solid #242424; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-.align-cell svg { stroke:#888; width:16px; height:16px; }
-
 .color-slider-wrap { display:flex; flex-direction:column; gap:14px; padding:8px 4px; }
 .color-slider-row { display:flex; align-items:center; gap:12px; }
 .color-slider-preview { width:38px; height:38px; border-radius:10px; border:2px solid #333; flex-shrink:0; }
@@ -196,21 +155,42 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .bgremover-menu { padding:8px 0; }
 .bgremover-btn { width:100%; background:#161616; border:1px solid #242424; color:#fff; padding:24px 18px; border-radius:14px; font-size:14px; font-weight:700; cursor:pointer; text-align:center; margin-bottom:12px; display:flex; justify-content:center; align-items:center; }
 .bgremover-btn .label { display:flex; flex-direction:column; gap:3px; align-items:center; }
-.bgremover-btn .title { font-size:18px; font-weight:800; color:#fff; letter-spacing:1px; }
-.bgremover-btn.best .title { color:#ff2c2c; }
+.bgremover-btn .title { font-size:18px; font-weight:800; color:#ff2c2c; letter-spacing:1px; }
 .bgremover-btn:active { background:#1f1f1f; }
 
 #splashScreen { position:fixed; inset:0; background:#0a0a0a; z-index:99999; display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .3s ease; }
 #splashScreen.fade-out { opacity:0; pointer-events:none; }
 .splash-inner { display:flex; flex-direction:column; align-items:center; gap:20px; padding:20px; width:100%; }
 
-.gallery { display:block; }
-.gal-item { position:relative; aspect-ratio:1/1; border-radius:6px; overflow:hidden; background:#141414; cursor:pointer; }
-.gal-item img { width:100%; height:100%; object-fit:cover; display:block; }
-.gal-del { position:absolute; top:4px; right:4px; width:22px; height:22px; background:rgba(255,44,44,.92); border:none; border-radius:50%; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
-.gal-del svg { stroke:#fff; }
-.gal-add { display:flex; align-items:center; justify-content:center; background:transparent; border:1px dashed #2a2a2a; border-radius:6px; aspect-ratio:1/1; color:#444; cursor:pointer; }
-.gal-empty { text-align:center; color:#444; font-size:11px; padding:20px 0; }
+#cropScreen { position:fixed; inset:0; background:#000; z-index:300; display:none; flex-direction:column; }
+#cropScreen.active { display:flex; }
+.crop-topbar { display:flex; justify-content:space-between; align-items:center; padding:14px 20px 6px; }
+.crop-icon-btn { background:none; border:none; cursor:pointer; padding:8px; display:inline-flex; }
+.crop-canvas-wrap { flex:1; position:relative; display:flex; align-items:center; justify-content:center; padding:10px 16px; min-height:0; }
+#cropCanvas { max-width:100%; max-height:100%; display:block; background:#000; }
+#cropFrame { position:absolute; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,.55); }
+#cropFrame .grid-line { position:absolute; background:rgba(255,255,255,.4); }
+#cropFrame .grid-line.grid-v { top:0; bottom:0; width:1px; }
+#cropFrame .grid-line.grid-h { left:0; right:0; height:1px; }
+#cropFrame .crop-corner-ui { position:absolute; width:22px; height:22px; border:3px solid #fff; pointer-events:auto; touch-action:none; }
+#cropFrame .crop-corner-ui.tl { top:-2px; left:-2px; border-right:none; border-bottom:none; }
+#cropFrame .crop-corner-ui.tr { top:-2px; right:-2px; border-left:none; border-bottom:none; }
+#cropFrame .crop-corner-ui.bl { bottom:-2px; left:-2px; border-right:none; border-top:none; }
+#cropFrame .crop-corner-ui.br { bottom:-2px; right:-2px; border-left:none; border-top:none; }
+.crop-tools { display:flex; justify-content:center; gap:36px; padding:8px 0; }
+.crop-circle-btn { width:48px; height:48px; border-radius:50%; background:transparent; border:1.5px solid #333; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.crop-circle-btn svg { stroke:#fff; width:20px; height:20px; fill:none; }
+.crop-angle-row { display:flex; align-items:center; gap:10px; padding:6px 22px; }
+.crop-angle-row input[type="range"] { flex:1; max-width:none; }
+.crop-angle-icon { color:#666; font-size:12px; }
+.crop-reset-angle { background:none; border:none; cursor:pointer; padding:4px; display:inline-flex; }
+.crop-reset-angle svg { stroke:#fff; width:18px; height:18px; fill:none; }
+.crop-ratios { display:flex; justify-content:flex-start; gap:2px; padding:10px 10px 16px; overflow-x:auto; }
+.crop-ratios::-webkit-scrollbar { display:none; }
+.crop-ratio-btn { flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color:#888; font-size:10px; font-weight:600; cursor:pointer; padding:6px 10px; min-width:56px; }
+.crop-ratio-btn svg { width:22px; height:22px; stroke:#888; fill:none; }
+.crop-ratio-btn.active { color:#00d4ff; }
+.crop-ratio-btn.active svg { stroke:#00d4ff; }
 </style>
 </head>
 <body>
@@ -218,8 +198,8 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 <div id="splashScreen">
   <div class="splash-inner">
     <svg width="48" height="48" viewBox="0 0 90 90" style="transform:rotate(-90deg);">
-      <circle cx="45" cy="45" r="38" fill="none" stroke="#1a1a1a" stroke-width="5"/>
-      <circle id="splashRing" cx="45" cy="45" r="38" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
+   <circle cx="45" cy="45" r="38" fill="none" stroke="#0a0a0a" stroke-width="7"/>
+      <circle id="splashRing" cx="45" cy="45" r="38" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
     </svg>
   </div>
 </div>
@@ -246,12 +226,6 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 
   <div class="canvas-container">
     <canvas id="canvas" width="400" height="400"></canvas>
-    <div id="cropOverlay"><div id="cropBox">
-      <div class="crop-corner" data-corner="tl"></div>
-      <div class="crop-corner" data-corner="tr"></div>
-      <div class="crop-corner" data-corner="bl"></div>
-      <div class="crop-corner" data-corner="br"></div>
-    </div></div>
     <div id="textFloatingMenu">
       <div class="arrow-grid">
         <div></div>
@@ -283,25 +257,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
   </div>
 
-  <div id="panel-crop" class="panel">
-    <label class="section-label" style="margin-top:0;">DRAG CORNERS TO CROP · TAP APPLY</label>
-    <div class="crop-toolbar">
-      <button class="crop-tool" onclick="setCropRect('free')">FREE</button>
-      <button class="crop-tool" onclick="setCropRect('1:1')">1:1</button>
-      <button class="crop-tool" onclick="setCropRect('4:5')">4:5</button>
-      <button class="crop-tool" onclick="setCropRect('9:16')">9:16</button>
-      <button class="crop-tool" onclick="setCropRect('16:9')">16:9</button>
-    </div>
-    <div class="crop-toolbar">
-      <button class="crop-tool" onclick="rotateImage(90)">↻ Rotate</button>
-      <button class="crop-tool" onclick="flipImage('h')">⇋ Flip H</button>
-      <button class="crop-tool" onclick="flipImage('v')">⇅ Flip V</button>
-    </div>
-    <div class="crop-toolbar">
-      <button class="crop-tool" onclick="resetCrop()">RESET</button>
-      <button class="crop-tool" onclick="applyCropNow()" style="background:#ff2c2c;color:#fff;flex:1;justify-content:center;">✂ APPLY CROP</button>
-    </div>
-  </div>
+  <div id="panel-crop" class="panel"></div>
 
   <div id="panel-filters" class="panel">
     <div class="filter-thumbs" id="filterThumbsContainer" style="margin-top:8px;"></div>
@@ -336,18 +292,6 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
         <div class="color-circle" style="background:#ffffff;" onclick="setActiveTextColor('#ffffff',this)"></div>
         <div class="color-circle" style="background:#ff2c2c;" onclick="setActiveTextColor('#ff2c2c',this)"></div>
         <div class="color-circle" style="background:#000000;" onclick="setActiveTextColor('#000000',this)"></div>
-      </div>
-      <label class="section-label">ALIGN</label>
-      <div class="align-grid">
-        <div class="align-cell" onclick="alignText('left','top')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3h18M3 8h12M3 13h18M3 18h12"/></svg></div>
-        <div class="align-cell" onclick="alignText('center','top')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3h18M6 8h12M3 13h18M6 18h12"/></svg></div>
-        <div class="align-cell" onclick="alignText('right','top')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3h18M9 8h12M3 13h18M9 18h12"/></svg></div>
-        <div class="align-cell" onclick="alignText('left','middle')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 12h18M3 6h12M3 18h12"/></svg></div>
-        <div class="align-cell" onclick="alignText('center','middle')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></div>
-        <div class="align-cell" onclick="alignText('right','middle')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 12h18M9 6h12M9 18h12"/></svg></div>
-        <div class="align-cell" onclick="alignText('left','bottom')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 21h18M3 6h12M3 16h12"/></svg></div>
-        <div class="align-cell" onclick="alignText('center','bottom')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 21h18M6 6h12M6 16h12"/></svg></div>
-        <div class="align-cell" onclick="alignText('right','bottom')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 21h18M9 6h12M9 16h12"/></svg></div>
       </div>
       <label class="section-label">COLOR TUNE</label>
       <div class="color-slider-wrap">
@@ -422,9 +366,9 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 
   <div id="panel-bgremover" class="panel">
     <div class="bgremover-menu">
-      <div class="bgremover-btn best" onclick="removeBgBest()" style="justify-content:center;text-align:center;">
-        <div class="label" style="align-items:center;">
-          <span class="title" style="font-size:18px;letter-spacing:1px;">REMOVE BACKGROUND</span>
+      <div class="bgremover-btn" onclick="removeBgBest()">
+        <div class="label">
+          <span class="title">REMOVE BACKGROUND</span>
         </div>
       </div>
       <div style="font-size:10px;color:#555;text-align:center;margin-top:16px;line-height:1.6;">After removal, add a new background from the BG tab</div>
@@ -446,14 +390,6 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <button class="crop-tool" onclick="clearBgImage()" style="margin-top:8px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
   </div>
 
-  <div id="panel-advisory" class="panel">
-    <label class="section-label">PARENTAL ADVISORY STICKERS</label>
-    <div class="sticker-grid" id="stickerGrid"></div>
-    <label class="section-label">DEFAULT SIZE: <span id="advSizeVal">35</span>%</label>
-    <input type="range" id="advSizeInput" min="10" max="80" value="35" oninput="setAdvDefaultSize(this.value)">
-    <button class="crop-tool" onclick="trimActiveSticker()" style="margin-top:10px;width:100%;justify-content:center;">  CROP SELECTED STICKER</button>
-  </div>
-
   <div class="bottom-nav">
     <button class="nav-btn active" data-panel="adjust" onclick="switchPanel('adjust', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Adjust</span></button>
     <button class="nav-btn" data-panel="crop" onclick="switchPanel('crop', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/></svg><span>Crop</span></button>
@@ -462,13 +398,52 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <button class="nav-btn" data-panel="text" onclick="switchPanel('text', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg><span>Text</span></button>
     <button class="nav-btn" data-panel="bg" onclick="switchPanel('bg', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M5 19a7 7 0 0114 0"/></svg><span>Subject</span></button>
     <button class="nav-btn" data-panel="border" onclick="switchPanel('border', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg><span>Border</span></button>
-    <button class="nav-btn" data-panel="bgremover" onclick="switchPanel('bgremover', this)"><svg width="18" height="18" viewBox="0 0 32 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M4 20 a6 6 0 0 1 12 0"/><circle cx="20" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="23" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="24" cy="14" r="0.9" fill="currentColor" stroke="none"/><circle cx="22" cy="18" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="20" r="0.8" fill="currentColor" stroke="none"/></svg><span>BG Rmv</span></button>
+    <button class="nav-btn" data-panel="bgremover" onclick="switchPanel('bgremover', this)"><svg width="24" height="24" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="11" r="4.5"/><path d="M5 25a8 8 0 0 1 16 0"/><circle cx="22" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="25" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="26" cy="17" r="0.9" fill="currentColor" stroke="none"/><circle cx="24" cy="21" r="1" fill="currentColor" stroke="none"/><circle cx="21" cy="24" r="0.8" fill="currentColor" stroke="none"/></svg><span>BG Rmv</span></button>
     <button class="nav-btn" data-panel="bgimage" onclick="switchPanel('bgimage', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>BG</span></button>
-    <button class="nav-btn" data-panel="advisory" onclick="switchPanel('advisory', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="13" y2="17"/></svg><span>Advisory</span></button>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous"></script>
+<div id="cropScreen">
+  <div class="crop-topbar">
+    <button class="crop-icon-btn" onclick="cancelCropMode()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <button class="crop-icon-btn" onclick="restorePreCrop()" title="Restore Original"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9"/><polyline points="3 3 3 8 8 8"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="16" y2="14"/></svg></button>
+    <button class="crop-icon-btn" onclick="applyCropMode()"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+  </div>
+  <div class="crop-canvas-wrap" id="cropCanvasWrap">
+    <canvas id="cropCanvas"></canvas>
+    <div id="cropFrame">
+      <div class="grid-line grid-v" style="left:33.33%"></div>
+      <div class="grid-line grid-v" style="left:66.66%"></div>
+      <div class="grid-line grid-h" style="top:33.33%"></div>
+      <div class="grid-line grid-h" style="top:66.66%"></div>
+      <div class="crop-corner-ui tl" data-c="tl"></div>
+      <div class="crop-corner-ui tr" data-c="tr"></div>
+      <div class="crop-corner-ui bl" data-c="bl"></div>
+      <div class="crop-corner-ui br" data-c="br"></div>
+    </div>
+  </div>
+  <div class="crop-tools">
+    <button class="crop-circle-btn" onclick="cropRotate(90)"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9"/><polyline points="3 3 3 8 8 8"/></svg></button>
+    <button class="crop-circle-btn" onclick="cropFlip('h')"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 4 3 20 12 12 3 4"/><polyline points="21 4 21 20 12 12 21 4"/><line x1="12" y1="2" x2="12" y2="22"/></svg></button>
+    <button class="crop-circle-btn" onclick="cropFlip('v')"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 3 20 3 12 12 4 3"/><polyline points="4 21 20 21 12 12 4 21"/><line x1="2" y1="12" x2="22" y2="12"/></svg></button>
+  </div>
+  <div class="crop-angle-row">
+    <span class="crop-angle-icon">◁|▷</span>
+    <input type="range" id="cropAngleInput" min="-45" max="45" value="0">
+    <button class="crop-reset-angle" onclick="resetCropAngle()"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9"/><polyline points="3 3 3 8 8 8"/></svg></button>
+  </div>
+  <div class="crop-ratios">
+    <button class="crop-ratio-btn" onclick="setCropRatio('original', this)"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg><span>Original</span></button>
+    <button class="crop-ratio-btn active" onclick="setCropRatio('free', this)"><svg viewBox="0 0 24 24" stroke-width="2" stroke-dasharray="4 3"><rect x="4" y="4" width="16" height="16"/></svg><span>Free</span></button>
+    <button class="crop-ratio-btn" onclick="setCropRatio('1:1', this)"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="1"/></svg><span>1:1</span></button>
+    <button class="crop-ratio-btn" onclick="setCropRatio('4:5', this)"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="1"/></svg><span>4:5</span></button>
+    <button class="crop-ratio-btn" onclick="setCropRatio('9:16', this)"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="8" y="2" width="8" height="20" rx="1"/></svg><span>IG story</span></button>
+    <button class="crop-ratio-btn" onclick="setCropRatio('4:3', this)"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/></svg><span>4:3</span></button>
+    <button class="crop-ratio-btn" onclick="setCropRatio('3:4', this)"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="1"/></svg><span>3:4</span></button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -484,6 +459,9 @@ const sizeInput = document.getElementById('fontSize');
 let img = new Image();
 let imgLoaded = false;
 let originalImageSrc = null;
+let preCropImageSrc = null;
+let preCropCanvasW = 0;
+let preCropCanvasH = 0;
 let currentFilter = 'none';
 let currentBorder = 'none';
 let currentBorderColor = '#ffffff';
@@ -500,7 +478,6 @@ let currentProjectId = null;
 let currentProjectName = '';
 let currentFx = 'none';
 let currentFxAmount = 70;
-let advDefaultSize = 35;
 let textLayers = [];
 let activeLayerId = null;
 let isDraggingText = false;
@@ -512,12 +489,9 @@ let strokeColor = '#ffffff';
 let personMask = null;
 let subjectReady = false;
 let selfieSeg = null;
-let crop = { x:0, y:0, w:1, h:1 };
-let cropDrag = null;
 let counterLocked = false;
 
-const PANEL_ORDER = ['adjust','crop','filters','fx','text','bg','border','bgremover','bgimage','advisory'];
-
+const PANEL_ORDER = ['adjust','crop','filters','fx','text','bg','border','bgremover','bgimage'];
 const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
 
 const TEMPLATES = [
@@ -558,10 +532,8 @@ const BG_LABELS = {
 const EFFECTS_BASE = './effects/';
 let FX_CATEGORIES = [];
 let currentFxTab = 'grunge';
-const ADVISORY_CONFIG = { prefix:'advisory', max:12, files:[] };
 const BG_CONFIG = { prefix:'background', max:20, files:[] };
 const fxImages = {};
-const advisoryImages = {};
 const bgImages = {};
 
 function loadImage(url) {
@@ -614,22 +586,6 @@ async function probeCategory(cat) {
   cat.files.forEach(r => { fxImages[cat.key + ':' + r.fname] = r.im; });
 }
 
-async function probeAdvisory() {
-  const cfg = ADVISORY_CONFIG;
-  const promises = [];
-  for (let i = 1; i <= cfg.max; i++) {
-    promises.push((async () => {
-      let r = await probeOne('Advisory' + i);
-      if (r) return r;
-      r = await probeOne('advisory' + i);
-      return r;
-    })());
-  }
-  const results = await Promise.all(promises);
-  cfg.files = results.filter(r => r !== null);
-  cfg.files.forEach(r => { advisoryImages[r.fname] = r.im; });
-}
-
 async function probeBackgrounds() {
   const cfg = BG_CONFIG;
   const promises = [];
@@ -641,14 +597,9 @@ async function probeBackgrounds() {
 
 async function preloadEffects() {
   await loadCategoryConfig();
-  await Promise.all([
-    ...FX_CATEGORIES.map(c => probeCategory(c)),
-    probeAdvisory(),
-    probeBackgrounds()
-  ]);
+  await Promise.all([ ...FX_CATEGORIES.map(c => probeCategory(c)), probeBackgrounds() ]);
   buildFxTabs();
   buildFxGrids();
-  buildAdvisoryGrid();
   buildBgImageGrid();
 }
 
@@ -682,10 +633,7 @@ function playCount(callback) {
   requestAnimationFrame(step);
 }
 
-/* ============================================================
-   FX (EFFECTS TAB)
-   ============================================================ */
-
+/* FX */
 function buildFxTabs() {
   const bar = document.getElementById('fxTabBar');
   if (!bar) return;
@@ -769,72 +717,7 @@ function drawFxLayer() {
   ctx.restore();
 }
 
-/* ============================================================
-   SWIPE GESTURES
-   ============================================================ */
-
-let swipeStartX = 0, swipeStartY = 0, swipeStartTime = 0, swipeActive = false;
-
-function initSwipeGestures() {
-  const view = document.getElementById('view-studio');
-  if (!view) return;
-  view.addEventListener('touchstart', e => {
-    if (e.touches.length !== 1) { swipeActive = false; return; }
-    const t = e.touches[0];
-    const target = e.target;
-    if (target.closest('.canvas-container') || target.closest('.bottom-nav') || target.closest('input') || target.closest('.crop-tool') || target.closest('.corner-btn')) {
-      swipeActive = false; return;
-    }
-    swipeStartX = t.clientX; swipeStartY = t.clientY;
-    swipeStartTime = Date.now();
-    swipeActive = true;
-  }, { passive:true });
-
-  view.addEventListener('touchend', e => {
-    if (!swipeActive) return;
-    swipeActive = false;
-    const t = e.changedTouches[0];
-    if (!t) return;
-    const dx = t.clientX - swipeStartX;
-    const dy = t.clientY - swipeStartY;
-    const dt = Date.now() - swipeStartTime;
-    if (dt > 600) return;
-    if (Math.abs(dx) < 55) return;
-    if (Math.abs(dy) > Math.abs(dx) * 0.8) return;
-
-    const current = document.querySelector('.panel.active');
-    if (!current) return;
-    const currentKey = current.id.replace('panel-', '');
-    const idx = PANEL_ORDER.indexOf(currentKey);
-    if (idx < 0) return;
-
-    let nextIdx = idx;
-    if (dx < 0) nextIdx = Math.min(PANEL_ORDER.length - 1, idx + 1);
-    else nextIdx = Math.max(0, idx - 1);
-    if (nextIdx === idx) return;
-
-    const nextKey = PANEL_ORDER[nextIdx];
-    const btn = document.querySelector('.nav-btn[data-panel="' + nextKey + '"]');
-    switchPanel(nextKey, btn);
-    if (btn) btn.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
-  }, { passive:true });
-}
-
-/* ============================================================
-   ADVISORY + BACKGROUNDS
-   ============================================================ */
-
-function buildAdvisoryGrid() {
-  const g = document.getElementById('stickerGrid');
-  if (!g) return;
-  if (!ADVISORY_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">No files</div>'; return; }
-  let html = '';
-  ADVISORY_CONFIG.files.forEach(f => {
-    html += `<div class="sticker-item" onclick="addSticker('${f.fname}')"><img src="${EFFECTS_BASE + f.fname}"></div>`;
-  });
-  g.innerHTML = html;
-}
-
+/* Backgrounds */
 function buildBgImageGrid() {
   const g = document.getElementById('bgImageGrid');
   if (!g) return;
@@ -882,48 +765,7 @@ function clearBgImage() {
   redraw(); saveState();
 }
 
-function setAdvDefaultSize(v) { advDefaultSize = parseInt(v); const e = document.getElementById('advSizeVal'); if (e) e.innerText = v; }
-
-function addSticker(fname) {
-  const im = advisoryImages[fname];
-  if (!im || !imgLoaded) return;
-  const w = Math.round(Math.min(canvas.width, canvas.height) * (advDefaultSize / 100));
-  const h = Math.round(w * (im.naturalHeight / im.naturalWidth));
-  const id = Date.now() + Math.random();
-  const layer = { id, image: im, imageUrl: EFFECTS_BASE + fname, isImage: true, x: canvas.width/2, y: canvas.height/2, width: w, height: h, rotation: 0, size: w };
-  textLayers.push(layer); activeLayerId = id;
-  updateTextLayersUI(); showFloatingMenu(layer.x, layer.y);
-  redraw(); saveState();
-}
-
-function trimActiveSticker() {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l || !l.isImage || !l.image) { alert('Select a sticker first'); return; }
-  const im = l.image;
-  const c = document.createElement('canvas');
-  c.width = im.naturalWidth || im.width;
-  c.height = im.naturalHeight || im.height;
-  const cx = c.getContext('2d');
-  cx.drawImage(im, 0, 0);
-  const d = cx.getImageData(0, 0, c.width, c.height).data;
-  let minX = c.width, minY = c.height, maxX = 0, maxY = 0;
-  for (let y = 0; y < c.height; y += 2) {
-    for (let x = 0; x < c.width; x += 2) {
-      const i = (y * c.width + x) * 4;
-      const bright = (d[i] + d[i+1] + d[i+2]) / 3;
-      if (bright < 200) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
-    }
-  }
-  if (minX >= maxX || minY >= maxY) { alert('Nothing to trim'); return; }
-  const tw = maxX - minX, th = maxY - minY;
-  const tc = document.createElement('canvas');
-  tc.width = tw; tc.height = th;
-  tc.getContext('2d').drawImage(c, minX, minY, tw, th, 0, 0, tw, th);
-  const trimmed = new Image();
-  trimmed.onload = () => { l.image = trimmed; l.height = Math.round(l.width * (th / tw)); redraw(); saveState(); };
-  trimmed.src = tc.toDataURL('image/png');
-}
-
+/* BG Remover */
 async function removeBgBest() {
   if (!imgLoaded) { alert('Load a photo first'); return; }
   playCount(async () => {
@@ -943,10 +785,7 @@ async function removeBgBest() {
   });
 }
 
-/* ============================================================
-   FONTS / COLORS / TEMPLATES / BORDERS / FILTERS
-   ============================================================ */
-
+/* Fonts / Colors / Templates / Borders / Filters */
 function buildFontGrid() {
   const c = document.getElementById('fontGridContainer');
   if (!c) return;
@@ -1068,10 +907,7 @@ function applyFilterByIndex(i, el) {
   saveState(); redraw();
 }
 
-/* ============================================================
-   HOME / PROJECTS
-   ============================================================ */
-
+/* Home */
 function timeAgo(iso) {
   if (!iso) return '';
   const d = new Date(iso);
@@ -1129,21 +965,18 @@ function setupCanvasFromImage(newImg) {
 
 function resetStudioState() {
   img = new Image(); imgLoaded = false; originalImageSrc = null;
+  preCropImageSrc = null; preCropCanvasW = 0; preCropCanvasH = 0;
   textLayers = []; activeLayerId = null;
   currentFilter = 'none'; currentBorder = 'none'; currentBorderColor = '#ffffff'; currentBorderSize = 5;
   currentTemplate = 'none'; currentBgColor = null; currentBgImage = null;
   currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
   currentFx = 'none'; currentFxAmount = 70;
-  crop = { x:0, y:0, w:1, h:1 };
   subjectMode = 'none'; personMask = null; subjectReady = false;
   undoStack = []; redoStack = []; updateHistoryButtons();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-/* ============================================================
-   UNDO / REDO
-   ============================================================ */
-
+/* Undo / Redo */
 function saveState() {
   if (!imgLoaded) return;
   const state = canvas.toDataURL();
@@ -1182,10 +1015,7 @@ function updateHistoryButtons() {
   if (r) r.disabled = redoStack.length === 0;
 }
 
-/* ============================================================
-   TEXT LAYER INTERACTION
-   ============================================================ */
-
+/* Text interaction */
 function getCanvasCoordinates(e, touch) {
   const rect = canvas.getBoundingClientRect();
   const cx = touch ? touch.clientX : (e.touches ? e.touches[0].clientX : e.clientX);
@@ -1205,7 +1035,7 @@ canvas.addEventListener('touchend', endTouch);
 canvas.addEventListener('touchcancel', endTouch);
 
 function startTouch(e) {
-  if (!imgLoaded || isCropPanelActive()) return;
+  if (!imgLoaded) return;
   if (e.preventDefault) e.preventDefault();
   if (e.touches) { touches.clear(); for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
   else { touches.clear(); touches.set('mouse', { x:e.clientX, y:e.clientY }); }
@@ -1222,15 +1052,10 @@ function startTouch(e) {
   let clickedLayer = null;
   for (let i = textLayers.length - 1; i >= 0; i--) {
     const layer = textLayers[i];
-    if (layer.isImage) {
-      const hw = layer.width / 2, hh = layer.height / 2;
-      if (pos.x >= layer.x - hw - 10 && pos.x <= layer.x + hw + 10 && pos.y >= layer.y - hh - 10 && pos.y <= layer.y + hh + 10) { clickedLayer = layer; break; }
-    } else {
-      ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
-      const m = ctx.measureText(layer.text);
-      const w = m.width, h = parseInt(layer.size);
-      if (pos.x >= layer.x - w/2 - 20 && pos.x <= layer.x + w/2 + 20 && pos.y >= layer.y - h && pos.y <= layer.y + 15) { clickedLayer = layer; break; }
-    }
+    ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
+    const m = ctx.measureText(layer.text);
+    const w = m.width, h = parseInt(layer.size);
+    if (pos.x >= layer.x - w/2 - 20 && pos.x <= layer.x + w/2 + 20 && pos.y >= layer.y - h && pos.y <= layer.y + 15) { clickedLayer = layer; break; }
   }
   if (clickedLayer) {
     activeLayerId = clickedLayer.id;
@@ -1244,7 +1069,7 @@ function startTouch(e) {
 }
 
 function onTouchMove(e) {
-  if (!imgLoaded || isCropPanelActive()) return;
+  if (!imgLoaded) return;
   if (e.preventDefault) e.preventDefault();
   if (e.touches) { for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
   else if (touches.has('mouse')) { touches.set('mouse', { x:e.clientX, y:e.clientY }); }
@@ -1255,8 +1080,7 @@ function onTouchMove(e) {
     if (gesture.type === 'text') {
       const l = textLayers.find(x => x.id === gesture.id);
       if (l) {
-        if (l.isImage) { const newW = Math.max(20, Math.min(canvas.width*2, Math.round(gesture.startSize * scale))); const ratio = l.height / l.width; l.width = newW; l.height = Math.round(newW * ratio); l.size = newW; }
-        else l.size = Math.max(8, Math.min(400, Math.round(gesture.startSize * scale)));
+        l.size = Math.max(8, Math.min(400, Math.round(gesture.startSize * scale)));
         l.rotation = gesture.startRot + rotDelta;
       }
     }
@@ -1296,21 +1120,6 @@ function centerActiveTextHoriz() {
   if (l) { l.x = canvas.width / 2; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
 }
 
-function alignText(horiz, vert) {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  const margin = Math.min(canvas.width, canvas.height) * 0.12;
-  const layerH = l.isImage ? l.height : (l.size || 40);
-  const layerW = l.isImage ? l.width : (() => { ctx.font = `bold ${l.size}px '${l.font}', sans-serif`; return ctx.measureText(l.text || '').width; })();
-  if (horiz === 'left')   l.x = layerW / 2 + margin;
-  if (horiz === 'center') l.x = canvas.width / 2;
-  if (horiz === 'right')  l.x = canvas.width - layerW / 2 - margin;
-  if (vert === 'top')     l.y = layerH / 2 + margin;
-  if (vert === 'middle')  l.y = canvas.height / 2;
-  if (vert === 'bottom')  l.y = canvas.height - layerH / 2 - margin;
-  showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState();
-}
-
 function addNewTextLayer() {
   const id = Date.now();
   const newLayer = { id, text:"TEXT", x:canvas.width/2, y:canvas.height/2, font:"Impact", size:Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
@@ -1344,8 +1153,8 @@ function updateTextLayersUI() {
   let html = '';
   textLayers.forEach(l => {
     const act = l.id === activeLayerId ? 'active' : '';
-    const label = l.isImage ? 'Sticker' : (l.text || '(Empty)');
-    html += `<div class="text-layer-item ${act}" onclick="selectLayer(${l.id})"><span style="font-weight:bold;font-size:11px;">${label}</span><span style="font-size:10px;color:#666;">${l.isImage ? 'IMG' : l.font}</span></div>`;
+    const label = l.text || '(Empty)';
+    html += `<div class="text-layer-item ${act}" onclick="selectLayer(${l.id})"><span style="font-weight:bold;font-size:11px;">${label}</span><span style="font-size:10px;color:#666;">${l.font}</span></div>`;
   });
   el.innerHTML = html;
 }
@@ -1379,7 +1188,7 @@ function setActiveTextBrightness(v) {
   v = parseInt(v);
   const e = document.getElementById('brVal'); if (e) e.innerText = v;
   const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l || l.isImage) return;
+  if (!l) return;
   const hsl = hexToHsl(l.color || '#ffffff');
   l.color = hslToHex(hsl.h, hsl.s, v);
   updateColorPreview(); redraw(); saveState();
@@ -1389,7 +1198,7 @@ function setActiveTextHue(v) {
   v = parseInt(v);
   const e = document.getElementById('hueVal'); if (e) e.innerText = v + '°';
   const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l || l.isImage) return;
+  if (!l) return;
   const hsl = hexToHsl(l.color || '#ffffff');
   l.color = hslToHex(v, Math.max(hsl.s, 70), hsl.l);
   updateColorPreview(); redraw(); saveState();
@@ -1398,7 +1207,7 @@ function setActiveTextHue(v) {
 function updateColorPreview() {
   const l = textLayers.find(x => x.id === activeLayerId);
   const prev = document.getElementById('colorPreview');
-  if (prev && l && !l.isImage) prev.style.background = l.color;
+  if (prev && l) prev.style.background = l.color;
 }
 
 function syncActiveInputs() {
@@ -1418,21 +1227,15 @@ function syncActiveInputs() {
   }
   if (px) { px.value = Math.round(l.x); document.getElementById('posXVal').innerText = Math.round(l.x); }
   if (py) { py.value = Math.round(l.y); document.getElementById('posYVal').innerText = Math.round(l.y); }
-  if (l.isImage) {
-    if (tInput) tInput.value = '';
-    if (sizeInput) sizeInput.value = l.width || 100;
-    const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = Math.round(l.width || 100);
-  } else {
-    if (tInput) tInput.value = l.text;
-    if (sizeInput) sizeInput.value = l.size;
-    const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = l.size;
-    const cb = document.getElementById('colorBrightness');
-    if (cb) {
-      const hsl = hexToHsl(l.color || '#ffffff');
-      cb.value = hsl.l; document.getElementById('brVal').innerText = hsl.l;
-      document.getElementById('colorHue').value = hsl.h; document.getElementById('hueVal').innerText = hsl.h + '°';
-      updateColorPreview();
-    }
+  if (tInput) tInput.value = l.text;
+  if (sizeInput) sizeInput.value = l.size;
+  const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = l.size;
+  const cb = document.getElementById('colorBrightness');
+  if (cb) {
+    const hsl = hexToHsl(l.color || '#ffffff');
+    cb.value = hsl.l; document.getElementById('brVal').innerText = hsl.l;
+    document.getElementById('colorHue').value = hsl.h; document.getElementById('hueVal').innerText = hsl.h + '°';
+    updateColorPreview();
   }
   const fr = document.getElementById('fontRotation');
   if (fr) { const deg = Math.round((l.rotation || 0) * 180 / Math.PI); fr.value = deg; document.getElementById('fRotVal').innerText = deg + '°'; }
@@ -1449,7 +1252,7 @@ function setActivePos(axis, v) {
 
 function updateActiveTextContent(v) {
   let l = textLayers.find(x => x.id === activeLayerId);
-  if (!l || l.isImage) {
+  if (!l) {
     if (!v) return;
     const id = Date.now();
     l = { id, text:v, x:canvas.width/2, y:canvas.height/2, font:"Impact", size:Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
@@ -1461,8 +1264,7 @@ function updateActiveTextContent(v) {
 function setActiveFontSize(v) {
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) { const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v; return; }
-  if (l.isImage) { const ratio = l.height / l.width; l.width = parseInt(v); l.height = Math.round(l.width * ratio); }
-  else l.size = parseInt(v);
+  l.size = parseInt(v);
   const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v;
   redraw(); saveState();
 }
@@ -1475,27 +1277,21 @@ function setActiveFontRotation(v) {
   redraw(); saveState();
 }
 
-function setActiveFont(f, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.font = f; redraw(); saveState(); }
-function setActiveTextColor(c, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.color = c; syncActiveInputs(); redraw(); saveState(); }
-function setActiveTextStyle(s, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l || l.isImage) return; l.style = s; redraw(); saveState(); }
+function setActiveFont(f, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.font = f; redraw(); saveState(); }
+function setActiveTextColor(c, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.color = c; syncActiveInputs(); redraw(); saveState(); }
+function setActiveTextStyle(s, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.style = s; redraw(); saveState(); }
 
-/* ============================================================
-   SAVE / LOAD
-   ============================================================ */
-
+/* Save / Load */
 function saveProjectToHome() {
   if (!imgLoaded) return;
   if (!currentProjectId) currentProjectId = 'proj_' + Date.now();
-  const serializedLayers = textLayers.map(l => {
-    if (l.isImage) return { id:l.id, isImage:true, imageUrl:l.imageUrl, x:l.x, y:l.y, width:l.width, height:l.height, rotation:l.rotation, size:l.size };
-    return l;
-  });
+  const serializedLayers = textLayers.map(l => ({ id:l.id, text:l.text, x:l.x, y:l.y, size:l.size, font:l.font, color:l.color, style:l.style, rotation:l.rotation }));
   let bgFile = null;
   if (currentBgImage) { for (const f of BG_CONFIG.files) if (bgImages[f.fname] === currentBgImage) { bgFile = f.fname; break; } }
   const now = new Date();
   let autoName = currentProjectName;
   if (!autoName || autoName.startsWith('Cover ')) {
-    const firstText = textLayers.find(l => !l.isImage && l.text && l.text.trim());
+    const firstText = textLayers.find(l => l.text && l.text.trim());
     autoName = firstText ? firstText.text.trim().slice(0, 24) : (currentProjectName || 'Cover');
   }
   try {
@@ -1529,11 +1325,14 @@ function saveImage() {
   });
 }
 
-/* ============================================================
-   PANEL SWITCHING
-   ============================================================ */
-
+/* Panel switching */
 function switchPanel(name, btn) {
+  if (name === 'crop') {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    openCropMode();
+    return;
+  }
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const panel = document.getElementById('panel-' + name);
@@ -1544,14 +1343,10 @@ function switchPanel(name, btn) {
   if (name === 'border') buildBorders();
   if (name === 'adjust') buildTemplates();
   if (name === 'color') buildBgColors();
-  if (name === 'advisory') buildAdvisoryGrid();
   if (name === 'bgimage') buildBgImageGrid();
   if (name === 'fx') { buildFxTabs(); buildFxGrids(); }
-  if (name === 'crop') showCropOverlay(true); else showCropOverlay(false);
   syncActiveInputs();
 }
-
-function isCropPanelActive() { return document.getElementById('panel-crop').classList.contains('active'); }
 
 function switchSubTab(name, el) {
   const panel = el.closest('.panel');
@@ -1583,141 +1378,191 @@ function updateSelection(el) {
   input.addEventListener('change', saveState);
 });
 
-/* ============================================================
-   CROP
-   ============================================================ */
+/* Full-screen crop */
+let cropModeActive = false;
+let cropPrevPanel = 'adjust';
+let cropFrameDrag = null;
 
-function showCropOverlay(show) {
-  const ov = document.getElementById('cropOverlay');
-  if (show && imgLoaded) { ov.classList.add('active'); crop = { x:0, y:0, w:1, h:1 }; updateCropBox(); }
-  else { ov.classList.remove('active'); }
+function openCropMode() {
+  if (!imgLoaded) { alert('Load a photo first'); return; }
+  const cur = document.querySelector('.panel.active');
+  if (cur) cropPrevPanel = cur.id.replace('panel-','');
+  cropModeActive = true;
+  const cc = document.getElementById('cropCanvas');
+  cc.width = canvas.width; cc.height = canvas.height;
+  const cx = cc.getContext('2d');
+  cx.clearRect(0, 0, cc.width, cc.height);
+  cx.drawImage(img, 0, 0, cc.width, cc.height);
+  crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
+  document.getElementById('cropScreen').classList.add('active');
+  initCropFrameDrag();
+  requestAnimationFrame(() => { updateCropFrameUI(); });
 }
 
-function updateCropBox() {
-  const box = document.getElementById('cropBox');
-  const rect = canvas.getBoundingClientRect();
-  const contRect = canvas.parentElement.getBoundingClientRect();
-  const ox = rect.left - contRect.left;
-  const oy = rect.top - contRect.top;
-  box.style.left = (ox + rect.width * crop.x) + 'px';
-  box.style.top = (oy + rect.height * crop.y) + 'px';
-  box.style.width = (rect.width * crop.w) + 'px';
-  box.style.height = (rect.height * crop.h) + 'px';
+function closeCropMode() {
+  cropModeActive = false;
+  document.getElementById('cropScreen').classList.remove('active');
 }
 
-function initCropOverlay() {
-  const box = document.getElementById('cropBox');
-  if (!box) return;
-  box.addEventListener('pointerdown', e => {
-    if (!isCropPanelActive()) return;
-    e.preventDefault(); e.stopPropagation();
-    const isCorner = e.target.classList.contains('crop-corner');
-    const corner = isCorner ? e.target.dataset.corner : null;
-    const rect = canvas.getBoundingClientRect();
-    cropDrag = { type:corner||'move', startX:e.clientX, startY:e.clientY, start:{...crop}, canvasRect:rect };
-  });
-  window.addEventListener('pointermove', e => {
-    if (!cropDrag) return;
-    e.preventDefault();
-    const dx = (e.clientX - cropDrag.startX) / cropDrag.canvasRect.width;
-    const dy = (e.clientY - cropDrag.startY) / cropDrag.canvasRect.height;
-    const s = cropDrag.start; const MIN = 0.15;
-    let { x, y, w, h } = s;
-    if (cropDrag.type === 'move') { x = Math.max(0, Math.min(1-s.w, s.x+dx)); y = Math.max(0, Math.min(1-s.h, s.y+dy)); }
-    else if (cropDrag.type === 'tl') { const nx = Math.max(0, Math.min(s.x+s.w-MIN, s.x+dx)); const ny = Math.max(0, Math.min(s.y+s.h-MIN, s.y+dy)); x=nx; y=ny; w=s.x+s.w-nx; h=s.y+s.h-ny; }
-    else if (cropDrag.type === 'tr') { const ny = Math.max(0, Math.min(s.y+s.h-MIN, s.y+dy)); y=ny; h=s.y+s.h-ny; w=Math.max(MIN, Math.min(1-s.x, s.w+dx)); }
-    else if (cropDrag.type === 'bl') { const nx = Math.max(0, Math.min(s.x+s.w-MIN, s.x+dx)); x=nx; w=s.x+s.w-nx; h=Math.max(MIN, Math.min(1-s.y, s.h+dy)); }
-    else if (cropDrag.type === 'br') { w=Math.max(MIN, Math.min(1-s.x, s.w+dx)); h=Math.max(MIN, Math.min(1-s.y, s.h+dy)); }
-    crop = { x, y, w, h };
-    updateCropBox();
-  });
-  window.addEventListener('pointerup', () => { cropDrag = null; });
-  window.addEventListener('pointercancel', () => { cropDrag = null; });
-  window.addEventListener('resize', () => { if (isCropPanelActive()) updateCropBox(); });
+function cancelCropMode() {
+  closeCropMode();
+  switchPanel(cropPrevPanel, document.querySelector('.nav-btn[data-panel="' + cropPrevPanel + '"]'));
 }
 
-function setCropRect(ratio) {
-  if (ratio === 'free') { crop = { x:0, y:0, w:1, h:1 }; updateCropBox(); return; }
-  let tr;
-  if (ratio === '1:1') tr = 1;
-  else if (ratio === '4:5') tr = 4/5;
-  else if (ratio === '9:16') tr = 9/16;
-  else if (ratio === '16:9') tr = 16/9;
-  const ca = canvas.width / canvas.height;
-  const cr = tr / ca;
-  let w, h;
-  if (cr >= 1) { w = 1; h = 1/cr; } else { h = 1; w = cr; }
-  crop = { x:(1-w)/2, y:(1-h)/2, w, h };
-  updateCropBox();
-}
-
-function resetCrop() { crop = { x:0, y:0, w:1, h:1 }; updateCropBox(); }
-
-function applyCropNow() {
+function applyCropMode() {
   if (!imgLoaded) return;
-  if (crop.w >= 0.99 && crop.h >= 0.99 && crop.x < 0.01 && crop.y < 0.01) return;
-  const px = Math.round(crop.x * canvas.width);
-  const py = Math.round(crop.y * canvas.height);
-  const pw = Math.round(crop.w * canvas.width);
-  const ph = Math.round(crop.h * canvas.height);
-  const full = document.createElement('canvas');
-  full.width = canvas.width; full.height = canvas.height;
-  full.getContext('2d').drawImage(img, 0, 0);
+  // Save pre-crop state only the first time
+  if (preCropImageSrc === null) {
+    preCropImageSrc = canvas.toDataURL('image/png');
+    preCropCanvasW = canvas.width;
+    preCropCanvasH = canvas.height;
+  }
+  const cc = document.getElementById('cropCanvas');
+  const px = Math.round(crop.x * cc.width);
+  const py = Math.round(crop.y * cc.height);
+  const pw = Math.max(8, Math.round(crop.w * cc.width));
+  const ph = Math.max(8, Math.round(crop.h * cc.height));
   const tmp = document.createElement('canvas');
   tmp.width = pw; tmp.height = ph;
-  tmp.getContext('2d').drawImage(full, px, py, pw, ph, 0, 0, pw, ph);
+  tmp.getContext('2d').drawImage(cc, px, py, pw, ph, 0, 0, pw, ph);
   const url = tmp.toDataURL('image/png');
   const newImg = new Image();
   newImg.onload = function() {
     img = newImg; originalImageSrc = url;
     canvas.width = pw; canvas.height = ph;
     personMask = null; subjectReady = false;
-    crop = { x:0, y:0, w:1, h:1 };
     buildFilterThumbs(); buildTemplates();
     redraw(); saveState();
-    showCropOverlay(false);
+    closeCropMode();
     switchPanel('adjust', document.querySelector('.nav-btn[data-panel="adjust"]'));
   };
   newImg.src = url;
 }
 
-function rotateImage(deg) {
-  if (!imgLoaded) return;
+function restorePreCrop() {
+  if (!preCropImageSrc) { alert('Nothing to restore — no crop applied yet'); return; }
+  const newImg = new Image();
+  newImg.onload = function() {
+    img = newImg;
+    originalImageSrc = preCropImageSrc;
+    canvas.width = preCropCanvasW;
+    canvas.height = preCropCanvasH;
+    preCropImageSrc = null;
+    preCropCanvasW = 0;
+    preCropCanvasH = 0;
+    personMask = null; subjectReady = false;
+    buildFilterThumbs(); buildTemplates();
+    redraw(); saveState();
+    closeCropMode();
+    switchPanel('adjust', document.querySelector('.nav-btn[data-panel="adjust"]'));
+  };
+  newImg.src = preCropImageSrc;
+}
+
+function updateCropFrameUI() {
+  const cc = document.getElementById('cropCanvas');
+  const frame = document.getElementById('cropFrame');
+  if (!cc || !frame) return;
+  const r = cc.getBoundingClientRect();
+  const wr = cc.parentElement.getBoundingClientRect();
+  const ox = r.left - wr.left;
+  const oy = r.top - wr.top;
+  frame.style.left = (ox + r.width * crop.x) + 'px';
+  frame.style.top = (oy + r.height * crop.y) + 'px';
+  frame.style.width = (r.width * crop.w) + 'px';
+  frame.style.height = (r.height * crop.h) + 'px';
+}
+
+function initCropFrameDrag() {
+  const frame = document.getElementById('cropFrame');
+  if (!frame || frame.dataset.bound) return;
+  frame.dataset.bound = '1';
+  frame.addEventListener('pointerdown', e => {
+    if (!cropModeActive) return;
+    e.preventDefault(); e.stopPropagation();
+    const corner = (e.target.dataset && e.target.dataset.c) ? e.target.dataset.c : null;
+    const cc = document.getElementById('cropCanvas');
+    const r = cc.getBoundingClientRect();
+    cropFrameDrag = { type: corner || 'move', sx: e.clientX, sy: e.clientY, start: { ...crop }, cw: r.width, ch: r.height };
+  });
+  window.addEventListener('pointermove', e => {
+    if (!cropFrameDrag) return;
+    e.preventDefault();
+    const dx = (e.clientX - cropFrameDrag.sx) / cropFrameDrag.cw;
+    const dy = (e.clientY - cropFrameDrag.sy) / cropFrameDrag.ch;
+    const s = cropFrameDrag.start; const MIN = 0.12;
+    let { x, y, w, h } = s;
+    const t = cropFrameDrag.type;
+    if (t === 'move') { x = Math.max(0, Math.min(1-s.w, s.x+dx)); y = Math.max(0, Math.min(1-s.h, s.y+dy)); }
+    else if (t === 'tl') { const nx = Math.max(0, Math.min(s.x+s.w-MIN, s.x+dx)); const ny = Math.max(0, Math.min(s.y+s.h-MIN, s.y+dy)); x=nx; y=ny; w=s.x+s.w-nx; h=s.y+s.h-ny; }
+    else if (t === 'tr') { const ny = Math.max(0, Math.min(s.y+s.h-MIN, s.y+dy)); y=ny; h=s.y+s.h-ny; w=Math.max(MIN, Math.min(1-s.x, s.w+dx)); }
+    else if (t === 'bl') { const nx = Math.max(0, Math.min(s.x+s.w-MIN, s.x+dx)); x=nx; w=s.x+s.w-nx; h=Math.max(MIN, Math.min(1-s.y, s.h+dy)); }
+    else if (t === 'br') { w=Math.max(MIN, Math.min(1-s.x, s.w+dx)); h=Math.max(MIN, Math.min(1-s.y, s.h+dy)); }
+    crop = { x, y, w, h };
+    updateCropFrameUI();
+  });
+  window.addEventListener('pointerup', () => { cropFrameDrag = null; });
+  window.addEventListener('pointercancel', () => { cropFrameDrag = null; });
+  window.addEventListener('resize', () => { if (cropModeActive) updateCropFrameUI(); });
+}
+
+function setCropRatio(ratio, el) {
+  document.querySelectorAll('.crop-ratio-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (ratio === 'free') return;
+  if (ratio === 'original') { crop = { x:0, y:0, w:1, h:1 }; updateCropFrameUI(); return; }
+  const cc = document.getElementById('cropCanvas');
+  const ca = cc.width / cc.height;
+  let tr;
+  if (ratio === '1:1') tr = 1;
+  else if (ratio === '4:5') tr = 4/5;
+  else if (ratio === '9:16') tr = 9/16;
+  else if (ratio === '4:3') tr = 4/3;
+  else if (ratio === '3:4') tr = 3/4;
+  if (!tr) return;
+  const cr = tr / ca;
+  let w, h;
+  if (cr >= 1) { w = 1; h = 1/cr; } else { h = 1; w = cr; }
+  crop = { x:(1-w)/2, y:(1-h)/2, w, h };
+  updateCropFrameUI();
+}
+
+function cropRotate(deg) {
+  const cc = document.getElementById('cropCanvas');
   const c = document.createElement('canvas');
-  c.width = canvas.height; c.height = canvas.width;
+  c.width = cc.height; c.height = cc.width;
   const cx = c.getContext('2d');
   cx.translate(c.width/2, c.height/2);
   cx.rotate(deg * Math.PI / 180);
-  cx.drawImage(img, -canvas.width/2, -canvas.height/2);
-  const url = c.toDataURL('image/png');
-  const newImg = new Image();
-  newImg.onload = function() {
-    img = newImg; originalImageSrc = url;
-    canvas.width = c.width; canvas.height = c.height;
-    redraw(); saveState(); buildFilterThumbs(); buildTemplates();
-    if (isCropPanelActive()) { crop = { x:0, y:0, w:1, h:1 }; updateCropBox(); }
-  };
-  newImg.src = url;
+  cx.drawImage(cc, -cc.width/2, -cc.height/2);
+  cc.width = c.width; cc.height = c.height;
+  const ccx = cc.getContext('2d');
+  ccx.clearRect(0, 0, cc.width, cc.height);
+  ccx.drawImage(c, 0, 0);
+  crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
+  updateCropFrameUI();
 }
 
-function flipImage(dir) {
-  if (!imgLoaded) return;
+function cropFlip(dir) {
+  const cc = document.getElementById('cropCanvas');
   const c = document.createElement('canvas');
-  c.width = canvas.width; c.height = canvas.height;
+  c.width = cc.width; c.height = cc.height;
   const cx = c.getContext('2d');
-  cx.translate(dir === 'h' ? canvas.width : 0, dir === 'v' ? canvas.height : 0);
+  cx.translate(dir === 'h' ? cc.width : 0, dir === 'v' ? cc.height : 0);
   cx.scale(dir === 'h' ? -1 : 1, dir === 'v' ? -1 : 1);
-  cx.drawImage(img, 0, 0);
-  const url = c.toDataURL('image/png');
-  const newImg = new Image();
-  newImg.onload = function() { img = newImg; originalImageSrc = url; redraw(); saveState(); buildFilterThumbs(); buildTemplates(); };
-  newImg.src = url;
+  cx.drawImage(cc, 0, 0);
+  const ccx = cc.getContext('2d');
+  ccx.clearRect(0, 0, cc.width, cc.height);
+  ccx.drawImage(c, 0, 0);
+  updateCropFrameUI();
 }
 
-/* ============================================================
-   SUBJECT DETECTION
-   ============================================================ */
+function resetCropAngle() {
+  const a = document.getElementById('cropAngleInput');
+  if (a) a.value = 0;
+}
 
+/* Subject detection */
 window.detectSubject = async function() {
   const status = document.getElementById('subjectStatus');
   const btn = document.getElementById('detectBtn');
@@ -1755,10 +1600,7 @@ window.detectSubject = async function() {
   } catch(err) { status.textContent = 'Failed: ' + err.message; btn.disabled = false; }
 };
 
-/* ============================================================
-   BORDER / COVER / SELECTION
-   ============================================================ */
-
+/* Border + Cover + Selection */
 function drawBorder() {
   if (!imgLoaded || currentBorder === 'none') return;
   const w = canvas.width, h = canvas.height;
@@ -1817,10 +1659,7 @@ function drawSelectionBox(bx, by, bw, bh) {
   ctx.beginPath(); ctx.arc(bx + bw/2, by - 30, 6, 0, Math.PI*2); ctx.fill();
 }
 
-/* ============================================================
-   MAIN REDRAW
-   ============================================================ */
-
+/* Main redraw */
 function redraw() {
   if (!imgLoaded) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1898,15 +1737,7 @@ function redraw() {
   if (!currentBgColor && !currentBgImage) drawBorder();
   drawFxLayer();
   textLayers.forEach(layer => {
-    if (layer.isImage && layer.image && layer.image.complete) {
-      ctx.save();
-      ctx.translate(layer.x, layer.y);
-      if (layer.rotation) ctx.rotate(layer.rotation);
-      const w = layer.width, h = layer.height;
-      ctx.drawImage(layer.image, -w/2, -h/2, w, h);
-      if (activeLayerId === layer.id) drawSelectionBox(-w/2 - 4, -h/2 - 4, w + 8, h + 8);
-      ctx.restore();
-    } else if (layer.text && layer.text.trim() !== '') {
+    if (layer.text && layer.text.trim() !== '') {
       ctx.save();
       ctx.translate(layer.x, layer.y);
       if (layer.rotation) ctx.rotate(layer.rotation);
@@ -1927,10 +1758,7 @@ function redraw() {
   });
 }
 
-/* ============================================================
-   UPLOAD / IMPORT
-   ============================================================ */
-
+/* Upload / Import */
 function initHomeUpload() {
   document.getElementById('homeImageUpload').addEventListener('change', async function(e) {
     const files = Array.from(e.target.files || []);
@@ -1994,10 +1822,7 @@ function importOnePhoto(file) {
   });
 }
 
-/* ============================================================
-   LOAD / HOME
-   ============================================================ */
-
+/* Load / Home */
 function loadProject(key) {
   resetStudioState();
   const p = JSON.parse(localStorage.getItem(key));
@@ -2005,7 +1830,6 @@ function loadProject(key) {
   currentProjectName = p.name || 'Untitled';
   textLayers = p.textLayers || [];
   activeLayerId = null;
-  textLayers.forEach(l => { if (l.isImage && l.imageUrl) { const im = new Image(); im.src = l.imageUrl; l.image = im; } });
   bInput.value = p.brightness ?? 100; cInput.value = p.contrast ?? 100; sInput.value = p.saturation ?? 100; nInput.value = p.noise ?? 0;
   subjAmt.value = p.subjectAmount ?? 12;
   currentFilter = p.filter ?? 'none';
@@ -2039,13 +1863,12 @@ function loadProject(key) {
     if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
     imgLoaded = true;
     buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-    buildFxGrids(); buildAdvisoryGrid(); buildBgImageGrid();
+    buildFxGrids(); buildBgImageGrid();
     saveState(); redraw();
   };
   img.src = sourceImage;
   document.getElementById('view-home').classList.remove('active');
   document.getElementById('view-studio').classList.add('active');
-  document.getElementById('cropOverlay').classList.remove('active');
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-adjust').classList.add('active');
@@ -2056,7 +1879,6 @@ function goHome() {
   document.getElementById('view-studio').classList.remove('active');
   document.getElementById('view-home').classList.add('active');
   textMenu.style.display = 'none';
-  document.getElementById('cropOverlay').classList.remove('active');
   resetStudioState();
   renderProjectsList();
 }
@@ -2068,21 +1890,21 @@ function resetEverything() {
   currentFx = 'none'; currentFxAmount = 70;
   textLayers = []; activeLayerId = null;
   subjectMode = 'none'; personMask = null; subjectReady = false;
+  preCropImageSrc = null;
   document.querySelectorAll('.template-thumb, .filter-thumb, .border-thumb, .bgcolor-swatch, .bg-item, .fx-card').forEach(c => c.classList.remove('selected'));
   syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
 }
 
-/* ============================================================
-   BOOT
-   ============================================================ */
-
+/* Boot */
 window.onload = function() {
   const el = document.getElementById('splashScreen');
   if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
   (async () => {
     buildFontGrid(); buildTemplates(); buildBorders(); buildBgColors();
-    updateTextLayersUI(); initCropOverlay(); initHomeUpload(); renderProjectsList();
-    try { if (typeof preloadEffects === 'function') await preloadEffects(); } catch (e) { console.warn(e); }
+    updateTextLayersUI(); initHomeUpload(); renderProjectsList();
+    setTimeout(() => {
+  try { if (typeof preloadEffects === 'function') preloadEffects(); } catch (e) { console.warn(e); }
+}, 2000);
     setTimeout(() => {
       const s = document.getElementById('splashScreen');
       if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 300); }
