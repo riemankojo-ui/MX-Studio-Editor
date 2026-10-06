@@ -188,6 +188,15 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 #toast { position:fixed; left:50%; bottom:110px; transform:translateX(-50%) translateY(20px); background:#161616; color:#fff; font-size:13px; font-weight:700; padding:12px 22px; border-radius:24px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:600; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 #confirmModal { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
+#textCardModal { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:650; display:none; align-items:center; justify-content:center; padding:20px; }
+#textCardModal.active { display:flex; }
+.text-card { background:#161616; border:1px solid #242424; border-radius:16px; padding:20px 18px 16px; width:100%; max-width:320px; box-shadow:0 20px 60px rgba(0,0,0,.6); text-align:left; }
+.text-card-title { font-size:12px; font-weight:800; color:#fff; margin-bottom:10px; text-transform:uppercase; letter-spacing:.6px; }
+.text-card input[type="text"] { margin-top:0; }
+.text-card-actions { display:flex; gap:10px; margin-top:14px; }
+.text-card-btn { flex:1; border:none; padding:12px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; text-transform:uppercase; }
+.text-card-btn.cancel { background:#242424; color:#fff; }
+.text-card-btn.confirm { background:#fff; color:#000; }
 #confirmModal.active { display:flex; }
 .confirm-card { background:#161616; border:1px solid #242424; border-radius:16px; padding:24px 20px 18px; width:100%; max-width:280px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
 .confirm-title { font-size:15px; font-weight:800; color:#fff; margin-bottom:6px; }
@@ -502,7 +511,16 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
   </div>
 </div>
-
+<div id="textCardModal">
+  <div class="text-card">
+    <div class="text-card-title" id="textCardTitle">Add Text</div>
+    <input type="text" id="textCardInput" placeholder="Type here..." autocomplete="off">
+    <div class="text-card-actions">
+      <button class="text-card-btn cancel" onclick="closeTextCard()">Cancel</button>
+      <button class="text-card-btn confirm" onclick="confirmTextCard()">Add</button>
+    </div>
+  </div>
+</div>
 <div id="toast">Saved</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
