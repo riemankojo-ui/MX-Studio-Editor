@@ -1575,7 +1575,7 @@ function saveImage() {
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    }, 2000);
+    }, 0);
     showToast('Saved');
   }, 'image/png');
 }
@@ -2121,15 +2121,20 @@ function loadProject(key) {
     }
     setTimeout(() => { if (imgLoaded) redraw(); }, 400);
     if (currentFx && currentFx !== 'none' && !currentFx.endsWith(':none')) {
-      const key2 = currentFx.split(':').slice(0, 2).join(':');
-      let tries = 0;
-      const check = setInterval(() => {
-        if (fxImages[key2] || tries++ > 150) {
-          clearInterval(check);
-          if (imgLoaded) redraw();
-        }
-      }, 100);
-    }
+  const parts = currentFx.split(':');
+  const catKey = parts[0], fname = parts[1];
+  const imgKey = catKey + ':' + fname;
+  if (fxImages[imgKey]) {
+    redraw();
+  } else {
+    loadImage(EFFECTS_BASE + fname).then(im => {
+      if (im) {
+        fxImages[imgKey] = im;
+        if (imgLoaded) redraw();
+      }
+    });
+  }
+}
     saveState();
   };
   img.src = sourceImage;
