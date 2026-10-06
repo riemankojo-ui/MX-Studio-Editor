@@ -37,9 +37,9 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .home-empty-title { font-size:18px; letter-spacing:2px; color:#fff; margin-bottom:8px; font-weight:900; }
 .home-empty-sub { font-size:12px; color:#666; line-height:1.6; margin-bottom:22px; }
 
-.canvas-container { position:relative; display:inline-block; max-width:100%; margin:0 auto 4px auto; flex-shrink:0; }
-canvas { max-width:100%; max-height:52vh; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; transition:max-height .3s ease; }
-#view-studio.expanded canvas { max-height:44vh; }
+/* Canvas fills whatever vertical room is left after the panel */
+.canvas-container { position:relative; display:flex; align-items:center; justify-content:center; flex:1 1 auto; min-height:0; max-width:100%; margin:0 auto 4px auto; padding:0 4px; }
+canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; transition:max-height .3s ease; }
 
 #textFloatingMenu { display:none; position:absolute; background:rgba(15,15,15,.96); padding:8px; border-radius:10px; z-index:50; transform:translate(-50%,-125%); width:150px; }
 .arrow-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:6px; }
@@ -68,7 +68,14 @@ canvas { max-width:100%; max-height:52vh; height:auto; width:auto; background:#0
 .panel { display:none; background:transparent; padding:8px 4px; text-align:left; font-size:12px; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; position:relative; }
 .panel.active { display:block; }
 
-.sub-tabs { display:flex; justify-content:flex-start; gap:16px; margin-bottom:10px; border-bottom:1px solid #1a1a1a; padding-bottom:10px; overflow-x:auto; }
+/* Adjust panel hugs its content — no dead space below the tabs */
+#panel-adjust.active {
+  flex: 0 0 auto;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+
+.sub-tabs { display:flex; justify-content:flex-start; gap:16px; margin-bottom:8px; border-bottom:1px solid #1a1a1a; padding-bottom:8px; overflow-x:auto; }
 .sub-tabs::-webkit-scrollbar { display:none; }
 .sub-tab { background:none; border:none; color:#666; font-weight:bold; font-size:11px; cursor:pointer; padding:2px 0; white-space:nowrap; flex-shrink:0; }
 .sub-tab.active { color:#fff; border-bottom:2px solid #fff; }
@@ -82,6 +89,14 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 
 .h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .fx-grid { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
 .h-scroll::-webkit-scrollbar, .filter-thumbs::-webkit-scrollbar, .template-thumbs::-webkit-scrollbar, .border-thumbs::-webkit-scrollbar, .color-row::-webkit-scrollbar, .bgcolor-row::-webkit-scrollbar, .fx-grid::-webkit-scrollbar { display:none; }
+
+/* Templates: single row, side-scroll (matches your reference) */
+.template-thumbs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+}
+
 .bg-grid { display:flex; flex-wrap:wrap; gap:8px; padding:4px 2px 8px; }
 .h-card { flex:0 0 auto; padding:8px 16px; background:#161616; border:none; border-radius:18px; font-size:11px; font-weight:600; color:#aaa; cursor:pointer; white-space:nowrap; }
 .h-card.selected { color:#fff; background:#333; }
@@ -527,6 +542,7 @@ let personMask = null;
 let subjectReady = false;
 let selfieSeg = null;
 let counterLocked = false;
+let crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
 
 const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
 
@@ -683,7 +699,6 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 1500);
 }
 
-/* Adjust categories */
 function switchAdjustCat(name, el) {
   const panel = el.closest('.panel');
   panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
@@ -709,7 +724,6 @@ function buildPresetThumbs() {
   el.innerHTML = html;
 }
 
-/* FX */
 function buildFxTabs() {
   const bar = document.getElementById('fxTabBar');
   if (!bar) return;
@@ -793,7 +807,6 @@ function drawFxLayer() {
   ctx.restore();
 }
 
-/* Backgrounds */
 function buildBgImageGrid() {
   const g = document.getElementById('bgImageGrid');
   if (!g) return;
@@ -841,7 +854,6 @@ function clearBgImage() {
   redraw(); saveState();
 }
 
-/* BG Remover */
 async function removeBgBest() {
   if (!imgLoaded) { alert('Load a photo first'); return; }
   playCount(async () => {
@@ -861,7 +873,6 @@ async function removeBgBest() {
   });
 }
 
-/* Fonts / Colors / Templates / Borders / Filters */
 function buildFontGrid() {
   const c = document.getElementById('fontGridContainer');
   if (!c) return;
@@ -984,7 +995,6 @@ function applyFilterByIndex(i, el) {
   saveState(); redraw();
 }
 
-/* Home */
 function timeAgo(iso) {
   if (!iso) return '';
   const d = new Date(iso);
@@ -1071,7 +1081,6 @@ function resetStudioState() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-/* Undo / Redo */
 function saveState() {
   if (!imgLoaded) return;
   const state = canvas.toDataURL();
@@ -1110,7 +1119,6 @@ function updateHistoryButtons() {
   if (r) r.disabled = redoStack.length === 0;
 }
 
-/* Text interaction */
 function getCanvasCoordinates(e, touch) {
   const rect = canvas.getBoundingClientRect();
   const cx = touch ? touch.clientX : (e.touches ? e.touches[0].clientX : e.clientX);
@@ -1377,7 +1385,6 @@ function setActiveFont(f, el) { const l = textLayers.find(x => x.id === activeLa
 function setActiveTextColor(c, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.color = c; syncActiveInputs(); redraw(); saveState(); }
 function setActiveTextStyle(s, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.style = s; redraw(); saveState(); }
 
-/* Save / Load */
 function saveProjectToHome() {
   if (!imgLoaded) return;
   if (!currentProjectId) currentProjectId = 'proj_' + Date.now();
@@ -1453,13 +1460,8 @@ function saveImage() {
   }, 'image/png');
 }
 
-/* Panel switching */
 function switchPanel(name, btn) {
   const view = document.getElementById('view-studio');
-  if (view) {
-    if (name === 'adjust') view.classList.remove('expanded');
-    else view.classList.add('expanded');
-  }
   if (name === 'crop') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
@@ -1512,7 +1514,6 @@ function updateSelection(el) {
   input.addEventListener('change', saveState);
 });
 
-/* Full-screen crop */
 let cropModeActive = false;
 let cropPrevPanel = 'adjust';
 let cropFrameDrag = null;
@@ -1695,7 +1696,6 @@ function resetCropAngle() {
   if (a) a.value = 0;
 }
 
-/* Subject detection */
 window.detectSubject = async function() {
   const status = document.getElementById('subjectStatus');
   const btn = document.getElementById('detectBtn');
@@ -1733,7 +1733,6 @@ window.detectSubject = async function() {
   } catch(err) { status.textContent = 'Failed: ' + err.message; btn.disabled = false; }
 };
 
-/* Border / Cover / Selection */
 function drawBorder() {
   if (!imgLoaded || currentBorder === 'none') return;
   const w = canvas.width, h = canvas.height;
@@ -1792,7 +1791,6 @@ function drawSelectionBox(bx, by, bw, bh) {
   ctx.beginPath(); ctx.arc(bx + bw/2, by - 30, 6, 0, Math.PI*2); ctx.fill();
 }
 
-/* Main redraw */
 function redraw() {
   if (!imgLoaded) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1891,7 +1889,6 @@ function redraw() {
   });
 }
 
-/* Upload / Import */
 function initHomeUpload() {
   document.getElementById('homeImageUpload').addEventListener('change', async function(e) {
     const files = Array.from(e.target.files || []);
@@ -1955,7 +1952,6 @@ function importOnePhoto(file) {
   });
 }
 
-/* Load / Home */
 function loadProject(key) {
   resetStudioState();
   const p = JSON.parse(localStorage.getItem(key));
@@ -2011,7 +2007,6 @@ function loadProject(key) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-adjust').classList.add('active');
   document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
-  document.getElementById('view-studio').classList.remove('expanded');
 }
 
 function goHome() {
@@ -2034,7 +2029,6 @@ function resetEverything() {
   syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
 }
 
-/* Boot */
 document.addEventListener('DOMContentLoaded', function() {
   const el = document.getElementById('splashScreen');
   if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
