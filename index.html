@@ -2124,7 +2124,7 @@ function loadProject(key) {
       const key2 = currentFx.split(':').slice(0, 2).join(':');
       let tries = 0;
       const check = setInterval(() => {
-        if (fxImages[key2] || tries++ > 50) {
+        if (fxImages[key2] || tries++ > 150) {
           clearInterval(check);
           if (imgLoaded) redraw();
         }
@@ -2180,7 +2180,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 400);
   })();
 });
-
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && imgLoaded) redraw();
+});
+window.addEventListener('focus', function() {
+  if (imgLoaded) redraw();
+});
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW failed', e));
