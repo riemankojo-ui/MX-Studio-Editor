@@ -146,7 +146,7 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-box; padding:11px; background:#141414; border:none; border-radius:8px; margin-top:4px; }
 .section-label { font-size:10px; color:#666; margin:14px 0 4px; display:block; letter-spacing:.6px; font-weight:700; }
 
-.corner-btn { position:absolute; right:12px; bottom:12px; background:#ffffff; color:#000; border:none; width:52px; height:52px; border-radius:50%; font-size:24px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.6); z-index:20; line-height:1; transition:transform .1s ease; }
+..corner-btn { position:absolute; left:12px; bottom:12px; background:#ffffff; color:#000; border:none; width:36px; height:36px; border-radius:50%; font-size:20px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.6); z-index:20; line-height:1; transition:transform .1s ease; } .1s ease; }
 .corner-btn:active { transform:scale(.92); }
 .corner-btn.small { width:44px; height:44px; font-size:11px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; }
 
@@ -303,7 +303,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <div class="sub-tabs" id="fxTabBar"></div>
     <div id="fxGrids"></div>
     <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
-    <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
+    <input type="range" id="fxAmount"<button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button> min="0" max="100" value="70" oninput="setFxAmount(this.value)">
   </div>
 
   <div id="panel-text" class="panel">
@@ -314,9 +314,8 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
       <button class="sub-tab" onclick="switchSubTab('featured', this)">EFFECTS</button>
     </div>
     <div id="subtab-layers" class="sub-view active" style="padding-bottom:70px;">
-      <input type="text" id="textContent" placeholder="Type here..." oninput="updateActiveTextContent(this.value)">
       <div id="textLayersList" class="text-layers-list"></div>
-      <button class="corner-btn" onclick="addNewTextLayer()">+</button>
+      <button class="corner-btn" onclick="openTextCard()">+</button>
     </div>
     <div id="subtab-font" class="sub-view">
       <label>Select Font (40):</label>
@@ -539,6 +538,10 @@ let personMask = null;
 let subjectReady = false;
 let selfieSeg = null;
 let counterLocked = false;
+let fxX = 0.5, fxY = 0.5, fxScale = 1, fxRotation = 0;
+let gestureTarget = 'text';
+let isDraggingFx = false;
+let fxDragStart = null;
 let crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
 
 const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
@@ -797,10 +800,25 @@ function drawFxLayer() {
   if (!im) return;
   const cat = FX_CATEGORIES.find(c => c.key === catKey);
   const a = currentFxAmount / 100;
+
   ctx.save();
   ctx.globalAlpha = a;
   ctx.globalCompositeOperation = (cat && cat.blend) ? cat.blend : 'screen';
-  drawCover(0, 0, canvas.width, canvas.height, im);
+
+  const cw = canvas.width, ch = canvas.height;
+  const baseW = cw * fxScale;
+  const baseH = ch * fxScale;
+
+  ctx.translate(fxX * cw, fxY * ch);
+  if (fxRotation) ctx.rotate(fxRotation);
+
+  const sr = im.naturalWidth / im.naturalHeight;
+  const dr = baseW / baseH;
+  let sx = 0, sy = 0, sw = im.naturalWidth, sh = im.naturalHeight;
+  if (sr > dr) { sw = sh * dr; sx = (im.naturalWidth - sw) / 2; }
+  else { sh = sw / dr; sy = (im.naturalHeight - sh) / 2; }
+  ctx.drawImage(im, sx, sy, sw, sh, -baseW/2, -baseH/2, baseW, baseH);
+
   ctx.restore();
 }
 
@@ -1139,6 +1157,24 @@ function startTouch(e) {
   if (e.preventDefault) e.preventDefault();
   if (e.touches) { touches.clear(); for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
   else { touches.clear(); touches.set('mouse', { x:e.clientX, y:e.clientY }); }
+
+  const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
+
+  if (gestureTarget === 'fx' && fxActive) {
+    if (touches.size === 2) {
+      const arr = Array.from(touches.values());
+      gesture = { type:'fx', startDist: touchDist(arr[0], arr[1]), startAngle: touchAngle(arr[0], arr[1]), startScale: fxScale, startRot: fxRotation };
+      return;
+    }
+    if (touches.size === 1) {
+      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+      isDraggingFx = true;
+      fxDragStart = { x: pos.x, y: pos.y, fxX: fxX, fxY: fxY };
+      return;
+    }
+    return;
+  }
+
   if (touches.size === 2) {
     const arr = Array.from(touches.values());
     if (activeLayerId !== null) {
@@ -1173,6 +1209,27 @@ function onTouchMove(e) {
   if (e.preventDefault) e.preventDefault();
   if (e.touches) { for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
   else if (touches.has('mouse')) { touches.set('mouse', { x:e.clientX, y:e.clientY }); }
+
+  const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
+
+  if (gestureTarget === 'fx' && fxActive) {
+    if (touches.size === 2 && gesture && gesture.type === 'fx') {
+      const arr = Array.from(touches.values());
+      const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
+      const rotDelta = touchAngle(arr[0], arr[1]) - gesture.startAngle;
+      fxScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
+      fxRotation = gesture.startRot + rotDelta;
+      redraw(); return;
+    }
+    if (isDraggingFx && fxDragStart) {
+      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+      fxX = fxDragStart.fxX + (pos.x - fxDragStart.x) / canvas.width;
+      fxY = fxDragStart.fxY + (pos.y - fxDragStart.y) / canvas.height;
+      redraw(); return;
+    }
+    return;
+  }
+
   if (touches.size === 2 && gesture) {
     const arr = Array.from(touches.values());
     const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
@@ -1197,8 +1254,8 @@ function endTouch(e) {
   if (e && e.changedTouches) { for (const t of e.changedTouches) touches.delete(t.identifier); } else { touches.delete('mouse'); }
   if (touches.size < 2) gesture = null;
   if (isDraggingText) { isDraggingText = false; saveState(); syncActiveInputs(); }
+  if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
 }
-
 function showFloatingMenu(x, y) {
   const rect = canvas.getBoundingClientRect();
   const contRect = canvas.parentElement.getBoundingClientRect();
@@ -1220,16 +1277,49 @@ function centerActiveTextHoriz() {
   if (l) { l.x = canvas.width / 2; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
 }
 
-function addNewTextLayer() {
-  const id = Date.now();
-  const newLayer = { id, text:"TEXT", x:canvas.width/2, y:canvas.height/2, font:"Impact", size:Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
-  textLayers.push(newLayer); activeLayerId = id;
-  syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
-  showFloatingMenu(newLayer.x, newLayer.y);
-  redraw(); saveState();
-  setTimeout(() => { tInput.focus(); tInput.select(); }, 60);
+let textCardMode = 'add';
+let textCardLayerId = null;
+
+function openTextCard(mode, layerId) {
+  textCardMode = mode || 'add';
+  textCardLayerId = layerId || null;
+  const modal = document.getElementById('textCardModal');
+  const title = document.getElementById('textCardTitle');
+  const inp = document.getElementById('textCardInput');
+  if (textCardMode === 'edit' && textCardLayerId) {
+    const l = textLayers.find(x => x.id === textCardLayerId);
+    title.textContent = 'Edit Text';
+    inp.value = l ? (l.text || '') : '';
+  } else {
+    title.textContent = 'Add Text';
+    inp.value = '';
+  }
+  modal.classList.add('active');
+  setTimeout(() => { inp.focus(); inp.select(); }, 100);
 }
 
+function closeTextCard() {
+  const m = document.getElementById('textCardModal');
+  if (m) m.classList.remove('active');
+  textCardLayerId = null;
+}
+
+function confirmTextCard() {
+  const val = (document.getElementById('textCardInput').value || '').trim();
+  if (!val) { closeTextCard(); return; }
+  if (textCardMode === 'edit' && textCardLayerId) {
+    const l = textLayers.find(x => x.id === textCardLayerId);
+    if (l) l.text = val;
+  } else {
+    const id = Date.now();
+    const newLayer = { id, text: val, x: canvas.width/2, y: canvas.height/2, font:"Impact", size: Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
+    textLayers.push(newLayer);
+    activeLayerId = id;
+    showFloatingMenu(newLayer.x, newLayer.y);
+  }
+  closeTextCard();
+  syncActiveInputs(); updateTextLayersUI(); buildFontGrid(); redraw(); saveState();
+}
 function deleteActiveTextLayer() {
   if (textLayers.length === 0) { textMenu.style.display = 'none'; return; }
   textLayers = textLayers.filter(x => x.id !== activeLayerId);
@@ -1458,6 +1548,7 @@ function saveImage() {
 }
 
 function switchPanel(name, btn) {
+  gestureTarget = (name === 'fx') ? 'fx' : 'text';
   const view = document.getElementById('view-studio');
   if (name === 'crop') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
