@@ -156,8 +156,17 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .bgremover-btn { width:100%; background:#161616; border:1px solid #242424; color:#fff; padding:24px 18px; border-radius:14px; font-size:14px; font-weight:700; cursor:pointer; text-align:center; margin-bottom:12px; display:flex; justify-content:center; align-items:center; }
 .bgremover-btn .label { display:flex; flex-direction:column; gap:3px; align-items:center; }
 .bgremover-btn .title { font-size:18px; font-weight:800; color:#ff2c2c; letter-spacing:1px; }
-.bgremover-btn:active { background:#1f1f1f; }
-
+.bgremover-btn:active { background:#1f1f1f; }#toast { position:fixed; left:50%; bottom:110px; transform:translateX(-50%) translateY(20px); background:#161616; color:#fff; font-size:13px; font-weight:700; padding:12px 22px; border-radius:24px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:600; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+#confirmModal { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
+#confirmModal.active { display:flex; }
+.confirm-card { background:#161616; border:1px solid #242424; border-radius:16px; padding:24px 20px 18px; width:100%; max-width:280px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+.confirm-title { font-size:15px; font-weight:800; color:#fff; margin-bottom:6px; }
+.confirm-sub { font-size:11px; color:#888; margin-bottom:20px; line-height:1.5; }
+.confirm-actions { display:flex; gap:10px; }
+.confirm-btn { flex:1; border:none; padding:12px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; text-transform:uppercase; }
+.confirm-btn.keep { background:#242424; color:#fff; }
+.confirm-btn.delete { background:#ff2c2c; color:#fff; }
 #splashScreen { position:fixed; inset:0; background:#0a0a0a; z-index:99999; display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .3s ease; }
 #splashScreen.fade-out { opacity:0; pointer-events:none; }
 .splash-inner { display:flex; flex-direction:column; align-items:center; gap:20px; padding:20px; width:100%; }
@@ -951,8 +960,27 @@ function openProjectWithCount(key) {
   playCount(() => { loadProject(key); });
 }
 
+let pendingDeleteKey = null;
+
 function deleteProject(key) {
-  if (confirm("Delete this project?")) { localStorage.removeItem(key); renderProjectsList(); }
+  pendingDeleteKey = key;
+  const modal = document.getElementById('confirmModal');
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.onclick = function() {
+    if (pendingDeleteKey) {
+      localStorage.removeItem(pendingDeleteKey);
+      pendingDeleteKey = null;
+    }
+    closeConfirm();
+    renderProjectsList();
+  };
+  modal.classList.add('active');
+}
+
+function closeConfirm() {
+  const modal = document.getElementById('confirmModal');
+  if (modal) modal.classList.remove('active');
+  pendingDeleteKey = null;
 }
 
 function setupCanvasFromImage(newImg) {
@@ -1311,18 +1339,62 @@ function saveProjectToHome() {
     }));
   } catch(e) { alert('Storage full.'); return; }
   undoStack = []; redoStack = []; updateHistoryButtons();
+  showToast('Saved');
+  showToast('Saved');
   playCount(() => { goHome(); });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.innerText = msg || 'Saved';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 1500);
 }
 
 function saveImage() {
   if (!imgLoaded) return;
-  const dataUrl = canvas.toDataURL('image/png');
-  playCount(() => {
+  const projName = (currentProjectName || 'Mx-Studio').trim().replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
+  const d = new Date();
+  const stamp = d.getFullYear()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0')
+    + '-'
+    + String(d.getHours()).padStart(2,'0')
+    + String(d.getMinutes()).padStart(2,'0')
+    + String(d.getSeconds()).padStart(2,'0');
+  const filename = projName + '-' + stamp + '.png';
+
+  canvas.toBlob(async function(blob) {
+    if (!blob) { showToast('Save failed'); return; }
+    const file = new File([blob], filename, { type: 'image/png' });
+
+    // Try native share sheet first (works on Android/iOS)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: filename });
+        showToast('Saved');
+        return;
+      } catch(err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+
+    // Fallback — blob download
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.download = 'mx-studio-' + Date.now() + '.png';
-    a.href = dataUrl;
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
-  });
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 2000);
+    showToast('Saved');
+  }, 'image/png');
 }
 
 /* Panel switching */
@@ -1918,6 +1990,17 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<div id="toast">Saved</div>
+<div id="confirmModal">
+  <div class="confirm-card">
+    <div class="confirm-title">Delete this project?</div>
+    <div class="confirm-sub">This can't be undone.</div>
+    <div class="confirm-actions">
+      <button class="confirm-btn keep" onclick="closeConfirm()">Keep</button>
+      <button class="confirm-btn delete" id="confirmDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
