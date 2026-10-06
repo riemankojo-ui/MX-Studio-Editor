@@ -37,7 +37,6 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .home-empty-title { font-size:18px; letter-spacing:2px; color:#fff; margin-bottom:8px; font-weight:900; }
 .home-empty-sub { font-size:12px; color:#666; line-height:1.6; margin-bottom:22px; }
 
-/* Canvas fills whatever vertical room is left after the panel */
 .canvas-container { position:relative; display:flex; align-items:center; justify-content:center; flex:1 1 auto; min-height:0; max-width:100%; margin:0 auto 4px auto; padding:0 4px; }
 canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; transition:max-height .3s ease; }
 
@@ -68,14 +67,21 @@ canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#0
 .panel { display:none; background:transparent; padding:8px 4px; text-align:left; font-size:12px; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; position:relative; }
 .panel.active { display:block; }
 
-/* Adjust panel hugs its content — no dead space below the tabs */
 #panel-adjust.active {
   flex: 0 0 auto;
   max-height: 30vh;
   overflow-y: auto;
 }
 
-.sub-tabs { display:flex; justify-content:flex-start; gap:16px; margin-bottom:8px; border-bottom:1px solid #1a1a1a; padding-bottom:8px; overflow-x:auto; }
+/* Effects panel needs enough room for tabs + swipe row + slider */
+#panel-fx.active {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.sub-tabs { display:flex; justify-content:flex-start; gap:16px; margin-bottom:8px; border-bottom:1px solid #1a1a1a; padding-bottom:8px; overflow-x:auto; flex-shrink: 0; }
 .sub-tabs::-webkit-scrollbar { display:none; }
 .sub-tab { background:none; border:none; color:#666; font-weight:bold; font-size:11px; cursor:pointer; padding:2px 0; white-space:nowrap; flex-shrink:0; }
 .sub-tab.active { color:#fff; border-bottom:2px solid #fff; }
@@ -87,15 +93,38 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px;
 input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; border:none; }
 .adjust-sliders { display:flex; flex-direction:column; gap:20px; padding:8px 4px; }
 
-.h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .fx-grid { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
-.h-scroll::-webkit-scrollbar, .filter-thumbs::-webkit-scrollbar, .template-thumbs::-webkit-scrollbar, .border-thumbs::-webkit-scrollbar, .color-row::-webkit-scrollbar, .bgcolor-row::-webkit-scrollbar, .fx-grid::-webkit-scrollbar { display:none; }
-
-/* Templates: single row, side-scroll (matches your reference) */
-.template-thumbs {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding: 2px 2px 4px;
+/* Base row style for all horizontal galleries */
+.h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .fx-grid {
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:4px 2px 10px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
 }
+.h-scroll::-webkit-scrollbar,
+.filter-thumbs::-webkit-scrollbar,
+.template-thumbs::-webkit-scrollbar,
+.border-thumbs::-webkit-scrollbar,
+.color-row::-webkit-scrollbar,
+.bgcolor-row::-webkit-scrollbar,
+.fx-grid::-webkit-scrollbar { display:none; }
+
+/* One-row swipeable for all card galleries */
+.template-thumbs,
+.filter-thumbs,
+.border-thumbs,
+.fx-grid {
+  flex-wrap: nowrap;
+  scroll-snap-type: x proximity;
+}
+.template-thumb,
+.filter-thumb,
+.border-thumb,
+.fx-card { scroll-snap-align: start; }
 
 .bg-grid { display:flex; flex-wrap:wrap; gap:8px; padding:4px 2px 8px; }
 .h-card { flex:0 0 auto; padding:8px 16px; background:#161616; border:none; border-radius:18px; font-size:11px; font-weight:600; color:#aaa; cursor:pointer; white-space:nowrap; }
@@ -126,6 +155,12 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .fx-card.selected .fx-card-preview { box-shadow:0 0 0 2px #00d4ff; }
 .fx-card-label { font-size:9px; color:#888; margin-top:4px; display:block; font-weight:700; }
 .fx-card.selected .fx-card-label { color:#00d4ff; }
+
+/* Keep the intensity slider fully visible under the fx row */
+#panel-fx .section-label { flex-shrink: 0; margin: 4px 0 4px; }
+#panel-fx #fxAmount { flex-shrink: 0; }
+
+#fxGrids { flex: 0 0 auto; min-height: 0; }
 
 .bg-item { flex:0 0 auto; width:72px; cursor:pointer; text-align:center; }
 .bg-item-img { width:72px; height:72px; border-radius:10px; background:#111; overflow:hidden; border:2px solid transparent; }
@@ -781,7 +816,15 @@ function buildFxGrid(catKey) {
 function setFx(key, el) {
   currentFx = key;
   document.querySelectorAll('.fx-card').forEach(c => c.classList.remove('selected'));
-  if (el) el.classList.add('selected');
+  if (el) {
+    el.classList.add('selected');
+    // Smoothly bring the tapped card into view (centered)
+    try {
+      const parent = el.parentElement;
+      const target = el.offsetLeft - (parent.clientWidth - el.offsetWidth) / 2;
+      parent.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+    } catch(e) {}
+  }
   redraw(); saveState();
 }
 
