@@ -2090,7 +2090,7 @@ function loadProject(key) {
   currentBgImageX = p.bgImageX ?? 0;
   currentBgImageY = p.bgImageY ?? 0;
   currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
-fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p.fxRotation ?? 0;
+  fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p.fxRotation ?? 0;
   const fxAmt = document.getElementById('fxAmount'); if (fxAmt) fxAmt.value = currentFxAmount;
   const fxV = document.getElementById('fxVal'); if (fxV) fxV.innerText = currentFxAmount;
   const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
@@ -2120,6 +2120,16 @@ fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p
       document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
     }
     setTimeout(() => { if (imgLoaded) redraw(); }, 400);
+    if (currentFx && currentFx !== 'none' && !currentFx.endsWith(':none')) {
+      const key2 = currentFx.split(':').slice(0, 2).join(':');
+      let tries = 0;
+      const check = setInterval(() => {
+        if (fxImages[key2] || tries++ > 50) {
+          clearInterval(check);
+          if (imgLoaded) redraw();
+        }
+      }, 100);
+    }
     saveState();
   };
   img.src = sourceImage;
