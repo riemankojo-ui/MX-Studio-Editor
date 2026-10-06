@@ -672,8 +672,8 @@ async function preloadEffects() {
   buildFxTabs();
   buildFxGrids();
   buildBgImageGrid();
+  if (imgLoaded) redraw();
 }
-
 function playCount(callback) {
   if (counterLocked) return;
   counterLocked = true;
@@ -1501,7 +1501,7 @@ function saveProjectToHome() {
   try {
     localStorage.setItem('music_' + currentProjectId, JSON.stringify({
       name: autoName, date: now.toISOString(), savedAt: now.getTime(),
-      image: canvas.toDataURL('image/jpeg', 0.85),
+      image: originalImageSrc,
       originalImage: originalImageSrc,
       canvasW: canvas.width, canvasH: canvas.height,
       textLayers: serializedLayers,
@@ -1511,6 +1511,7 @@ function saveProjectToHome() {
       bgImageFile: bgFile, bgImageSize: currentBgImageSize,
       bgImageZoom: currentBgImageZoom, bgImageX: currentBgImageX, bgImageY: currentBgImageY,
       template: currentTemplate, fx: currentFx, fxAmount: currentFxAmount,
+fxX, fxY, fxScale, fxRotation,
       subjectMode, strokeColor, subjectAmount: subjAmt.value
     }));
   } catch(e) { alert('Storage full.'); return; }
@@ -2071,6 +2072,7 @@ function loadProject(key) {
   currentBgImageX = p.bgImageX ?? 0;
   currentBgImageY = p.bgImageY ?? 0;
   currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
+fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p.fxRotation ?? 0;
   const fxAmt = document.getElementById('fxAmount'); if (fxAmt) fxAmt.value = currentFxAmount;
   const fxV = document.getElementById('fxVal'); if (fxV) fxV.innerText = currentFxAmount;
   const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
