@@ -514,7 +514,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   <div id="subtab-bggrid" class="sub-view active">"
     <div class="bg-grid" id="bgImageGrid"></div>
   </div>
-  <div id="subtab-bglayers" class="sub-view"><button class="crop-tool" onclick="clearAllBg()" style="width:100%;justify-content:center;padding:12px;background:#242424;color:#fff;font-weight:800;margin-bottom:14px;">NONE</button>
+  <div id="subtab-bglayers" 
     <label class="section-label">FRAME SIZE:<div class="h-scroll" style="margin-bottom:8px;">
   <div class="h-card selected" onclick="switchBgDrag('subject', this)">Move Subject</div>
   <div class="h-card" onclick="switchBgDrag('bg', this)">Move Background</div>
@@ -967,8 +967,10 @@ function drawFxLayer() {
 function buildBgImageGrid() {
   const g = document.getElementById('bgImageGrid');
   if (!g) return;
-  if (!BG_CONFIG.files.length) { g.innerHTML = '<div class="filter-empty">No files</div>'; return; }
   let html = '';
+  const noneSel = (!currentBgImage && !currentBgColor) ? 'selected' : '';
+  html += '<div class="bg-item ' + noneSel + '" onclick="clearAllBg()"><div class="bg-item-img" style="display:flex;align-items:center;justify-content:center;background:#1a1a1a;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><span class="bg-item-label">None</span></div>';
+  if (!BG_CONFIG.files.length) { g.innerHTML = html; return; }
   BG_CONFIG.files.forEach(f => {
     if (f.fname === 'background10.jpg') return;
     const sel = (currentBgImage && currentBgImage.src.endsWith(f.fname)) ? 'selected' : '';
@@ -2427,7 +2429,21 @@ subjectX = p.subjectX ?? 0.5; subjectY = p.subjectY ?? 0.5; subjectScale = p.sub
   const xV = document.getElementById('bgImgXVal'); if (xV) xV.innerText = currentBgImageX;
   const yIn = document.getElementById('bgImgYInput'); if (yIn) yIn.value = currentBgImageY;
   const yV = document.getElementById('bgImgYVal'); if (yV) yV.innerText = currentBgImageY;
-  currentBgImage = (p.bgImageFile && bgImages[p.bgImageFile]) ? bgImages[p.bgImageFile] : null;
+currentBgImage = null;
+if (p.bgImageFile) {
+  const bgKey = p.bgImageFile;
+  if (bgImages[bgKey]) {
+    currentBgImage = bgImages[bgKey];
+  } else {
+    loadImage(EFFECTS_BASE + bgKey).then(im => {
+      if (im) {
+        bgImages[bgKey] = im;
+        currentBgImage = im;
+        if (imgLoaded) redraw();
+      }
+    });
+  }
+}
 if (p.customBgData && !currentBgImage) {
   const ci = new Image();
   ci.onload = () => { currentBgImage = ci; customBgImage = ci; if (imgLoaded) redraw(); };
