@@ -1777,6 +1777,7 @@ function saveProjectToHome() {
       name: autoName, date: now.toISOString(), savedAt: now.getTime(),
       image: originalImageSrc,
       originalImage: originalImageSrc,
+      preBgRemoveImage: window.__originalBeforeBgRemove || null,
       canvasW: canvas.width, canvasH: canvas.height,
       textLayers: serializedLayers,
       brightness: bInput.value, contrast: cInput.value, saturation: sInput.value, noise: nInput.value,
@@ -2469,6 +2470,7 @@ if (p.customBgData && !currentBgImage) {
   subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
   const sourceImage = p.originalImage || p.image;
   originalImageSrc = sourceImage;
+  window.__originalBeforeBgRemove = p.preBgRemoveImage || null;
   img.onload = function() {
     if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
     imgLoaded = true;
