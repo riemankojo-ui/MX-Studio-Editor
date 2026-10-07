@@ -1,12 +1,10 @@
 const CACHE_NAME = 'mx-studio-v' + Date.now();
 
-// Files to cache immediately when the service worker installs
 const SHELL = [
   './',
   './index.html',
   './manifest2.json',
-  './effects.json',
-  './sw.js'
+  './effects.json'
 ];
 
 // Install — cache the shell
@@ -26,27 +24,39 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch — cache-first with network fallback, and runtime caching for anything new
+// Fetch — cache-first with network fallback
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  // Don't try to cache blob: or data: URLs
+  // Skip blob: and data: URLs
   if (req.url.startsWith('blob:') || req.url.startsWith('data:')) return;
 
+  // Cache Google Fonts at runtime
+  if (req.url.includes('fonts.googleapis.com') || req.url.includes('fonts.gstatic.com')) {
+    e.respondWith(
+      caches.match(req).then(hit => {
+        if (hit) return hit;
+        return fetch(req).then(res => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {});
+          return res;
+        }).catch(() => new Response('', { status: 200 }));
+      })
+    );
+    return;
+  }
+
+  // Everything else — cache-first
   e.respondWith(
     caches.match(req).then(hit => {
       if (hit) return hit;
-
       return fetch(req).then(res => {
-        // Only cache successful responses (and opaque cross-origin ones)
         if (!res || (res.status !== 200 && res.type !== 'opaque')) return res;
-
         const copy = res.clone();
         caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {});
         return res;
       }).catch(() => {
-        // If offline and not cached → return a fallback for navigations
         if (req.mode === 'navigate') return caches.match('./index.html');
         return new Response('', { status: 503, statusText: 'Offline' });
       });

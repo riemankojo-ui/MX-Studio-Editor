@@ -1183,15 +1183,17 @@ function getCanvasCoordinates(e, touch) {
 function touchDist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
 function touchAngle(a,b) { return Math.atan2(b.y-a.y, b.x-a.x); }
 
-canvas.addEventListener('mousedown', startTouch);
-canvas.addEventListener('touchstart', startTouch, {passive:false});
-canvas.addEventListener('mousemove', onTouchMove);
-canvas.addEventListener('touchmove', onTouchMove, {passive:false});
-canvas.addEventListener('mouseup', endTouch);
-canvas.addEventListener('touchend', endTouch);
-canvas.addEventListener('touchcancel', endTouch);
+const canvasHost = canvas.parentElement;
+canvasHost.addEventListener('mousedown', startTouch);
+canvasHost.addEventListener('touchstart', startTouch, {passive:false});
+canvasHost.addEventListener('mousemove', onTouchMove);
+canvasHost.addEventListener('touchmove', onTouchMove, {passive:false});
+canvasHost.addEventListener('mouseup', endTouch);
+canvasHost.addEventListener('touchend', endTouch);
+canvasHost.addEventListener('touchcancel', endTouch);
 
 function startTouch(e) {
+if (e.target && e.target.closest && e.target.closest('#textFloatingMenu')) return;
   if (!imgLoaded) return;
   if (e.preventDefault) e.preventDefault();
   if (e.touches) { touches.clear(); for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
