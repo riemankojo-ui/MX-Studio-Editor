@@ -395,25 +395,44 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   </div>
 
   <div id="panel-bg" class="panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
-      <div id="subjectStatus" style="font-size:11px;color:#666;line-height:1.5;flex:1;">Tap DETECT. First run downloads a small model.</div>
-      <button class="corner-btn small" style="position:static;flex-shrink:0;" id="detectBtn" onclick="detectSubject()">Detect</button>
-    </div>
-    <label class="section-label">Effect</label>
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchSubTab('subjmain', this)">DETECT</button>
+    <button class="sub-tab" onclick="switchSubTab('subjeffect', this)">EFFECT</button>
+  </div>
+
+  <div id="subtab-subjmain" class="sub-view active">
+    <div id="subjectStatus" style="font-size:11px;color:#666;line-height:1.6;text-align:center;padding:14px 8px;">Tap DETECT — first run downloads a small AI model.</div>
+    <button class="bgremover-btn" id="detectBtn" onclick="detectSubject()" style="margin-bottom:8px;">
+      <div class="label">
+        <span class="title" style="color:#00d4ff;">DETECT SUBJECT</span>
+      </div>
+    </button>
+  </div>
+
+  <div id="subtab-subjeffect" class="sub-view">
+    <label class="section-label">EFFECT</label>
     <div class="h-scroll">
       <div class="h-card selected" onclick="setSubjectMode('none', this)">None</div>
       <div class="h-card" onclick="setSubjectMode('blur', this)">BG Blur</div>
       <div class="h-card" onclick="setSubjectMode('stroke', this)">Stroke</div>
     </div>
-    <label class="section-label">Amount: <span id="subjectAmtVal">12</span></label>
+    <label class="section-label">AMOUNT: <span id="subjectAmtVal">12</span></label>
     <input type="range" id="subjectAmount" min="1" max="25" value="12">
   </div>
+</div>
 
   <div id="panel-border" class="panel">
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchSubTab('borderstyle', this)">STYLE</button>
+    <button class="sub-tab" onclick="switchSubTab('bordercolor', this)">COLOR</button>
+  </div>
+  <div id="subtab-borderstyle" class="sub-view active">
     <label class="section-label">FRAME STYLE</label>
     <div class="border-thumbs" id="borderContainer"></div>
     <label class="section-label">FRAME SIZE: <span id="borderSizeVal">5</span>%</label>
     <input type="range" id="borderSizeInput" min="1" max="20" value="5" oninput="setBorderSize(this.value)">
+  </div>
+  <div id="subtab-bordercolor" class="sub-view">
     <label class="section-label">FRAME COLOR</label>
     <div style="display:flex;gap:12px;padding:4px 2px 8px;">
       <div class="bcolor-circle selected" style="background:#ffffff;" onclick="setBorderColor('#ffffff', this)"></div>
@@ -421,6 +440,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
       <div class="bcolor-circle" style="background:#000000;" onclick="setBorderColor('#000000', this)"></div>
     </div>
   </div>
+</div>
 
   <div id="panel-bgremover" class="panel">
     <div class="bgremover-menu">
@@ -442,7 +462,10 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <div class="bg-grid" id="bgImageGrid"></div>
   </div>
   <div id="subtab-bglayers" class="sub-view">
-    <label class="section-label">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
+    <label class="section-label">FRAME SIZE:<div class="h-scroll" style="margin-bottom:8px;">
+  <div class="h-card selected" onclick="switchBgDrag('subject', this)">Move Subject</div>
+  <div class="h-card" onclick="switchBgDrag('bg', this)">Move Background</div>
+</div> <span id="bgImgSizeVal">8</span>%</label>
     <input type="range" id="bgImgSizeInput" min="0" max="40" value="8" oninput="setBgImageSize(this.value)">
     <label class="section-label">ZOOM: <span id="bgImgZoomVal">100</span>%</label>
     <input type="range" id="bgImgZoomInput" min="50" max="300" value="100" oninput="setBgImageZoom(this.value)">
@@ -583,6 +606,9 @@ let isDraggingFx = false;
 let subjectX = 0.5, subjectY = 0.5, subjectScale = 1;
 let isDraggingSubject = false;
 let subjectDragStart = null;
+let bgDragMode = 'subject';
+let isDraggingBg = false;
+let bgDragStart = null;
 let fxDragStart = null;
 let crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
 
@@ -909,7 +935,15 @@ function clearBgImage() {
   currentBgImage = null;
   document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
   redraw(); saveState();
+}function switchBgDrag(mode, el) {
+  bgDragMode = mode;
+  gestureTarget = mode;
+  if (el && el.parentElement) {
+    el.parentElement.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
 }
+
 function resetSubjectTransform() {
   subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
   redraw(); saveState();
@@ -1220,6 +1254,41 @@ if (gestureTarget === 'fx' && fxActive) {
     return;
   }
   return;
+}if (gestureTarget === 'bg' && imgLoaded && currentBgImage) {
+  if (touches.size === 2) {
+    const arr = Array.from(touches.values());
+    gesture = { type:'bg', startDist: touchDist(arr[0], arr[1]), startZoom: currentBgImageZoom };
+    return;
+  }
+  if (touches.size === 1) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    isDraggingBg = true;
+    bgDragStart = { x: pos.x, y: pos.y, bgX: currentBgImageX, bgY: currentBgImageY };
+    return;
+  }
+  return;
+}if (gestureTarget === 'bg' && imgLoaded && currentBgImage) {
+  if (touches.size === 2 && gesture && gesture.type === 'bg') {
+    const arr = Array.from(touches.values());
+    const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
+    currentBgImageZoom = Math.max(50, Math.min(300, Math.round(gesture.startZoom * scale)));
+    const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
+    const zV = document.getElementById('bgImgZoomVal'); if (zV) zV.innerText = currentBgImageZoom;
+    redraw(); return;
+  }
+  if (isDraggingBg && bgDragStart) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    const dx = (pos.x - bgDragStart.x) / canvas.width * 200;
+    const dy = (pos.y - bgDragStart.y) / canvas.height * 200;
+    currentBgImageX = Math.max(-100, Math.min(100, Math.round(bgDragStart.bgX + dx)));
+    currentBgImageY = Math.max(-100, Math.min(100, Math.round(bgDragStart.bgY + dy)));
+    const xIn = document.getElementById('bgImgXInput'); if (xIn) xIn.value = currentBgImageX;
+    const xV = document.getElementById('bgImgXVal'); if (xV) xV.innerText = currentBgImageX;
+    const yIn = document.getElementById('bgImgYInput'); if (yIn) yIn.value = currentBgImageY;
+    const yV = document.getElementById('bgImgYVal'); if (yV) yV.innerText = currentBgImageY;
+    redraw(); return;
+  }
+  return;
 }
 
   if (gestureTarget === 'subject' && imgLoaded) {
@@ -1302,7 +1371,7 @@ function endTouch(e) {
   if (isDraggingText) { isDraggingText = false; saveState(); syncActiveInputs(); }
   if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
 if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }  
-}
+}if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
 function showFloatingMenu(x, y) {
   const rect = canvas.getBoundingClientRect();
   const contRect = canvas.parentElement.getBoundingClientRect();
@@ -1597,9 +1666,10 @@ function saveImage() {
 }
 
 function switchPanel(name, btn) {
-  gestureTarget = (name === 'fx') ? 'fx'
-  : (name === 'bgremover' || name === 'bgimage') ? 'subject'
-  : 'text';
+  if (name === 'fx') gestureTarget = 'fx';
+else if (name === 'bgremover') gestureTarget = 'subject';
+else if (name === 'bgimage') gestureTarget = bgDragMode;
+else gestureTarget = 'text';
   const view = document.getElementById('view-studio');
   if (name === 'crop') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
