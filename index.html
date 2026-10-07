@@ -1078,7 +1078,7 @@ function resetSubjectTransform() {
   subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
   redraw(); saveState();
 }
-
+if (!window.__originalBeforeBgRemove) window.__originalBeforeBgRemove = originalImageSrc;
 async function removeBgBest() {
   if (!imgLoaded) { alert('Load a photo first'); return; }
   playCount(async () => {
@@ -1092,6 +1092,7 @@ async function removeBgBest() {
       const data = await r.json();
       if (!data.image) { alert('No image returned'); return; }
       const newImg = new Image();
+      
       newImg.onload = () => { img = newImg; originalImageSrc = data.image; canvas.width = newImg.width; canvas.height = newImg.height; imgLoaded = true; currentBgColor = '#ffffff'; buildBgColors(); redraw(); saveState(); };
       newImg.src = data.image;
     } catch (e) { alert('Failed: ' + e.message); }
@@ -2520,7 +2521,28 @@ function resetEverything() {
   textLayers = []; activeLayerId = null;
   subjectMode = 'none'; personMask = null; subjectReady = false;
   preCropImageSrc = null;
+  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
+  subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
+  currentTemplate = 'none';
   document.querySelectorAll('.template-thumb, .filter-thumb, .border-thumb, .bgcolor-swatch, .bg-item, .fx-card').forEach(c => c.classList.remove('selected'));
+
+  // Restore original photo if it was replaced by BG removal
+  if (window.__originalBeforeBgRemove && window.__originalBeforeBgRemove !== originalImageSrc) {
+    const restoreImg = new Image();
+    restoreImg.onload = () => {
+      img = restoreImg;
+      originalImageSrc = window.__originalBeforeBgRemove;
+      canvas.width = restoreImg.width;
+      canvas.height = restoreImg.height;
+      window.__originalBeforeBgRemove = null;
+      buildFilterThumbs(); buildTemplates();
+      syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
+      showToast('Reset to original');
+    };
+    restoreImg.src = window.__originalBeforeBgRemove;
+    return;
+  }
+
   syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
 }
 
