@@ -434,8 +434,14 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   </div>
 
   <div id="panel-bgimage" class="panel">
-    <label class="section-label">BACKGROUNDS</label>
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
+    <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
+  </div>
+  <div id="subtab-bggrid" class="sub-view active">
     <div class="bg-grid" id="bgImageGrid"></div>
+  </div>
+  <div id="subtab-bglayers" class="sub-view">
     <label class="section-label">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
     <input type="range" id="bgImgSizeInput" min="0" max="40" value="8" oninput="setBgImageSize(this.value)">
     <label class="section-label">ZOOM: <span id="bgImgZoomVal">100</span>%</label>
@@ -446,8 +452,9 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <input type="range" id="bgImgYInput" min="-100" max="100" value="0" oninput="setBgImageY(this.value)">
     <button class="crop-tool" onclick="resetBgPosition()" style="margin-top:14px;width:100%;justify-content:center;">RESET BG POSITION</button>
     <button class="crop-tool" onclick="clearBgImage()" style="margin-top:8px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
+    <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:8px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
   </div>
-
+</div>
   <div class="bottom-nav">
     <button class="nav-btn active" data-panel="adjust" onclick="switchPanel('adjust', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Adjust</span></button>
     <button class="nav-btn" data-panel="crop" onclick="switchPanel('crop', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/></svg><span>Crop</span></button>
