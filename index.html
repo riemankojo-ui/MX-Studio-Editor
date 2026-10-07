@@ -1225,13 +1225,15 @@ function touchDist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
 function touchAngle(a,b) { return Math.atan2(b.y-a.y, b.x-a.x); }
 
 const canvasHost = canvas.parentElement;
-canvasHost.addEventListener('mousedown', startTouch);
-canvasHost.addEventListener('touchstart', startTouch, {passive:false});
-canvasHost.addEventListener('mousemove', onTouchMove);
-canvasHost.addEventListener('touchmove', onTouchMove, {passive:false});
-canvasHost.addEventListener('mouseup', endTouch);
-canvasHost.addEventListener('touchend', endTouch);
-canvasHost.addEventListener('touchcancel', endTouch);
+let touchStartedOnCanvas = false;
+
+canvasHost.addEventListener('mousedown', (e) => { touchStartedOnCanvas = true; startTouch(e); });
+canvasHost.addEventListener('touchstart', (e) => { touchStartedOnCanvas = true; startTouch(e); }, {passive:false});
+document.addEventListener('mousemove', (e) => { if (touchStartedOnCanvas) onTouchMove(e); });
+document.addEventListener('touchmove', (e) => { if (touchStartedOnCanvas) onTouchMove(e); }, {passive:false});
+document.addEventListener('mouseup', (e) => { if (touchStartedOnCanvas) { onTouchMove(e); endTouch(e); } touchStartedOnCanvas = false; });
+document.addEventListener('touchend', (e) => { if (touchStartedOnCanvas) endTouch(e); touchStartedOnCanvas = false; });
+document.addEventListener('touchcancel', (e) => { if (touchStartedOnCanvas) endTouch(e); touchStartedOnCanvas = false; });
 
 function startTouch(e) {
 if (e.target && e.target.closest && e.target.closest('#textFloatingMenu')) return;
