@@ -428,7 +428,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
         <div class="label">
           <span class="title">REMOVE BACKGROUND</span>
         </div>
-      </div>
+      </div><button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:14px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
       <div style="font-size:10px;color:#555;text-align:center;margin-top:16px;line-height:1.6;">After removal, add a new background from the BG tab</div>
     </div>
   </div>
@@ -573,6 +573,9 @@ let counterLocked = false;
 let fxX = 0.5, fxY = 0.5, fxScale = 1, fxRotation = 0;
 let gestureTarget = 'text';
 let isDraggingFx = false;
+let subjectX = 0.5, subjectY = 0.5, subjectScale = 1;
+let isDraggingSubject = false;
+let subjectDragStart = null;
 let fxDragStart = null;
 let crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
 
@@ -900,6 +903,10 @@ function clearBgImage() {
   document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
   redraw(); saveState();
 }
+function resetSubjectTransform() {
+  subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
+  redraw(); saveState();
+}
 
 async function removeBgBest() {
   if (!imgLoaded) { alert('Load a photo first'); return; }
@@ -1191,21 +1198,35 @@ function startTouch(e) {
   else { touches.clear(); touches.set('mouse', { x:e.clientX, y:e.clientY }); }
 
   const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
-
-  if (gestureTarget === 'fx' && fxActive) {
-    if (touches.size === 2) {
-      const arr = Array.from(touches.values());
-      gesture = { type:'fx', startDist: touchDist(arr[0], arr[1]), startAngle: touchAngle(arr[0], arr[1]), startScale: fxScale, startRot: fxRotation };
-      return;
-    }
-    if (touches.size === 1) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      isDraggingFx = true;
-      fxDragStart = { x: pos.x, y: pos.y, fxX: fxX, fxY: fxY };
-      return;
-    }
+if (gestureTarget === 'fx' && fxActive) {
+  if (touches.size === 2) {
+    const arr = Array.from(touches.values());
+    gesture = { type:'fx', startDist: touchDist(arr[0], arr[1]), startAngle: touchAngle(arr[0], arr[1]), startScale: fxScale, startRot: fxRotation };
     return;
   }
+  if (touches.size === 1) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    isDraggingFx = true;
+    fxDragStart = { x: pos.x, y: pos.y, fxX: fxX, fxY: fxY };
+    return;
+  }
+  return;
+}
+
+  if (gestureTarget === 'subject' && imgLoaded) {
+  if (touches.size === 2) {
+    const arr = Array.from(touches.values());
+    gesture = { type:'subject', startDist: touchDist(arr[0], arr[1]), startScale: subjectScale };
+    return;
+  }
+  if (touches.size === 1) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    isDraggingSubject = true;
+    subjectDragStart = { x: pos.x, y: pos.y, sx: subjectX, sy: subjectY };
+    return;
+  }
+  return;
+}
 
   if (touches.size === 2) {
     const arr = Array.from(touches.values());
@@ -1244,23 +1265,7 @@ function onTouchMove(e) {
 
   const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
 
-  if (gestureTarget === 'fx' && fxActive) {
-    if (touches.size === 2 && gesture && gesture.type === 'fx') {
-      const arr = Array.from(touches.values());
-      const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-      const rotDelta = touchAngle(arr[0], arr[1]) - gesture.startAngle;
-      fxScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
-      fxRotation = gesture.startRot + rotDelta;
-      redraw(); return;
-    }
-    if (isDraggingFx && fxDragStart) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      fxX = fxDragStart.fxX + (pos.x - fxDragStart.x) / canvas.width;
-      fxY = fxDragStart.fxY + (pos.y - fxDragStart.y) / canvas.height;
-      redraw(); return;
-    }
-    return;
-  }
+  
 
   if (touches.size === 2 && gesture) {
     const arr = Array.from(touches.values());
@@ -1287,6 +1292,7 @@ function endTouch(e) {
   if (touches.size < 2) gesture = null;
   if (isDraggingText) { isDraggingText = false; saveState(); syncActiveInputs(); }
   if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
+if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }  
 }
 function showFloatingMenu(x, y) {
   const rect = canvas.getBoundingClientRect();
@@ -1530,6 +1536,7 @@ function saveProjectToHome() {
       bgImageZoom: currentBgImageZoom, bgImageX: currentBgImageX, bgImageY: currentBgImageY,
       template: currentTemplate, fx: currentFx, fxAmount: currentFxAmount,
 fxX, fxY, fxScale, fxRotation,
+subjectX, subjectY, subjectScale,
       subjectMode, strokeColor, subjectAmount: subjAmt.value
     }));
   } catch(e) { alert('Storage full.'); return; }
@@ -1581,7 +1588,9 @@ function saveImage() {
 }
 
 function switchPanel(name, btn) {
-  gestureTarget = (name === 'fx') ? 'fx' : 'text';
+  gestureTarget = (name === 'fx') ? 'fx'
+  : (name === 'bgremover' || name === 'bgimage') ? 'subject'
+  : 'text';
   const view = document.getElementById('view-studio');
   if (name === 'crop') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1964,26 +1973,34 @@ function redraw() {
     plctx.drawImage(img, -OVER, -OVER, canvas.width+OVER*2, canvas.height+OVER*2);
     plctx.filter = 'none';
   }
-  if (currentBgImage) {
-    const w = canvas.width, h = canvas.height;
-    const zoom = currentBgImageZoom / 100;
-    const offsetX = (currentBgImageX / 100) * w * 0.5;
-    const offsetY = (currentBgImageY / 100) * h * 0.5;
-    const scaledW = w * zoom;
-    const scaledH = h * zoom;
-    const dx = (w - scaledW) / 2 + offsetX;
-    const dy = (h - scaledH) / 2 + offsetY;
-    drawCover(dx, dy, scaledW, scaledH, currentBgImage);
-    const pad = Math.round(Math.min(canvas.width, canvas.height) * (currentBgImageSize / 100));
-    ctx.drawImage(photoLayer, 0, 0, canvas.width, canvas.height, pad, pad, canvas.width - pad*2, canvas.height - pad*2);
-  } else if (currentBgColor) {
-    ctx.fillStyle = currentBgColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const pad = Math.round(Math.min(canvas.width, canvas.height) * (currentBgColorSize / 100));
-    ctx.drawImage(photoLayer, 0, 0, canvas.width, canvas.height, pad, pad, canvas.width - pad*2, canvas.height - pad*2);
-  } else {
-    ctx.drawImage(photoLayer, 0, 0);
-  }
+  const hasBg = !!(currentBgColor || currentBgImage);
+if (currentBgImage) {
+  const w = canvas.width, h = canvas.height;
+  const zoom = currentBgImageZoom / 100;
+  const offsetX = (currentBgImageX / 100) * w * 0.5;
+  const offsetY = (currentBgImageY / 100) * h * 0.5;
+  const scaledW = w * zoom;
+  const scaledH = h * zoom;
+  const dx = (w - scaledW) / 2 + offsetX;
+  const dy = (h - scaledH) / 2 + offsetY;
+  drawCover(dx, dy, scaledW, scaledH, currentBgImage);
+} else if (currentBgColor) {
+  ctx.fillStyle = currentBgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+if (hasBg) {
+  const pad = Math.round(Math.min(canvas.width, canvas.height) * (((currentBgImageSize || currentBgColorSize) || 0) / 100));
+  const baseW = canvas.width - pad * 2;
+  const baseH = canvas.height - pad * 2;
+  const w2 = baseW * subjectScale;
+  const h2 = baseH * subjectScale;
+  const cx = canvas.width / 2 + (subjectX - 0.5) * canvas.width;
+  const cy = canvas.height / 2 + (subjectY - 0.5) * canvas.height;
+  ctx.drawImage(photoLayer, cx - w2 / 2, cy - h2 / 2, w2, h2);
+} else {
+  ctx.drawImage(photoLayer, 0, 0);
+}
   const fade = parseInt(nInput.value);
   if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${(fade/100)*0.4})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   if (!currentBgColor && !currentBgImage) drawBorder();
@@ -2090,6 +2107,9 @@ function loadProject(key) {
   currentBgImageX = p.bgImageX ?? 0;
   currentBgImageY = p.bgImageY ?? 0;
   currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
+fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p.fxRotation ?? 0;
+subjectX = p.subjectX ?? 0.5; subjectY = p.subjectY ?? 0.5; subjectScale = p.subjectScale ?? 1;
+  
   fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p.fxRotation ?? 0;
   const fxAmt = document.getElementById('fxAmount'); if (fxAmt) fxAmt.value = currentFxAmount;
   const fxV = document.getElementById('fxVal'); if (fxV) fxV.innerText = currentFxAmount;
