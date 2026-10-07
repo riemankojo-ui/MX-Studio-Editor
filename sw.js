@@ -24,7 +24,7 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch — cache-first with network fallback
+// Fetch — network-first for HTML/JS/CSS, cache-first for everything else
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
@@ -32,22 +32,24 @@ self.addEventListener('fetch', e => {
   // Skip blob: and data: URLs
   if (req.url.startsWith('blob:') || req.url.startsWith('data:')) return;
 
-  // Cache Google Fonts at runtime
-  if (req.url.includes('fonts.googleapis.com') || req.url.includes('fonts.gstatic.com')) {
+  const url = req.url;
+  const isHtml = req.mode === 'navigate' || req.destination === 'document' || url.endsWith('.html');
+  const isCode = req.destination === 'script' || req.destination === 'style' || url.endsWith('.js') || url.endsWith('.css');
+  const isConfig = url.endsWith('.json');
+
+  // NETWORK-FIRST for the app shell — updates come through as soon as you're online
+  if (isHtml || isCode || isConfig) {
     e.respondWith(
-      caches.match(req).then(hit => {
-        if (hit) return hit;
-        return fetch(req).then(res => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {});
-          return res;
-        }).catch(() => new Response('', { status: 200 }));
-      })
+      fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
     );
     return;
   }
 
-  // Everything else — cache-first
+  // CACHE-FIRST for images, fonts, effects
   e.respondWith(
     caches.match(req).then(hit => {
       if (hit) return hit;
@@ -56,10 +58,7 @@ self.addEventListener('fetch', e => {
         const copy = res.clone();
         caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {});
         return res;
-      }).catch(() => {
-        if (req.mode === 'navigate') return caches.match('./index.html');
-        return new Response('', { status: 503, statusText: 'Offline' });
-      });
+      }).catch(() => new Response('', { status: 503 }));
     })
   );
 });
