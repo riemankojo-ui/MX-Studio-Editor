@@ -1762,7 +1762,7 @@ function setActiveTextStyle(s, el) { const l = textLayers.find(x => x.id === act
 function saveProjectToHome() {
   if (!imgLoaded) return;
   if (!currentProjectId) currentProjectId = 'proj_' + Date.now();
-  const serializedLayers = textLayers.map(l => ({ id:l.id, text:l.text, x:l.x, y:l.y, size:l.size, font:l.font, color:l.color, style:l.style, rotation:l.rotation }));
+  const serializedLayers = textLayers.map(l => ({ id:l.id, text:l.text, x:l.x, y:l.y, size:l.size, font:l.font, color:l.color, style:l.style, rotation:l.rotation, persp: l.persp || 0 }));
   let bgFile = null;
   if (currentBgImage) { for (const f of BG_CONFIG.files) if (bgImages[f.fname] === currentBgImage) { bgFile = f.fname; break; } }
   const now = new Date();
