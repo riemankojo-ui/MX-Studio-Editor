@@ -374,6 +374,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
         <div class="slider-row"><span class="slider-label">Y</span><input type="range" id="posY" min="-500" max="2500" value="0" oninput="setActivePos('y', this.value)"><span class="slider-val" id="posYVal">0</span></div>
         <div class="slider-row"><span class="slider-label">Size</span><input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)"><span class="slider-val" id="fSizeVal">36</span></div>
         <div class="slider-row"><span class="slider-label">Rot</span><input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)"><span class="slider-val" id="fRotVal">0°</span></div>
+<div class="slider-row"><span class="slider-label">Persp</span><input type="range" id="textPersp" min="-100" max="100" value="0" oninput="setActiveTextPersp(this.value)"><span class="slider-val" id="perspVal">0</span></div>        
       </div>
       <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:12px;width:100%;justify-content:center;">DELETE THIS LAYER</button>
     </div>
@@ -1597,6 +1598,8 @@ function syncActiveInputs() {
   }
   const fr = document.getElementById('fontRotation');
   if (fr) { const deg = Math.round((l.rotation || 0) * 180 / Math.PI); fr.value = deg; document.getElementById('fRotVal').innerText = deg + '°'; }
+const tp = document.getElementById('textPersp');
+if (tp) { tp.value = l.persp || 0; document.getElementById('perspVal').innerText = (l.persp || 0); }  
 }
 
 function setActivePos(axis, v) {
@@ -1625,6 +1628,14 @@ function setActiveFontSize(v) {
   if (!l) { const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v; return; }
   l.size = parseInt(v);
   const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v;
+  redraw(); saveState();
+}
+function setActiveTextPersp(v) {
+  const l = textLayers.find(x => x.id === activeLayerId);
+  const pv = document.getElementById('perspVal');
+  if (pv) pv.innerText = v;
+  if (!l) return;
+  l.persp = parseInt(v);
   redraw(); saveState();
 }
 
@@ -2147,7 +2158,31 @@ if (hasBg) {
       else if (layer.style === 'shadow') { ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 4; ctx.shadowOffsetY = 4; }
       else if (layer.style === 'glow') { ctx.shadowColor = layer.color; ctx.shadowBlur = 20; }
       ctx.fillStyle = layer.color;
-      ctx.fillText(layer.text, 0, 0);
+      const persp = layer.persp || 0;
+if (persp === 0) {
+  ctx.fillText(layer.text, 0, 0);
+} else {
+  const mm = ctx.measureText(layer.text);
+  const ww = mm.width, hh = layer.size;
+  const slices = 30;
+  const k = persp / 100;
+  for (let si = 0; si < slices; si++) {
+    const tTop = si / slices, tBot = (si + 1) / slices;
+    const yTop = -hh/2 + tTop * hh, yBot = -hh/2 + tBot * hh;
+    const sTop = 1 - k * (1 - tTop) * 0.8;
+    const sBot = 1 - k * (1 - tBot) * 0.8;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(-ww/2 * sTop, yTop);
+    ctx.lineTo(ww/2 * sTop, yTop);
+    ctx.lineTo(ww/2 * sBot, yBot);
+    ctx.lineTo(-ww/2 * sBot, yBot);
+    ctx.closePath();
+    ctx.clip();
+    ctx.fillText(layer.text, 0, 0);
+    ctx.restore();
+  }
+}
       if (activeLayerId === layer.id) {
         const m = ctx.measureText(layer.text);
         const bw = m.width + 16, bh = layer.size + 8;
