@@ -2162,19 +2162,28 @@ if (persp === 0) {
 } else {
   const mm = ctx.measureText(layer.text);
   const ww = mm.width, hh = layer.size;
-  const slices = 30;
-  const k = persp / 100;
+  const slices = 80;
+  const k = Math.abs(persp) / 100 * 6;
+  const dTop = persp > 0 ? 1 + k : 1;
+  const dBot = persp > 0 ? 1 : 1 + k;
+  const C = hh / (1/dBot - 1/dTop);
+  const yOffset = -hh/2 - C/dTop;
+  const screenY = (d) => C / d + yOffset;
+  const scaleAt = (d) => (1/d) * dBot;
   for (let si = 0; si < slices; si++) {
-    const tTop = si / slices, tBot = (si + 1) / slices;
-    const yTop = -hh/2 + tTop * hh, yBot = -hh/2 + tBot * hh;
-    const sTop = 1 - k * (1 - tTop) * 0.8;
-    const sBot = 1 - k * (1 - tBot) * 0.8;
+    const t0 = si / slices, t1 = (si + 1) / slices;
+    const d0 = dTop + (dBot - dTop) * t0;
+    const d1 = dTop + (dBot - dTop) * t1;
+    const y0 = screenY(d0);
+    const y1 = screenY(d1);
+    const s0 = scaleAt(d0);
+    const s1 = scaleAt(d1);
     ctx.save();
     ctx.beginPath();
-    ctx.moveTo(-ww/2 * sTop, yTop);
-    ctx.lineTo(ww/2 * sTop, yTop);
-    ctx.lineTo(ww/2 * sBot, yBot);
-    ctx.lineTo(-ww/2 * sBot, yBot);
+    ctx.moveTo(-ww/2 * s0, y0);
+    ctx.lineTo(ww/2 * s0, y0);
+    ctx.lineTo(ww/2 * s1, y1);
+    ctx.lineTo(-ww/2 * s1, y1);
     ctx.closePath();
     ctx.clip();
     ctx.fillText(layer.text, 0, 0);
