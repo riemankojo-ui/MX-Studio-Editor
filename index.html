@@ -497,38 +497,47 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   </div>
 
   <div id="panel-bgimage" class="panel">
-<div class="sub-tabs">
-  <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
-  <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
-  <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
-</div>
-<div id="subtab-bgimport" class="sub-view">
-  <div style="text-align:center;padding:40px 20px;">
-    <div 
-    <div 
-    <div style="font-size:11px;color:#666;line-height:1.6;margin-bottom:22px;">Pick any photo from your gallery and use it as the background behind your subject.</div>    
-    <button class="crop-tool" onclick="document.getElementById('bgUploadInput').click()" style="width:100%;max-width:280px;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;margin:0 auto;">+ PICK FROM GALLERY</button>
-    <input type="file" id="bgUploadInput" accept="image/*" style="display:none;">
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
+    <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
+    <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
   </div>
-</div>
-  <div id="subtab-bggrid" class="sub-view active">"
+
+  <div id="subtab-bggrid" class="sub-view active">
     <div class="bg-grid" id="bgImageGrid"></div>
   </div>
-  <div id="subtab-bglayers" 
-    <label class="section-label">FRAME SIZE:<div class="h-scroll" style="margin-bottom:8px;">
-  <div class="h-card selected" onclick="switchBgDrag('subject', this)">Move Subject</div>
-  <div class="h-card" onclick="switchBgDrag('bg', this)">Move Background</div>
-</div> <span id="bgImgSizeVal">8</span>%</label>
+
+  <div id="subtab-bglayers" class="sub-view">
+    <button class="crop-tool" onclick="clearAllBg()" style="width:100%;justify-content:center;padding:12px;background:#242424;color:#fff;font-weight:800;margin-bottom:14px;">NONE</button>
+
+    <div class="h-scroll" style="margin-bottom:8px;">
+      <div class="h-card selected" onclick="switchBgDrag('subject', this)">Move Subject</div>
+      <div class="h-card" onclick="switchBgDrag('bg', this)">Move Background</div>
+    </div>
+
+    <label class="section-label">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
     <input type="range" id="bgImgSizeInput" min="0" max="40" value="8" oninput="setBgImageSize(this.value)">
+
     <label class="section-label">ZOOM: <span id="bgImgZoomVal">100</span>%</label>
     <input type="range" id="bgImgZoomInput" min="50" max="300" value="100" oninput="setBgImageZoom(this.value)">
+
     <label class="section-label">MOVE X: <span id="bgImgXVal">0</span></label>
     <input type="range" id="bgImgXInput" min="-100" max="100" value="0" oninput="setBgImageX(this.value)">
+
     <label class="section-label">MOVE Y: <span id="bgImgYVal">0</span></label>
     <input type="range" id="bgImgYInput" min="-100" max="100" value="0" oninput="setBgImageY(this.value)">
+
     <button class="crop-tool" onclick="resetBgPosition()" style="margin-top:14px;width:100%;justify-content:center;">RESET BG POSITION</button>
     <button class="crop-tool" onclick="clearBgImage()" style="margin-top:8px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
     <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:8px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
+  </div>
+
+  <div id="subtab-bgimport" class="sub-view">
+    <div style="padding:20px 8px;">
+      <button class="crop-tool" onclick="document.getElementById('bgUploadInput').click()" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;">+ PICK FROM GALLERY</button>
+      <div style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo from your gallery to use as the background.</div>
+      <input type="file" id="bgUploadInput" accept="image/*" style="display:none;">
+    </div>
   </div>
 </div>
   <div class="bottom-nav">
