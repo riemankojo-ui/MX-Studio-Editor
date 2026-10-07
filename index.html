@@ -667,14 +667,26 @@ function loadImage(url) {
 }
 
 async function loadCategoryConfig() {
+  FX_CATEGORIES = [];
   const isLocal = location.protocol === 'content:' || location.protocol === 'file:';
   if (!isLocal) {
     try {
       const r = await fetch('./effects.json', { cache: 'no-cache' });
       if (r.ok) {
         const data = await r.json();
-        if (data && Array.isArray(data.categories)) {
-          FX_CATEGORIES = data.categories.map(c => ({ key: c.prefix, label: c.label || c.prefix, prefix: c.prefix, blend: c.blend || 'screen', max: 60, files: [] }));
+        let list = null;
+        if (Array.isArray(data.tabs)) list = data.tabs;
+        else if (Array.isArray(data.categories)) list = data.categories;
+        if (list) {
+          FX_CATEGORIES = list.map(t => ({
+            key: t.prefix,
+            label: t.label || t.prefix,
+            prefix: t.prefix,
+            blend: t.blend || 'screen',
+            max: t.max || 60,
+            fileList: Array.isArray(t.files) ? t.files : null,
+            files: []
+          }));
         }
       }
     } catch (e) {}
@@ -692,7 +704,6 @@ async function loadCategoryConfig() {
   }
   if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) currentFxTab = FX_CATEGORIES[0].key;
 }
-
 async function probeOne(base) {
   let im = await loadImage(EFFECTS_BASE + base + '.jpg');
   if (im) return { fname: base + '.jpg', im };
@@ -704,6 +715,16 @@ async function probeOne(base) {
 }
 
 async function probeCategory(cat) {
+  if (cat.fileList && Array.isArray(cat.fileList) && cat.fileList.length) {
+    const results = await Promise.all(cat.fileList.map(async fname => {
+      const im = await loadImage(EFFECTS_BASE + fname);
+      return im ? { fname, im } : null;
+    }));
+    cat.files = results.filter(Boolean);
+    cat.files.forEach(r => { fxImages[cat.key + ':' + r.fname] = r.im; });
+    return;
+  }
+
   const promises = [];
   for (let i = 1; i <= cat.max; i++) promises.push(probeOne(cat.prefix + i).then(r => r ? { base: cat.prefix + i, ...r } : null));
   const results = await Promise.all(promises);
@@ -2308,7 +2329,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     setTimeout(() => {
       try { if (typeof preloadEffects === 'function') preloadEffects(); } catch (e) { console.warn(e); }
-    }, 2000);
+    }, 0);
     setTimeout(() => {
       const s = document.getElementById('splashScreen');
       if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 300); }
