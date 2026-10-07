@@ -2193,7 +2193,7 @@ window.addEventListener('focus', function() {
 });
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW failed', e));
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(e => console.warn('SW failed', e));
   });
 }
 </script>
