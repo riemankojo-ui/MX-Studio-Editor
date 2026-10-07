@@ -1342,8 +1342,39 @@ function onTouchMove(e) {
   else if (touches.has('mouse')) { touches.set('mouse', { x:e.clientX, y:e.clientY }); }
 
   const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
+if (gestureTarget === 'fx' && fxActive) {
+  if (touches.size === 2 && gesture && gesture.type === 'fx') {
+    const arr = Array.from(touches.values());
+    const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
+    const rotDelta = touchAngle(arr[0], arr[1]) - gesture.startAngle;
+    fxScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
+    fxRotation = gesture.startRot + rotDelta;
+    redraw(); return;
+  }
+  if (isDraggingFx && fxDragStart) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    fxX = fxDragStart.fxX + (pos.x - fxDragStart.x) / canvas.width;
+    fxY = fxDragStart.fxY + (pos.y - fxDragStart.y) / canvas.height;
+    redraw(); return;
+  }
+  return;
+}
 
-  
+if (gestureTarget === 'subject' && imgLoaded) {
+  if (touches.size === 2 && gesture && gesture.type === 'subject') {
+    const arr = Array.from(touches.values());
+    const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
+    subjectScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
+    redraw(); return;
+  }
+  if (isDraggingSubject && subjectDragStart) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    subjectX = subjectDragStart.sx + (pos.x - subjectDragStart.x) / canvas.width;
+    subjectY = subjectDragStart.sy + (pos.y - subjectDragStart.y) / canvas.height;
+    redraw(); return;
+  }
+  return;
+}
 
   if (touches.size === 2 && gesture) {
     const arr = Array.from(touches.values());
