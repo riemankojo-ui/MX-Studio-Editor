@@ -805,7 +805,10 @@ async function probeBackgrounds() {
 
 async function preloadEffects() {
   await loadCategoryConfig();
-  await Promise.all([ ...FX_CATEGORIES.map(c => probeCategory(c)), probeBackgrounds() ]);
+  // Only preload small categories (< 10 files). Large ones load on-demand.
+  const smallCats = FX_CATEGORIES.filter(c => c.fileList && c.fileList.length <= 10);
+  const noListCats = FX_CATEGORIES.filter(c => !c.fileList);
+  await Promise.all([...smallCats.map(c => probeCategory(c)), ...noListCats.map(c => probeCategory(c)), probeBackgrounds()]);
   buildFxTabs();
   buildFxGrids();
   buildBgImageGrid();
@@ -905,8 +908,17 @@ function switchFxTab(key, el) {
   panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('fx-tab-' + key).classList.add('active');
   el.classList.add('active');
-}
 
+  // Lazy-load this category's images if not already loaded
+  const cat = FX_CATEGORIES.find(c => c.key === key);
+  if (cat && cat.fileList && (!cat.files || !cat.files.length)) {
+    const g = document.getElementById('fxGrid-' + key);
+    if (g) g.innerHTML = '<div class="filter-empty">Loading ' + cat.fileList.length + ' effects...</div>';
+    probeCategory(cat).then(() => {
+      buildFxGrid(key);
+    });
+  }
+}
 function buildFxGrid(catKey) {
   const cat = FX_CATEGORIES.find(c => c.key === catKey);
   if (!cat) return;
