@@ -1149,9 +1149,9 @@ function pickAndClean(file) {
       currentBgImage = null;
       setupCanvasFromImage(newImg);
       buildFilterThumbs(); buildTemplates(); buildBorders();
-      redraw(); saveState();
-      if (status) status.textContent = 'Photo loaded. Go to BG Rmv to remove the background.';
-      showToast('Photo loaded');
+      redraw();
+      if (status) status.textContent = 'Removing background...';
+      setTimeout(() => { removeBgBest(); }, 100);
     };
     newImg.onerror = () => { if (status) status.textContent = 'Failed to load image.'; };
     newImg.src = ev.target.result;
@@ -1159,7 +1159,6 @@ function pickAndClean(file) {
   reader.onerror = () => { if (status) status.textContent = 'Failed to read file.'; };
   reader.readAsDataURL(file);
 }
-
 async function removeBgBest() {
   if (!imgLoaded) { alert('Load a photo first'); return; }
   if (window.__originalBeforeBgRemove && originalImageSrc !== window.__originalBeforeBgRemove) {
@@ -1969,11 +1968,11 @@ function saveImage() {
 }
 
 function switchPanel(name, btn) {
-  if (name === 'fx') gestureTarget = 'fx';
-  else if (name === 'bgremover') gestureTarget = 'subject';
-  else if (name === 'bgimage') gestureTarget = bgDragMode;
-  else gestureTarget = 'text';
-
+if (name === 'fx') gestureTarget = 'fx';
+else if (name === 'bgremover') gestureTarget = 'subject';
+else if (name === 'bgimage') gestureTarget = bgDragMode;
+else if (name === 'clean') gestureTarget = 'subject';
+else gestureTarget = 'text';
   if (name === 'crop') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
