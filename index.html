@@ -120,9 +120,7 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .fx-card-preview { width:68px; height:68px; border-radius:8px; background:#0a0a0a; position:relative; overflow:hidden; border:1px solid #1f1f1f; }
 .fx-card.selected .fx-card-preview { box-shadow:0 0 0 2px #00d4ff; }
 .fx-card-label { font-size:9px; color:#888; margin-top:4px; display:block; font-weight:700; }
-.fx-card.selected .fx-card-label { color:#00d4ff; }
-
-.bg-item-img { width:72px; height:72px; border-radius:10px; background:#111; overflow:hidden; border:2px solid transparent; }
+.fx-card.selected .fx-card-label { color:#00d4ff; }.bg-item-img { width:72px; height:72px; border-radius:10px; background:#111; overflow:hidden; border:2px solid transparent; }
 .bg-item.selected .bg-item-img { border-color:#fff; }
 .bg-item img { width:100%; height:100%; object-fit:cover; display:block; }
 .bg-item-label { font-size:9px; color:#888; margin-top:4px; display:block; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -313,9 +311,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
     <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
     <button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
-  </div>
-
-  <div id="panel-text" class="panel">
+  </div>  <div id="panel-text" class="panel">
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="switchSubTab('layers', this)">TEXT</button>
       <button class="sub-tab" onclick="switchSubTab('font', this)">FONTS</button>
@@ -648,8 +644,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 <div id="toast">Saved</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
-<script>
-const canvas = document.getElementById('canvas');
+<script>const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const textMenu = document.getElementById('textFloatingMenu');
 const bInput = document.getElementById('brightness');
@@ -1015,9 +1010,7 @@ function drawFxLayer() {
   else { sh = sw / dr; sy = (im.naturalHeight - sh) / 2; }
   ctx.drawImage(im, sx, sy, sw, sh, -baseW/2, -baseH/2, baseW, baseH);
   ctx.restore();
-}
-
-function buildBgImageGrid() {
+}function buildBgImageGrid() {
   const g = document.getElementById('bgImageGrid');
   if (!g) return;
   let html = '';
@@ -1169,7 +1162,6 @@ function pickAndClean(file) {
 
 async function removeBgBest() {
   if (!imgLoaded) { alert('Load a photo first'); return; }
-
   if (window.__originalBeforeBgRemove && originalImageSrc !== window.__originalBeforeBgRemove) {
     const restoreImg = new Image();
     restoreImg.onload = () => {
@@ -1186,7 +1178,6 @@ async function removeBgBest() {
     restoreImg.src = window.__originalBeforeBgRemove;
     return;
   }
-
   playCount(async () => {
     try {
       const tmp = document.createElement('canvas');
@@ -1596,9 +1587,7 @@ function startTouch(e) {
   } else {
     activeLayerId = null; textMenu.style.display = 'none'; updateTextLayersUI(); redraw();
   }
-}
-
-function onTouchMove(e) {
+}function onTouchMove(e) {
   if (!imgLoaded) return;
   if (e.preventDefault) e.preventDefault();
   if (e.touches) { for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
@@ -2549,3 +2538,227 @@ function initHomeUpload() {
 function importOnePhoto(file) {
   return new Promise(resolve => {
     const reader = new FileReader();
+    reader.onload = ev => {
+      const newImg = new Image();
+      newImg.onload = function() {
+        const MAX = 1080; let w = newImg.width, h = newImg.height;
+        if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
+        const tmp = document.createElement('canvas');
+        tmp.width = w; tmp.height = h;
+        tmp.getContext('2d').drawImage(newImg, 0, 0, w, h);
+        const dataURL = tmp.toDataURL('image/jpeg', 0.85);
+        const id = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+        const now = new Date();
+        try {
+          localStorage.setItem('music_' + id, JSON.stringify({
+            name: 'Cover ' + (Object.keys(localStorage).filter(k => k.startsWith('music_proj_')).length + 1),
+            date: now.toISOString(), savedAt: now.getTime(),
+            image: dataURL, originalImage: dataURL,
+            canvasW: w, canvasH: h, textLayers: [],
+            brightness: 100, contrast: 100, saturation: 100, noise: 0,
+            filter: 'none', border: 'none', borderColor: '#ffffff', borderSize: 5,
+            bgColor: null, bgColorSize: 8, template: 'none', fx: 'none', fxAmount: 70,
+            subjectMode: 'none', strokeColor: '#ffffff', subjectAmount: 12,
+            bgImageFile: null, bgImageSize: 8,
+            bgImageZoom: 100, bgImageX: 0, bgImageY: 0
+          }));
+        } catch(err) {}
+        resolve();
+      };
+      newImg.onerror = () => resolve();
+      newImg.src = ev.target.result;
+    };
+    reader.onerror = () => resolve();
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadProject(key) {
+  resetStudioState();
+  const p = JSON.parse(localStorage.getItem(key));
+  currentProjectId = key.replace('music_', '');
+  currentProjectName = p.name || 'Untitled';
+  textLayers = p.textLayers || [];
+  activeLayerId = null;
+  bInput.value = p.brightness ?? 100; cInput.value = p.contrast ?? 100; sInput.value = p.saturation ?? 100; nInput.value = p.noise ?? 0;
+  subjAmt.value = p.subjectAmount ?? 12;
+  currentFilter = p.filter ?? 'none';
+  currentBorder = p.border ?? 'none'; currentBorderColor = p.borderColor ?? '#ffffff'; currentBorderSize = p.borderSize ?? 5;
+  currentBgColor = p.bgColor ?? null; currentBgColorSize = p.bgColorSize ?? 8;
+  currentBgImageSize = p.bgImageSize ?? 8;
+  currentBgImageZoom = p.bgImageZoom ?? 100;
+  currentBgImageX = p.bgImageX ?? 0;
+  currentBgImageY = p.bgImageY ?? 0;
+  currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
+  fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p.fxRotation ?? 0;
+  subjectX = p.subjectX ?? 0.5; subjectY = p.subjectY ?? 0.5; subjectScale = p.subjectScale ?? 1;
+  const fxAmt = document.getElementById('fxAmount'); if (fxAmt) fxAmt.value = currentFxAmount;
+  const fxV = document.getElementById('fxVal'); if (fxV) fxV.innerText = currentFxAmount;
+  const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
+  const zV = document.getElementById('bgImgZoomVal'); if (zV) zV.innerText = currentBgImageZoom;
+  const xIn = document.getElementById('bgImgXInput'); if (xIn) xIn.value = currentBgImageX;
+  const xV = document.getElementById('bgImgXVal'); if (xV) xV.innerText = currentBgImageX;
+  const yIn = document.getElementById('bgImgYInput'); if (yIn) yIn.value = currentBgImageY;
+  const yV = document.getElementById('bgImgYVal'); if (yV) yV.innerText = currentBgImageY;
+  currentBgImage = null;
+  if (p.bgImageFile) {
+    const bgKey = p.bgImageFile;
+    if (bgImages[bgKey]) { currentBgImage = bgImages[bgKey]; }
+    else {
+      loadImage(EFFECTS_BASE + bgKey).then(im => {
+        if (im) { bgImages[bgKey] = im; currentBgImage = im; if (imgLoaded) redraw(); }
+      });
+    }
+  }
+  if (p.customBgData && !currentBgImage) {
+    const ci = new Image();
+    ci.onload = () => { currentBgImage = ci; customBgImage = ci; if (imgLoaded) redraw(); };
+    ci.src = p.customBgData;
+  }
+  const bsi = document.getElementById('borderSizeInput'); if (bsi) bsi.value = currentBorderSize;
+  const bsv = document.getElementById('borderSizeVal'); if (bsv) bsv.innerText = currentBorderSize;
+  const bcsi = document.getElementById('bgColorSizeInput'); if (bcsi) bcsi.value = currentBgColorSize;
+  const bcsv = document.getElementById('bgColorSizeVal'); if (bcsv) bcsv.innerText = currentBgColorSize;
+  const bgsi = document.getElementById('bgImgSizeInput'); if (bgsi) bgsi.value = currentBgImageSize;
+  const bgsv = document.getElementById('bgImgSizeVal'); if (bgsv) bgsv.innerText = currentBgImageSize;
+  currentTemplate = p.template ?? 'none';
+  subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
+  const sourceImage = p.originalImage || p.image;
+  originalImageSrc = sourceImage;
+  window.__originalBeforeBgRemove = p.preBgRemoveImage || null;
+  img.onload = function() {
+    if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
+    imgLoaded = true;
+    buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
+    buildFxGrids(); buildBgImageGrid(); buildFontGrid(); buildPresetThumbs();
+    redraw();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
+    }
+    setTimeout(() => { if (imgLoaded) redraw(); }, 400);
+    if (currentFx && currentFx !== 'none' && !currentFx.endsWith(':none')) {
+      const parts = currentFx.split(':');
+      const catKey = parts[0], fname = parts[1];
+      const imgKey = catKey + ':' + fname;
+      if (fxImages[imgKey]) { redraw(); }
+      else {
+        loadImage(EFFECTS_BASE + fname).then(im => {
+          if (im) { fxImages[imgKey] = im; if (imgLoaded) redraw(); }
+        });
+      }
+    }
+    saveState();
+  };
+  img.src = sourceImage;
+  document.getElementById('view-home').classList.remove('active');
+  document.getElementById('view-studio').classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-adjust').classList.add('active');
+  document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
+}
+
+function goHome() {
+  document.getElementById('view-studio').classList.remove('active');
+  document.getElementById('view-home').classList.add('active');
+  textMenu.style.display = 'none';
+  resetStudioState();
+  renderProjectsList();
+}
+
+function resetEverything() {
+  bInput.value = 100; cInput.value = 100; sInput.value = 100; nInput.value = 0;
+  currentFilter = 'none'; currentBorder = 'none'; currentBgColor = null; currentBgImage = null;
+  currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
+  currentFx = 'none'; currentFxAmount = 70;
+  textLayers = []; activeLayerId = null;
+  subjectMode = 'none'; personMask = null; subjectReady = false;
+  preCropImageSrc = null;
+  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
+  subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
+  unshowOpacity = 100; cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0; cutFeather = 0; cornerRound = 0;
+  currentTemplate = 'none';
+  document.querySelectorAll('.template-thumb, .filter-thumb, .border-thumb, .bgcolor-swatch, .bg-item, .fx-card').forEach(c => c.classList.remove('selected'));
+  if (window.__originalBeforeBgRemove && window.__originalBeforeBgRemove !== originalImageSrc) {
+    const restoreImg = new Image();
+    restoreImg.onload = () => {
+      img = restoreImg;
+      originalImageSrc = window.__originalBeforeBgRemove;
+      setupCanvasFromImage(restoreImg);
+      window.__originalBeforeBgRemove = null;
+      buildFilterThumbs(); buildTemplates();
+      syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
+      showToast('Reset to original');
+    };
+    restoreImg.src = window.__originalBeforeBgRemove;
+    return;
+  }
+  syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const el = document.getElementById('splashScreen');
+  if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
+
+  const bgInp = document.getElementById('bgUploadInput');
+  if (bgInp) {
+    bgInp.addEventListener('change', function(e) {
+      const file = (e.target.files || [])[0];
+      if (!file) return;
+      e.target.value = '';
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const newImg = new Image();
+        newImg.onload = () => {
+          customBgImage = newImg;
+          currentBgImage = newImg;
+          currentBgColor = null;
+          currentBgImageZoom = 100;
+          currentBgImageX = 0;
+          currentBgImageY = 0;
+          document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
+          document.querySelectorAll('.bgcolor-swatch').forEach(s => s.classList.remove('selected'));
+          redraw();
+          saveState();
+          showToast('Background imported');
+        };
+        newImg.onerror = () => alert('Failed to load image.');
+        newImg.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  (async () => {
+    buildFontGrid(); buildTemplates(); buildBorders(); buildBgColors();
+    buildPresetThumbs();
+    updateTextLayersUI(); initHomeUpload(); renderProjectsList();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
+    }
+    setTimeout(() => {
+      try { if (typeof preloadEffects === 'function') preloadEffects(); } catch (e) { console.warn(e); }
+    }, 0);
+    setTimeout(() => {
+      const s = document.getElementById('splashScreen');
+      if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 300); }
+    }, 400);
+  })();
+});
+
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && imgLoaded) redraw();
+});
+window.addEventListener('focus', function() {
+  if (imgLoaded) redraw();
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(e => console.warn('SW failed', e));
+  });
+}
+</script>
+
+</body>
+</html>
