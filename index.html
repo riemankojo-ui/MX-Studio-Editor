@@ -67,11 +67,7 @@ canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#0
 .panel { display:none; background:transparent; padding:8px 4px; text-align:left; font-size:12px; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; position:relative; }
 .panel.active { display:block; }
 
-#panel-adjust.active {
-  flex: 0 0 auto;
-  max-height: 30vh;
-  overflow-y: auto;
-}
+#panel-adjust.active { flex: 0 0 auto; max-height: 30vh; overflow-y: auto; }
 
 .sub-tabs { display:flex; justify-content:flex-start; gap:16px; margin-bottom:8px; border-bottom:1px solid #1a1a1a; padding-bottom:8px; overflow-x:auto; }
 .sub-tabs::-webkit-scrollbar { display:none; }
@@ -88,23 +84,12 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .fx-grid { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
 .h-scroll::-webkit-scrollbar, .filter-thumbs::-webkit-scrollbar, .template-thumbs::-webkit-scrollbar, .border-thumbs::-webkit-scrollbar, .color-row::-webkit-scrollbar, .bgcolor-row::-webkit-scrollbar, .fx-grid::-webkit-scrollbar { display:none; }
 
-.template-thumbs {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding: 2px 2px 4px;
-}
+.template-thumbs { flex-wrap: nowrap; overflow-x: auto; padding: 2px 2px 4px; }
 .bg-grid {
-  display:flex;
-  flex-wrap:nowrap;
-  gap:8px;
-  padding:4px 2px 10px;
-  overflow-x:auto;
-  overflow-y:hidden;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-  touch-action:pan-x pan-y;
-  overscroll-behavior-x:contain;
-  scroll-snap-type:x proximity;
+  display:flex; flex-wrap:nowrap; gap:8px; padding:4px 2px 10px;
+  overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch;
+  scrollbar-width:none; touch-action:pan-x pan-y;
+  overscroll-behavior-x:contain; scroll-snap-type:x proximity;
 }
 .bg-grid::-webkit-scrollbar { display:none; }
 .bg-item { flex:0 0 auto; width:72px; cursor:pointer; text-align:center; scroll-snap-align: start; }
@@ -137,7 +122,6 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .fx-card-label { font-size:9px; color:#888; margin-top:4px; display:block; font-weight:700; }
 .fx-card.selected .fx-card-label { color:#00d4ff; }
 
-.bg-item { flex:0 0 auto; width:72px; cursor:pointer; text-align:center; }
 .bg-item-img { width:72px; height:72px; border-radius:10px; background:#111; overflow:hidden; border:2px solid transparent; }
 .bg-item.selected .bg-item-img { border-color:#fff; }
 .bg-item img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -159,7 +143,7 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-box; padding:11px; background:#141414; border:none; border-radius:8px; margin-top:4px; }
 .section-label { font-size:10px; color:#666; margin:14px 0 4px; display:block; letter-spacing:.6px; font-weight:700; }
 
-..corner-btn { position:absolute; left:12px; bottom:12px; background:#ffffff; color:#000; border:none; width:36px; height:36px; border-radius:50%; font-size:20px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.6); z-index:20; line-height:1; transition:transform .1s ease; } .1s ease; }
+.corner-btn { position:absolute; left:12px; bottom:12px; background:#ffffff; color:#000; border:none; width:36px; height:36px; border-radius:50%; font-size:20px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.6); z-index:20; line-height:1; transition:transform .1s ease; }
 .corner-btn:active { transform:scale(.92); }
 .corner-btn.small { width:44px; height:44px; font-size:11px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; }
 
@@ -187,7 +171,17 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 
 #toast { position:fixed; left:50%; bottom:110px; transform:translateX(-50%) translateY(20px); background:#161616; color:#fff; font-size:13px; font-weight:700; padding:12px 22px; border-radius:24px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:600; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
 #confirmModal { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
+#confirmModal.active { display:flex; }
+.confirm-card { background:#161616; border:1px solid #242424; border-radius:16px; padding:24px 20px 18px; width:100%; max-width:280px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+.confirm-title { font-size:15px; font-weight:800; color:#fff; margin-bottom:6px; }
+.confirm-sub { font-size:11px; color:#888; margin-bottom:20px; line-height:1.5; }
+.confirm-actions { display:flex; gap:10px; }
+.confirm-btn { flex:1; border:none; padding:12px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; text-transform:uppercase; }
+.confirm-btn.keep { background:#242424; color:#fff; }
+.confirm-btn.delete { background:#ff2c2c; color:#fff; }
+
 #textCardModal { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:650; display:none; align-items:center; justify-content:center; padding:20px; }
 #textCardModal.active { display:flex; }
 .text-card { background:#161616; border:1px solid #242424; border-radius:16px; padding:20px 18px 16px; width:100%; max-width:320px; box-shadow:0 20px 60px rgba(0,0,0,.6); text-align:left; }
@@ -197,14 +191,6 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .text-card-btn { flex:1; border:none; padding:12px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; text-transform:uppercase; }
 .text-card-btn.cancel { background:#242424; color:#fff; }
 .text-card-btn.confirm { background:#fff; color:#000; }
-#confirmModal.active { display:flex; }
-.confirm-card { background:#161616; border:1px solid #242424; border-radius:16px; padding:24px 20px 18px; width:100%; max-width:280px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
-.confirm-title { font-size:15px; font-weight:800; color:#fff; margin-bottom:6px; }
-.confirm-sub { font-size:11px; color:#888; margin-bottom:20px; line-height:1.5; }
-.confirm-actions { display:flex; gap:10px; }
-.confirm-btn { flex:1; border:none; padding:12px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; text-transform:uppercase; }
-.confirm-btn.keep { background:#242424; color:#fff; }
-.confirm-btn.delete { background:#ff2c2c; color:#fff; }
 
 #splashScreen { position:fixed; inset:0; background:#0a0a0a; z-index:99999; display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .3s ease; }
 #splashScreen.fade-out { opacity:0; pointer-events:none; }
@@ -325,111 +311,112 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <div class="sub-tabs" id="fxTabBar"></div>
     <div id="fxGrids"></div>
     <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
-  <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
-<button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
+    <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
+    <button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
   </div>
 
-<div id="panel-text" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('layers', this)">TEXT</button>
-    <button class="sub-tab" onclick="switchSubTab('font', this)">FONTS</button>
-    <button class="sub-tab" onclick="switchSubTab('color', this)">COLOR</button>
-    <button class="sub-tab" onclick="switchSubTab('basic', this)">STYLE</button>
-    <button class="sub-tab" onclick="switchSubTab('featured', this)">EFFECTS</button>
-  </div>
-
-  <div id="subtab-layers" class="sub-view active" style="padding-bottom:70px;">
-    <div id="textLayersList" class="text-layers-list"></div>
-    <button class="corner-btn" onclick="openTextCard()">+</button>
-  </div>
-
-  <div id="subtab-font" class="sub-view">
-    <label>Select Font (40):</label>
-    <div class="font-grid" id="fontGridContainer"></div>
-  </div>
-
-  <div id="subtab-color" class="sub-view">
-    <label class="section-label">QUICK COLORS</label>
-    <div class="color-row">
-      <div class="color-circle" style="background:#ffffff;" onclick="setActiveTextColor('#ffffff',this)"></div>
-      <div class="color-circle" style="background:#000000;" onclick="setActiveTextColor('#000000',this)"></div>
-      <div class="color-circle" style="background:#ff2c2c;" onclick="setActiveTextColor('#ff2c2c',this)"></div>
-      <div class="color-circle" style="background:#00d4ff;" onclick="setActiveTextColor('#00d4ff',this)"></div>
-      <div class="color-circle" style="background:#ffd700;" onclick="setActiveTextColor('#ffd700',this)"></div>
-      <div class="color-circle" style="background:#00ff88;" onclick="setActiveTextColor('#00ff88',this)"></div>
-      <div class="color-circle" style="background:#ff69b4;" onclick="setActiveTextColor('#ff69b4',this)"></div>
+  <div id="panel-text" class="panel">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('layers', this)">TEXT</button>
+      <button class="sub-tab" onclick="switchSubTab('font', this)">FONTS</button>
+      <button class="sub-tab" onclick="switchSubTab('color', this)">COLOR</button>
+      <button class="sub-tab" onclick="switchSubTab('basic', this)">STYLE</button>
+      <button class="sub-tab" onclick="switchSubTab('featured', this)">EFFECTS</button>
     </div>
 
-    <label class="section-label">CUSTOM COLOR</label>
-    <div class="color-slider-wrap">
-      <div class="color-slider-row">
-        <div class="color-slider-preview" id="colorPreview" style="background:#ffffff;"></div>
-        <div style="flex:1;">
-          <div style="font-size:10px;color:#888;margin-bottom:4px;">Brightness: <span id="brVal">100</span></div>
-          <input type="range" id="colorBrightness" min="5" max="100" value="100" oninput="setActiveTextBrightness(this.value)">
+    <div id="subtab-layers" class="sub-view active" style="padding-bottom:70px;">
+      <div id="textLayersList" class="text-layers-list"></div>
+      <button class="corner-btn" onclick="openTextCard()">+</button>
+    </div>
+
+    <div id="subtab-font" class="sub-view">
+      <label>Select Font (40):</label>
+      <div class="font-grid" id="fontGridContainer"></div>
+    </div>
+
+    <div id="subtab-color" class="sub-view">
+      <label class="section-label">QUICK COLORS</label>
+      <div class="color-row">
+        <div class="color-circle" style="background:#ffffff;" onclick="setActiveTextColor('#ffffff',this)"></div>
+        <div class="color-circle" style="background:#000000;" onclick="setActiveTextColor('#000000',this)"></div>
+        <div class="color-circle" style="background:#ff2c2c;" onclick="setActiveTextColor('#ff2c2c',this)"></div>
+        <div class="color-circle" style="background:#00d4ff;" onclick="setActiveTextColor('#00d4ff',this)"></div>
+        <div class="color-circle" style="background:#ffd700;" onclick="setActiveTextColor('#ffd700',this)"></div>
+        <div class="color-circle" style="background:#00ff88;" onclick="setActiveTextColor('#00ff88',this)"></div>
+        <div class="color-circle" style="background:#ff69b4;" onclick="setActiveTextColor('#ff69b4',this)"></div>
+      </div>
+
+      <label class="section-label">CUSTOM COLOR</label>
+      <div class="color-slider-wrap">
+        <div class="color-slider-row">
+          <div class="color-slider-preview" id="colorPreview" style="background:#ffffff;"></div>
+          <div style="flex:1;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">Brightness: <span id="brVal">100</span></div>
+            <input type="range" id="colorBrightness" min="5" max="100" value="100" oninput="setActiveTextBrightness(this.value)">
+          </div>
+        </div>
+        <div class="color-slider-row">
+          <div style="width:38px;flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">Hue: <span id="hueVal">0°</span></div>
+            <input type="range" id="colorHue" min="0" max="360" value="0" oninput="setActiveTextHue(this.value)">
+          </div>
         </div>
       </div>
-      <div class="color-slider-row">
-        <div style="width:38px;flex-shrink:0;"></div>
-        <div style="flex:1;">
-          <div style="font-size:10px;color:#888;margin-bottom:4px;">Hue: <span id="hueVal">0°</span></div>
-          <input type="range" id="colorHue" min="0" max="360" value="0" oninput="setActiveTextHue(this.value)">
+    </div>
+
+    <div id="subtab-basic" class="sub-view" style="padding-bottom:70px;">
+      <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:4px;">
+        <label class="section-label" style="margin-top:0;">TEXT SIZE</label>
+        <div class="slider-row">
+          <span class="slider-label">Size</span>
+          <input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)">
+          <span class="slider-val" id="fSizeVal">36</span>
         </div>
+
+        <label class="section-label">ROTATION</label>
+        <div class="slider-row">
+          <span class="slider-label">Rot</span>
+          <input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)">
+          <span class="slider-val" id="fRotVal">0°</span>
+        </div>
+
+        <label class="section-label">PERSPECTIVE</label>
+        <div class="slider-row">
+          <span class="slider-label">Persp</span>
+          <input type="range" id="textPersp" min="-100" max="100" value="0" oninput="setActiveTextPersp(this.value)">
+          <span class="slider-val" id="perspVal">0</span>
+        </div>
+        <div style="font-size:9px;color:#555;margin-top:8px;line-height:1.5;">Slide right to make text lie down on the ground.</div>
+      </div>
+
+      <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:14px;width:100%;justify-content:center;background:#ff2c2c;color:#fff;font-weight:800;">DELETE THIS LAYER</button>
+    </div>
+
+    <div id="subtab-featured" class="sub-view">
+      <label class="section-label">TEXT STYLE</label>
+      <div class="h-scroll">
+        <div class="h-card selected" onclick="setActiveTextStyle('normal', this)">Standard</div>
+        <div class="h-card" onclick="setActiveTextStyle('stroke', this)">Outline</div>
+        <div class="h-card" onclick="setActiveTextStyle('shadow', this)">Shadow</div>
+        <div class="h-card" onclick="setActiveTextStyle('glow', this)">Glow</div>
+      </div>
+
+      <label class="section-label">MOVE TEXT</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px 2px 8px;max-width:240px;margin:0 auto;">
+        <div></div>
+        <button class="arrow-btn" onclick="moveActiveText(0,-5)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        <div></div>
+        <button class="arrow-btn" onclick="moveActiveText(-5,0)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <button class="arrow-btn" onclick="centerActiveTextHoriz()" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></button>
+        <button class="arrow-btn" onclick="moveActiveText(5,0)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        <div></div>
+        <button class="arrow-btn" onclick="moveActiveText(0,5)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
+        <div></div>
       </div>
     </div>
   </div>
 
-  <div id="subtab-basic" class="sub-view" style="padding-bottom:70px;">
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:4px;">
-      <label class="section-label" style="margin-top:0;">TEXT SIZE</label>
-      <div class="slider-row">
-        <span class="slider-label">Size</span>
-        <input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)">
-        <span class="slider-val" id="fSizeVal">36</span>
-      </div>
-
-      <label class="section-label">ROTATION</label>
-      <div class="slider-row">
-        <span class="slider-label">Rot</span>
-        <input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)">
-        <span class="slider-val" id="fRotVal">0°</span>
-      </div>
-
-      <label class="section-label">PERSPECTIVE</label>
-      <div class="slider-row">
-        <span class="slider-label">Persp</span>
-        <input type="range" id="textPersp" min="-100" max="100" value="0" oninput="setActiveTextPersp(this.value)">
-        <span class="slider-val" id="perspVal">0</span>
-      </div>
-      <div style="font-size:9px;color:#555;margin-top:8px;line-height:1.5;">Slide right to make text lie down on the ground.</div>
-    </div>
-
-    <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:14px;width:100%;justify-content:center;background:#ff2c2c;color:#fff;font-weight:800;">DELETE THIS LAYER</button>
-  </div>
-
-  <div id="subtab-featured" class="sub-view">
-    <label class="section-label">TEXT STYLE</label>
-    <div class="h-scroll">
-      <div class="h-card selected" onclick="setActiveTextStyle('normal', this)">Standard</div>
-      <div class="h-card" onclick="setActiveTextStyle('stroke', this)">Outline</div>
-      <div class="h-card" onclick="setActiveTextStyle('shadow', this)">Shadow</div>
-      <div class="h-card" onclick="setActiveTextStyle('glow', this)">Glow</div>
-    </div>
-
-    <label class="section-label">MOVE TEXT</label>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px 2px 8px;max-width:240px;margin:0 auto;">
-      <div></div>
-      <button class="arrow-btn" onclick="moveActiveText(0,-5)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-      <div></div>
-      <button class="arrow-btn" onclick="moveActiveText(-5,0)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-      <button class="arrow-btn" onclick="centerActiveTextHoriz()" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></button>
-      <button class="arrow-btn" onclick="moveActiveText(5,0)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
-      <div></div>
-      <button class="arrow-btn" onclick="moveActiveText(0,5)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
-      <div></div>
-    </div>
-  </div>
-</div>
   <div id="panel-color" class="panel">
     <label class="section-label">BACKGROUND COLOR</label>
     <div class="bgcolor-row" id="bgColorRow"></div>
@@ -438,60 +425,54 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   </div>
 
   <div id="panel-bg" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('subjmain', this)">DETECT</button>
-    <button class="sub-tab" onclick="switchSubTab('subjeffect', this)">EFFECT</button>
-  </div>
-
-  <div id="subtab-subjmain" class="sub-view active">
-    <div id="subjectStatus" style="font-size:11px;color:#666;line-height:1.6;text-align:center;padding:14px 8px;">Tap DETECT — first run downloads a small AI model.</div>
-    <button class="bgremover-btn" id="detectBtn" onclick="detectSubject()" style="margin-bottom:8px;">
-      <div class="label">
-        <span class="title" style="color:#00d4ff;">DETECT SUBJECT</span>
-      </div>
-    </button>
-  </div>
-
-  <div id="subtab-subjeffect" class="sub-view">
-    <label class="section-label">EFFECT</label>
-    <div class="h-scroll">
-      <div class="h-card selected" onclick="setSubjectMode('none', this)">None</div>
-      <div class="h-card" onclick="setSubjectMode('blur', this)">BG Blur</div>
-      <div class="h-card" onclick="setSubjectMode('stroke', this)">Stroke</div>
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('subjmain', this)">DETECT</button>
+      <button class="sub-tab" onclick="switchSubTab('subjeffect', this)">EFFECT</button>
     </div>
-    <label class="section-label">AMOUNT: <span id="subjectAmtVal">12</span></label>
-    <input type="range" id="subjectAmount" min="1" max="25" value="12">
+
+    <div id="subtab-subjmain" class="sub-view active">
+      <div id="subjectStatus" style="font-size:11px;color:#666;line-height:1.6;text-align:center;padding:14px 8px;">Tap DETECT — first run downloads a small AI model.</div>
+      <button class="bgremover-btn" id="detectBtn" onclick="detectSubject()" style="margin-bottom:8px;">
+        <div class="label">
+          <span class="title" style="color:#00d4ff;">DETECT SUBJECT</span>
+        </div>
+      </button>
+    </div>
+
+    <div id="subtab-subjeffect" class="sub-view">
+      <label class="section-label">EFFECT</label>
+      <div class="h-scroll">
+        <div class="h-card selected" onclick="setSubjectMode('none', this)">None</div>
+        <div class="h-card" onclick="setSubjectMode('blur', this)">BG Blur</div>
+        <div class="h-card" onclick="setSubjectMode('stroke', this)">Stroke</div>
+      </div>
+      <label class="section-label">AMOUNT: <span id="subjectAmtVal">12</span></label>
+      <input type="range" id="subjectAmount" min="1" max="25" value="12">
+    </div>
   </div>
-</div>
 
   <div id="panel-border" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('borderstyle', this)">STYLE</button>
-    <button class="sub-tab" onclick="switchSubTab('bordercolor', this)">COLOR</button>
-  </div>
-  <div id="subtab-borderstyle" class="sub-view active">
-    <label class="section-label">FRAME STYLE</label>
-    <div class="border-thumbs" id="borderContainer"></div>
-    <label class="section-label">FRAME SIZE: <span id="borderSizeVal">5</span>%</label>
-    <input type="range" id="borderSizeInput" min="1" max="20" value="5" oninput="setBorderSize(this.value)">
-  </div>
-  <div id="subtab-bordercolor" class="sub-view">
-    <label class="section-label">FRAME COLOR</label>
-    <div style="display:flex;gap:12px;padding:4px 2px 8px;">
-      <div class="bcolor-circle selected" style="background:#ffffff;" onclick="setBorderColor('#ffffff', this)"></div>
-      <div class="bcolor-circle" style="background:#ff2c2c;" onclick="setBorderColor('#ff2c2c', this)"></div>
-      <div class="bcolor-circle" style="background:#000000;" onclick="setBorderColor('#000000', this)"></div>
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('borderstyle', this)">STYLE</button>
+      <button class="sub-tab" onclick="switchSubTab('bordercolor', this)">COLOR</button>
+    </div>
+    <div id="subtab-borderstyle" class="sub-view active">
+      <label class="section-label">FRAME STYLE</label>
+      <div class="border-thumbs" id="borderContainer"></div>
+      <label class="section-label">FRAME SIZE: <span id="borderSizeVal">5</span>%</label>
+      <input type="range" id="borderSizeInput" min="1" max="20" value="5" oninput="setBorderSize(this.value)">
+    </div>
+    <div id="subtab-bordercolor" class="sub-view">
+      <label class="section-label">FRAME COLOR</label>
+      <div style="display:flex;gap:12px;padding:4px 2px 8px;">
+        <div class="bcolor-circle selected" style="background:#ffffff;" onclick="setBorderColor('#ffffff', this)"></div>
+        <div class="bcolor-circle" style="background:#ff2c2c;" onclick="setBorderColor('#ff2c2c', this)"></div>
+        <div class="bcolor-circle" style="background:#000000;" onclick="setBorderColor('#000000', this)"></div>
+      </div>
     </div>
   </div>
-</div>
-<div id="panel-bgremover" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('bgrmcurrent', this)">CLEAN CURRENT</button>
-    <button class="sub-tab" onclick="switchSubTab('bgrmpick', this)">PICK & CLEAN</button>
-    <button class="sub-tab" onclick="switchSubTab('unshow', this)">UNSHOW</button>
-  </div>
 
-  <div id="subtab-bgrmcurrent" class="sub-view active">
+  <div id="panel-bgremover" class="panel">
     <div class="bgremover-menu">
       <div class="bgremover-btn" onclick="removeBgBest()">
         <div class="label">
@@ -503,122 +484,90 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
   </div>
 
-<div id="subtab-bgrmpick" class="sub-view">
-  <div style="padding:20px 8px;">
-    <label for="cleanPickInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK PHOTO FROM GALLERY</label>
-    <input type="file" id="cleanPickInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;" onchange="handleCleanPick(this)">
-    <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — the background will be removed automatically.</div>
-  </div>
-</div>
-
-  <div id="subtab-unshow" class="sub-view">
-    <label class="section-label">OPACITY: <span id="unshowOpacityVal">100</span>%</label>
-    <input type="range" id="unshowOpacityInput" min="0" max="100" value="100" oninput="setUnshowOpacity(this.value)">
-
-    <label class="section-label">CUT TOP: <span id="cutTopVal">0</span>%</label>
-    <input type="range" id="cutTopInput" min="0" max="50" value="0" oninput="setCut('top', this.value)">
-
-    <label class="section-label">CUT BOTTOM: <span id="cutBottomVal">0</span>%</label>
-    <input type="range" id="cutBottomInput" min="0" max="50" value="0" oninput="setCut('bottom', this.value)">
-
-    <label class="section-label">CUT LEFT: <span id="cutLeftVal">0</span>%</label>
-    <input type="range" id="cutLeftInput" min="0" max="50" value="0" oninput="setCut('left', this.value)">
-
-    <label class="section-label">CUT RIGHT: <span id="cutRightVal">0</span>%</label>
-    <input type="range" id="cutRightInput" min="0" max="50" value="0" oninput="setCut('right', this.value)">
-
-    <label class="section-label">SOFT EDGE: <span id="cutFeatherVal">0</span></label>
-    <input type="range" id="cutFeatherInput" min="0" max="50" value="0" oninput="setCutFeather(this.value)">
-
-    <label class="section-label">CORNER ROUND: <span id="cornerRoundVal">0</span>%</label>
-    <input type="range" id="cornerRoundInput" min="0" max="50" value="0" oninput="setCornerRound(this.value)">
-
-    <button class="crop-tool" onclick="resetUnshow()" style="margin-top:14px;width:100%;justify-content:center;">RESET UNSHOW</button>
-  </div>
-</div>
   <div id="panel-bgimage" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
-    <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
-    <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
-  </div>
-
-  <div id="subtab-bggrid" class="sub-view active">
-    <div class="bg-grid" id="bgImageGrid"></div>
-  </div>
-
-  <div id="subtab-bglayers" class="sub-view">
-    <button class="crop-tool" onclick="clearAllBg()" style="width:100%;justify-content:center;padding:12px;background:#242424;color:#fff;font-weight:800;margin-bottom:14px;">NONE</button>
-
-    <div class="h-scroll" style="margin-bottom:8px;">
-      <div class="h-card selected" onclick="switchBgDrag('subject', this)">Move Subject</div>
-      <div class="h-card" onclick="switchBgDrag('bg', this)">Move Background</div>
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
+      <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
+      <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
     </div>
 
-    <label class="section-label">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
-    <input type="range" id="bgImgSizeInput" min="0" max="40" value="8" oninput="setBgImageSize(this.value)">
-
-    <label class="section-label">ZOOM: <span id="bgImgZoomVal">100</span>%</label>
-    <input type="range" id="bgImgZoomInput" min="50" max="300" value="100" oninput="setBgImageZoom(this.value)">
-
-    <label class="section-label">MOVE X: <span id="bgImgXVal">0</span></label>
-    <input type="range" id="bgImgXInput" min="-100" max="100" value="0" oninput="setBgImageX(this.value)">
-
-    <label class="section-label">MOVE Y: <span id="bgImgYVal">0</span></label>
-    <input type="range" id="bgImgYInput" min="-100" max="100" value="0" oninput="setBgImageY(this.value)">
-
-    <button class="crop-tool" onclick="resetBgPosition()" style="margin-top:14px;width:100%;justify-content:center;">RESET BG POSITION</button>
-    <button class="crop-tool" onclick="clearBgImage()" style="margin-top:8px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
-    <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:8px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
-  </div>
-
-  <div id="subtab-bgimport" class="sub-view">
-    <div style="padding:20px 8px;">
-      <button class="crop-tool" onclick="document.getElementById('bgUploadInput').click()" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;">+ PICK FROM GALLERY</button>
-      <div style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo from your gallery to use as the background.</div>
-      <input type="file" id="bgUploadInput" accept="image/*" style="display:none;">
+    <div id="subtab-bggrid" class="sub-view active">
+      <div class="bg-grid" id="bgImageGrid"></div>
     </div>
-  </div>
-</div>
-<div id="panel-clean" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('cleanpick', this)">PICK & CLEAN</button>
-    <button class="sub-tab" onclick="switchSubTab('unshow', this)">UNSHOW</button>
-  </div>
 
-  <div id="subtab-cleanpick" class="sub-view active">
-    <div style="padding:20px 8px;">
-      <button class="crop-tool" onclick="document.getElementById('cleanPickInput').click()" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;">+ PICK PHOTO FROM GALLERY</button>
-      <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — the background will be removed automatically.</div>
-<input type="file" id="cleanPickInput" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="handleCleanPick(this)">
+    <div id="subtab-bglayers" class="sub-view">
+      <button class="crop-tool" onclick="clearAllBg()" style="width:100%;justify-content:center;padding:12px;background:#242424;color:#fff;font-weight:800;margin-bottom:14px;">NONE</button>
+
+      <div class="h-scroll" style="margin-bottom:8px;">
+        <div class="h-card selected" onclick="switchBgDrag('subject', this)">Move Subject</div>
+        <div class="h-card" onclick="switchBgDrag('bg', this)">Move Background</div>
+      </div>
+
+      <label class="section-label">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
+      <input type="range" id="bgImgSizeInput" min="0" max="40" value="8" oninput="setBgImageSize(this.value)">
+
+      <label class="section-label">ZOOM: <span id="bgImgZoomVal">100</span>%</label>
+      <input type="range" id="bgImgZoomInput" min="50" max="300" value="100" oninput="setBgImageZoom(this.value)">
+
+      <label class="section-label">MOVE X: <span id="bgImgXVal">0</span></label>
+      <input type="range" id="bgImgXInput" min="-100" max="100" value="0" oninput="setBgImageX(this.value)">
+
+      <label class="section-label">MOVE Y: <span id="bgImgYVal">0</span></label>
+      <input type="range" id="bgImgYInput" min="-100" max="100" value="0" oninput="setBgImageY(this.value)">
+
+      <button class="crop-tool" onclick="resetBgPosition()" style="margin-top:14px;width:100%;justify-content:center;">RESET BG POSITION</button>
+      <button class="crop-tool" onclick="clearBgImage()" style="margin-top:8px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
+      <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:8px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
+    </div>
+
+    <div id="subtab-bgimport" class="sub-view">
+      <div style="padding:20px 8px;">
+        <label for="bgUploadInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK FROM GALLERY</label>
+        <div style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo from your gallery to use as the background.</div>
+        <input type="file" id="bgUploadInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;">
+      </div>
     </div>
   </div>
 
-  <div id="subtab-unshow" class="sub-view">
-    <label class="section-label">OPACITY: <span id="unshowOpacityVal">100</span>%</label>
-    <input type="range" id="unshowOpacityInput" min="0" max="100" value="100" oninput="setUnshowOpacity(this.value)">
+  <div id="panel-clean" class="panel">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('cleanpick', this)">PICK & CLEAN</button>
+      <button class="sub-tab" onclick="switchSubTab('unshow2', this)">UNSHOW</button>
+    </div>
 
-    <label class="section-label">CUT TOP: <span id="cutTopVal">0</span>%</label>
-    <input type="range" id="cutTopInput" min="0" max="50" value="0" oninput="setCut('top', this.value)">
+    <div id="subtab-cleanpick" class="sub-view active">
+      <div style="padding:20px 8px;">
+        <label for="cleanPickInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK PHOTO FROM GALLERY</label>
+        <input type="file" id="cleanPickInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;" onchange="handleCleanPick(this)">
+        <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — it will load onto the canvas.</div>
+      </div>
+    </div>
 
-    <label class="section-label">CUT BOTTOM: <span id="cutBottomVal">0</span>%</label>
-    <input type="range" id="cutBottomInput" min="0" max="50" value="0" oninput="setCut('bottom', this.value)">
+    <div id="subtab-unshow2" class="sub-view">
+      <label class="section-label">OPACITY: <span id="unshowOpacityVal">100</span>%</label>
+      <input type="range" id="unshowOpacityInput" min="0" max="100" value="100" oninput="setUnshowOpacity(this.value)">
 
-    <label class="section-label">CUT LEFT: <span id="cutLeftVal">0</span>%</label>
-    <input type="range" id="cutLeftInput" min="0" max="50" value="0" oninput="setCut('left', this.value)">
+      <label class="section-label">CUT TOP: <span id="cutTopVal">0</span>%</label>
+      <input type="range" id="cutTopInput" min="0" max="50" value="0" oninput="setCut('top', this.value)">
 
-    <label class="section-label">CUT RIGHT: <span id="cutRightVal">0</span>%</label>
-    <input type="range" id="cutRightInput" min="0" max="50" value="0" oninput="setCut('right', this.value)">
+      <label class="section-label">CUT BOTTOM: <span id="cutBottomVal">0</span>%</label>
+      <input type="range" id="cutBottomInput" min="0" max="50" value="0" oninput="setCut('bottom', this.value)">
 
-    <label class="section-label">SOFT EDGE: <span id="cutFeatherVal">0</span></label>
-    <input type="range" id="cutFeatherInput" min="0" max="50" value="0" oninput="setCutFeather(this.value)">
+      <label class="section-label">CUT LEFT: <span id="cutLeftVal">0</span>%</label>
+      <input type="range" id="cutLeftInput" min="0" max="50" value="0" oninput="setCut('left', this.value)">
 
-    <label class="section-label">CORNER ROUND: <span id="cornerRoundVal">0</span>%</label>
-    <input type="range" id="cornerRoundInput" min="0" max="50" value="0" oninput="setCornerRound(this.value)">
+      <label class="section-label">CUT RIGHT: <span id="cutRightVal">0</span>%</label>
+      <input type="range" id="cutRightInput" min="0" max="50" value="0" oninput="setCut('right', this.value)">
 
-    <button class="crop-tool" onclick="resetUnshow()" style="margin-top:14px;width:100%;justify-content:center;">RESET UNSHOW</button>
+      <label class="section-label">SOFT EDGE: <span id="cutFeatherVal">0</span></label>
+      <input type="range" id="cutFeatherInput" min="0" max="50" value="0" oninput="setCutFeather(this.value)">
+
+      <label class="section-label">CORNER ROUND: <span id="cornerRoundVal">0</span>%</label>
+      <input type="range" id="cornerRoundInput" min="0" max="50" value="0" oninput="setCornerRound(this.value)">
+
+      <button class="crop-tool" onclick="resetUnshow()" style="margin-top:14px;width:100%;justify-content:center;">RESET UNSHOW</button>
+    </div>
   </div>
-</div>
 
   <div class="bottom-nav">
     <button class="nav-btn active" data-panel="adjust" onclick="switchPanel('adjust', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Adjust</span></button>
@@ -630,7 +579,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <button class="nav-btn" data-panel="border" onclick="switchPanel('border', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg><span>Border</span></button>
     <button class="nav-btn" data-panel="bgremover" onclick="switchPanel('bgremover', this)"><svg width="24" height="24" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="11" r="4.5"/><path d="M5 25a8 8 0 0 1 16 0"/><circle cx="22" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="25" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="26" cy="17" r="0.9" fill="currentColor" stroke="none"/><circle cx="24" cy="21" r="1" fill="currentColor" stroke="none"/><circle cx="21" cy="24" r="0.8" fill="currentColor" stroke="none"/></svg><span>BG Rmv</span></button>
     <button class="nav-btn" data-panel="bgimage" onclick="switchPanel('bgimage', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>BG</span></button>
-<button class="nav-btn" data-panel="clean" onclick="switchPanel('clean', this)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="3"/><path d="M21 8v8a5 5 0 0 1-5 5h-8"/></svg><span>Double Bg</span></button>    
+    <button class="nav-btn" data-panel="clean" onclick="switchPanel('clean', this)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="3"/><path d="M21 8v8a5 5 0 0 1-5 5h-8"/></svg><span>Double Bg</span></button>
   </div>
 </div>
 
@@ -684,6 +633,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
   </div>
 </div>
+
 <div id="textCardModal">
   <div class="text-card">
     <div class="text-card-title" id="textCardTitle">Add Text</div>
@@ -694,6 +644,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
   </div>
 </div>
+
 <div id="toast">Saved</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
@@ -706,7 +657,6 @@ const cInput = document.getElementById('contrast');
 const sInput = document.getElementById('saturation');
 const nInput = document.getElementById('noise');
 const subjAmt = document.getElementById('subjectAmount');
-const tInput = document.getElementById('textContent');
 const sizeInput = document.getElementById('fontSize');
 
 let img = new Image();
@@ -746,6 +696,7 @@ let counterLocked = false;
 let fxX = 0.5, fxY = 0.5, fxScale = 1, fxRotation = 0;
 let gestureTarget = 'text';
 let isDraggingFx = false;
+let fxDragStart = null;
 let subjectX = 0.5, subjectY = 0.5, subjectScale = 1;
 let isDraggingSubject = false;
 let subjectDragStart = null;
@@ -756,7 +707,6 @@ let unshowOpacity = 100;
 let cutTop = 0, cutBottom = 0, cutLeft = 0, cutRight = 0;
 let cutFeather = 0;
 let cornerRound = 0;
-let fxDragStart = null;
 let crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
 
 const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
@@ -851,6 +801,7 @@ async function loadCategoryConfig() {
   }
   if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) currentFxTab = FX_CATEGORIES[0].key;
 }
+
 async function probeOne(base) {
   let im = await loadImage(EFFECTS_BASE + base + '.jpg');
   if (im) return { fname: base + '.jpg', im };
@@ -871,7 +822,6 @@ async function probeCategory(cat) {
     cat.files.forEach(r => { fxImages[cat.key + ':' + r.fname] = r.im; });
     return;
   }
-
   const promises = [];
   for (let i = 1; i <= cat.max; i++) promises.push(probeOne(cat.prefix + i).then(r => r ? { base: cat.prefix + i, ...r } : null));
   const results = await Promise.all(promises);
@@ -890,7 +840,6 @@ async function probeBackgrounds() {
 
 async function preloadEffects() {
   await loadCategoryConfig();
-  // Only preload small categories (< 10 files). Large ones load on-demand.
   const smallCats = FX_CATEGORIES.filter(c => c.fileList && c.fileList.length <= 10);
   const noListCats = FX_CATEGORIES.filter(c => !c.fileList);
   await Promise.all([...smallCats.map(c => probeCategory(c)), ...noListCats.map(c => probeCategory(c)), probeBackgrounds()]);
@@ -899,6 +848,7 @@ async function preloadEffects() {
   buildBgImageGrid();
   if (imgLoaded) redraw();
 }
+
 function playCount(callback) {
   if (counterLocked) return;
   counterLocked = true;
@@ -993,17 +943,14 @@ function switchFxTab(key, el) {
   panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('fx-tab-' + key).classList.add('active');
   el.classList.add('active');
-
-  // Lazy-load this category's images if not already loaded
   const cat = FX_CATEGORIES.find(c => c.key === key);
   if (cat && cat.fileList && (!cat.files || !cat.files.length)) {
     const g = document.getElementById('fxGrid-' + key);
     if (g) g.innerHTML = '<div class="filter-empty">Loading ' + cat.fileList.length + ' effects...</div>';
-    probeCategory(cat).then(() => {
-      buildFxGrid(key);
-    });
+    probeCategory(cat).then(() => { buildFxGrid(key); });
   }
 }
+
 function buildFxGrid(catKey) {
   const cat = FX_CATEGORIES.find(c => c.key === catKey);
   if (!cat) return;
@@ -1039,6 +986,11 @@ function setFxAmount(v) {
   redraw(); saveState();
 }
 
+function resetFxTransform() {
+  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
+  redraw(); saveState();
+}
+
 function drawFxLayer() {
   if (!imgLoaded || currentFx === 'none' || currentFxAmount === 0) return;
   const parts = currentFx.split(':');
@@ -1048,25 +1000,20 @@ function drawFxLayer() {
   if (!im) return;
   const cat = FX_CATEGORIES.find(c => c.key === catKey);
   const a = currentFxAmount / 100;
-
   ctx.save();
   ctx.globalAlpha = a;
   ctx.globalCompositeOperation = (cat && cat.blend) ? cat.blend : 'screen';
-
   const cw = canvas.width, ch = canvas.height;
   const baseW = cw * fxScale;
   const baseH = ch * fxScale;
-
   ctx.translate(fxX * cw, fxY * ch);
   if (fxRotation) ctx.rotate(fxRotation);
-
   const sr = im.naturalWidth / im.naturalHeight;
   const dr = baseW / baseH;
   let sx = 0, sy = 0, sw = im.naturalWidth, sh = im.naturalHeight;
   if (sr > dr) { sw = sh * dr; sx = (im.naturalWidth - sw) / 2; }
   else { sh = sw / dr; sy = (im.naturalHeight - sh) / 2; }
   ctx.drawImage(im, sx, sy, sw, sh, -baseW/2, -baseH/2, baseW, baseH);
-
   ctx.restore();
 }
 
@@ -1085,36 +1032,8 @@ function buildBgImageGrid() {
   });
   g.innerHTML = html;
 }
+
 let customBgImage = null;
-document.addEventListener('DOMContentLoaded', function() {
-  const inp = document.getElementById('bgUploadInput');
-  if (!inp) return;
-  inp.addEventListener('change', function(e) {
-    const file = (e.target.files || [])[0];
-    if (!file) return;
-    e.target.value = '';
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const newImg = new Image();
-      newImg.onload = () => {
-        customBgImage = newImg;
-        currentBgImage = newImg;
-        currentBgColor = null;
-        currentBgImageZoom = 100;
-        currentBgImageX = 0;
-        currentBgImageY = 0;
-        document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
-        document.querySelectorAll('.bgcolor-swatch').forEach(s => s.classList.remove('selected'));
-        redraw();
-        saveState();
-        showToast('Background imported');
-      };
-      newImg.onerror = () => alert('Failed to load image.');
-      newImg.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-});
 
 function setBgImage(fname, el) {
   const im = bgImages[fname];
@@ -1147,7 +1066,9 @@ function clearBgImage() {
   currentBgImage = null;
   document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
   redraw(); saveState();
-}function switchBgDrag(mode, el) {
+}
+
+function switchBgDrag(mode, el) {
   bgDragMode = mode;
   gestureTarget = mode;
   if (el && el.parentElement) {
@@ -1155,6 +1076,7 @@ function clearBgImage() {
     el.classList.add('selected');
   }
 }
+
 function clearAllBg() {
   currentBgColor = null;
   currentBgImage = null;
@@ -1174,8 +1096,7 @@ function resetSubjectTransform() {
   subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
   redraw(); saveState();
 }
-if (!window.__originalBeforeBgRemove) window.__originalBeforeBgRemove = originalImageSrc;
-async function removeBgBest() {
+
 function setUnshowOpacity(v) {
   unshowOpacity = parseInt(v);
   const e = document.getElementById('unshowOpacityVal'); if (e) e.innerText = v;
@@ -1211,31 +1132,33 @@ function resetUnshow() {
   set('cutFeatherInput', 0); label('cutFeatherVal', '0');
   set('cornerRoundInput', 0); label('cornerRoundVal', '0');
   redraw(); saveState();
-}function handleCleanPick(input) {
-  alert('picked!');
+}
+
+function handleCleanPick(input) {
   const file = (input.files || [])[0];
-  if (!file) { alert('no file'); return; }
-  alert('file: ' + Math.round(file.size/1024) + ' KB');
+  if (!file) return;
   input.value = '';
   pickAndClean(file);
 }
 
 function pickAndClean(file) {
-  const status =alert('pickAndClean called, file size: ' + Math.round(file.size/1024) + ' KB'); document.getElementById('cleanStatus');
+  const status = document.getElementById('cleanStatus');
   if (status) status.textContent = 'Loading photo...';
   const reader = new FileReader();
   reader.onload = (ev) => {
     const newImg = new Image();
     newImg.onload = () => {
-      setupCanvasFromImage(newImg);
       img = newImg;
       originalImageSrc = ev.target.result;
       imgLoaded = true;
       window.__originalBeforeBgRemove = ev.target.result;
       currentBgColor = null;
       currentBgImage = null;
-      redraw();
-      runCleanOnCurrent();
+      setupCanvasFromImage(newImg);
+      buildFilterThumbs(); buildTemplates(); buildBorders();
+      redraw(); saveState();
+      if (status) status.textContent = 'Photo loaded. Go to BG Rmv to remove the background.';
+      showToast('Photo loaded');
     };
     newImg.onerror = () => { if (status) status.textContent = 'Failed to load image.'; };
     newImg.src = ev.target.result;
@@ -1244,44 +1167,9 @@ function pickAndClean(file) {
   reader.readAsDataURL(file);
 }
 
-async function runCleanOnCurrent() {
-  const status = document.getElementById('cleanStatus');
-  if (!imgLoaded) { if (status) status.textContent = 'No image loaded.'; return; }
-  if (status) status.textContent = 'Removing background...';
-  try {
-    const tmp = document.createElement('canvas');
-    tmp.width = canvas.width; tmp.height = canvas.height;
-    tmp.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-    const dataUrl = tmp.toDataURL('image/jpeg', 0.9);
-    const r = await fetch('/api/remove-bg', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: dataUrl })
-    });
-    if (!r.ok) { if (status) status.textContent = 'Failed: ' + r.status; return; }
-    const data = await r.json();
-    if (!data.image) { if (status) status.textContent = 'No image returned.'; return; }
-    const bgImg = new Image();
-    bgImg.onload = () => {
-      img = bgImg;
-      originalImageSrc = data.image;
-      setupCanvasFromImage(bgImg);
-      currentBgColor = '#ffffff';
-      currentBgImage = null;
-      buildBgColors();
-      redraw(); saveState();
-      if (status) status.textContent = 'Done! Now go to BG tab to add a background.';
-      showToast('Background removed');
-    };
-    bgImg.src = data.image;
-  } catch (e) {
-    if (status) status.textContent = 'Failed: ' + e.message;
-  }
-}
-
+async function removeBgBest() {
   if (!imgLoaded) { alert('Load a photo first'); return; }
 
-  // If BG was already removed this session, tapping again restores the original
   if (window.__originalBeforeBgRemove && originalImageSrc !== window.__originalBeforeBgRemove) {
     const restoreImg = new Image();
     restoreImg.onload = () => {
@@ -1311,7 +1199,7 @@ async function runCleanOnCurrent() {
       if (!data.image) { alert('No image returned'); return; }
       if (!window.__originalBeforeBgRemove) window.__originalBeforeBgRemove = originalImageSrc;
       const newImg = new Image();
-      newImg.onload = () => { img = newImg; originalImageSrc = data.image; canvas.width = newImg.width; canvas.height = newImg.height; imgLoaded = true; currentBgColor = '#ffffff'; buildBgColors(); redraw(); saveState(); };
+      newImg.onload = () => { img = newImg; originalImageSrc = data.image; setupCanvasFromImage(newImg); imgLoaded = true; currentBgColor = '#ffffff'; buildBgColors(); redraw(); saveState(); };
       newImg.src = data.image;
     } catch (e) { alert('Failed: ' + e.message); }
   });
@@ -1584,21 +1472,21 @@ function saveState() {
   redoStack = [];
   updateHistoryButtons();
 }
+
+function undo() {
+  if (undoStack.length > 1) {
+    redoStack.push(undoStack.pop());
+    applyState(undoStack[undoStack.length - 1]);
+    updateHistoryButtons();
+  }
+}
+
 function redo() {
   if (redoStack.length) {
     const nxt = redoStack.pop();
     undoStack.push(nxt);
     applyState(nxt);
     updateHistoryButtons();
-  }
-}
-function redo() {
-  if (redoStack.length) {
-    const nxt = redoStack.pop();
-    undoStack.push(nxt);
-    const t = new Image();
-    t.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(t, 0, 0); updateHistoryButtons(); };
-    t.src = nxt;
   }
 }
 
@@ -1628,77 +1516,58 @@ canvasHost.addEventListener('touchend', endTouch);
 canvasHost.addEventListener('touchcancel', endTouch);
 
 function startTouch(e) {
-if (e.target && e.target.closest && e.target.closest('#textFloatingMenu')) return;
+  if (e.target && e.target.closest && e.target.closest('#textFloatingMenu')) return;
   if (!imgLoaded) return;
   if (e.preventDefault) e.preventDefault();
   if (e.touches) { touches.clear(); for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
   else { touches.clear(); touches.set('mouse', { x:e.clientX, y:e.clientY }); }
 
   const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
-if (gestureTarget === 'fx' && fxActive) {
-  if (touches.size === 2) {
-    const arr = Array.from(touches.values());
-    gesture = { type:'fx', startDist: touchDist(arr[0], arr[1]), startAngle: touchAngle(arr[0], arr[1]), startScale: fxScale, startRot: fxRotation };
+
+  if (gestureTarget === 'fx' && fxActive) {
+    if (touches.size === 2) {
+      const arr = Array.from(touches.values());
+      gesture = { type:'fx', startDist: touchDist(arr[0], arr[1]), startAngle: touchAngle(arr[0], arr[1]), startScale: fxScale, startRot: fxRotation };
+      return;
+    }
+    if (touches.size === 1) {
+      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+      isDraggingFx = true;
+      fxDragStart = { x: pos.x, y: pos.y, fxX: fxX, fxY: fxY };
+      return;
+    }
     return;
   }
-  if (touches.size === 1) {
-    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-    isDraggingFx = true;
-    fxDragStart = { x: pos.x, y: pos.y, fxX: fxX, fxY: fxY };
+
+  if (gestureTarget === 'bg' && imgLoaded && currentBgImage) {
+    if (touches.size === 2) {
+      const arr = Array.from(touches.values());
+      gesture = { type:'bg', startDist: touchDist(arr[0], arr[1]), startZoom: currentBgImageZoom };
+      return;
+    }
+    if (touches.size === 1) {
+      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+      isDraggingBg = true;
+      bgDragStart = { x: pos.x, y: pos.y, bgX: currentBgImageX, bgY: currentBgImageY };
+      return;
+    }
     return;
   }
-  return;
-}if (gestureTarget === 'bg' && imgLoaded && currentBgImage) {
-  if (touches.size === 2) {
-    const arr = Array.from(touches.values());
-    gesture = { type:'bg', startDist: touchDist(arr[0], arr[1]), startZoom: currentBgImageZoom };
-    return;
-  }
-  if (touches.size === 1) {
-    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-    isDraggingBg = true;
-    bgDragStart = { x: pos.x, y: pos.y, bgX: currentBgImageX, bgY: currentBgImageY };
-    return;
-  }
-  return;
-}if (gestureTarget === 'bg' && imgLoaded && currentBgImage) {
-  if (touches.size === 2 && gesture && gesture.type === 'bg') {
-    const arr = Array.from(touches.values());
-    const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-    currentBgImageZoom = Math.max(50, Math.min(300, Math.round(gesture.startZoom * scale)));
-    const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
-    const zV = document.getElementById('bgImgZoomVal'); if (zV) zV.innerText = currentBgImageZoom;
-    redraw(); return;
-  }
-  if (isDraggingBg && bgDragStart) {
-    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-    const dx = (pos.x - bgDragStart.x) / canvas.width * 200;
-    const dy = (pos.y - bgDragStart.y) / canvas.height * 200;
-    currentBgImageX = Math.max(-100, Math.min(100, Math.round(bgDragStart.bgX + dx)));
-    currentBgImageY = Math.max(-100, Math.min(100, Math.round(bgDragStart.bgY + dy)));
-    const xIn = document.getElementById('bgImgXInput'); if (xIn) xIn.value = currentBgImageX;
-    const xV = document.getElementById('bgImgXVal'); if (xV) xV.innerText = currentBgImageX;
-    const yIn = document.getElementById('bgImgYInput'); if (yIn) yIn.value = currentBgImageY;
-    const yV = document.getElementById('bgImgYVal'); if (yV) yV.innerText = currentBgImageY;
-    redraw(); return;
-  }
-  return;
-}
 
   if (gestureTarget === 'subject' && imgLoaded) {
-  if (touches.size === 2) {
-    const arr = Array.from(touches.values());
-    gesture = { type:'subject', startDist: touchDist(arr[0], arr[1]), startScale: subjectScale };
+    if (touches.size === 2) {
+      const arr = Array.from(touches.values());
+      gesture = { type:'subject', startDist: touchDist(arr[0], arr[1]), startScale: subjectScale };
+      return;
+    }
+    if (touches.size === 1) {
+      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+      isDraggingSubject = true;
+      subjectDragStart = { x: pos.x, y: pos.y, sx: subjectX, sy: subjectY };
+      return;
+    }
     return;
   }
-  if (touches.size === 1) {
-    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-    isDraggingSubject = true;
-    subjectDragStart = { x: pos.x, y: pos.y, sx: subjectX, sy: subjectY };
-    return;
-  }
-  return;
-}
 
   if (touches.size === 2) {
     const arr = Array.from(touches.values());
@@ -1736,39 +1605,64 @@ function onTouchMove(e) {
   else if (touches.has('mouse')) { touches.set('mouse', { x:e.clientX, y:e.clientY }); }
 
   const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
-if (gestureTarget === 'fx' && fxActive) {
-  if (touches.size === 2 && gesture && gesture.type === 'fx') {
-    const arr = Array.from(touches.values());
-    const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-    const rotDelta = touchAngle(arr[0], arr[1]) - gesture.startAngle;
-    fxScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
-    fxRotation = gesture.startRot + rotDelta;
-    redraw(); return;
-  }
-  if (isDraggingFx && fxDragStart) {
-    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-    fxX = fxDragStart.fxX + (pos.x - fxDragStart.x) / canvas.width;
-    fxY = fxDragStart.fxY + (pos.y - fxDragStart.y) / canvas.height;
-    redraw(); return;
-  }
-  return;
-}
 
-if (gestureTarget === 'subject' && imgLoaded) {
-  if (touches.size === 2 && gesture && gesture.type === 'subject') {
-    const arr = Array.from(touches.values());
-    const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-    subjectScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
-    redraw(); return;
+  if (gestureTarget === 'fx' && fxActive) {
+    if (touches.size === 2 && gesture && gesture.type === 'fx') {
+      const arr = Array.from(touches.values());
+      const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
+      const rotDelta = touchAngle(arr[0], arr[1]) - gesture.startAngle;
+      fxScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
+      fxRotation = gesture.startRot + rotDelta;
+      redraw(); return;
+    }
+    if (isDraggingFx && fxDragStart) {
+      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+      fxX = fxDragStart.fxX + (pos.x - fxDragStart.x) / canvas.width;
+      fxY = fxDragStart.fxY + (pos.y - fxDragStart.y) / canvas.height;
+      redraw(); return;
+    }
+    return;
   }
-  if (isDraggingSubject && subjectDragStart) {
-    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-    subjectX = subjectDragStart.sx + (pos.x - subjectDragStart.x) / canvas.width;
-    subjectY = subjectDragStart.sy + (pos.y - subjectDragStart.y) / canvas.height;
-    redraw(); return;
+
+  if (gestureTarget === 'bg' && imgLoaded && currentBgImage) {
+    if (touches.size === 2 && gesture && gesture.type === 'bg') {
+      const arr = Array.from(touches.values());
+      const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
+      currentBgImageZoom = Math.max(50, Math.min(300, Math.round(gesture.startZoom * scale)));
+      const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
+      const zV = document.getElementById('bgImgZoomVal'); if (zV) zV.innerText = currentBgImageZoom;
+      redraw(); return;
+    }
+    if (isDraggingBg && bgDragStart) {
+      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+      const dx = (pos.x - bgDragStart.x) / canvas.width * 200;
+      const dy = (pos.y - bgDragStart.y) / canvas.height * 200;
+      currentBgImageX = Math.max(-100, Math.min(100, Math.round(bgDragStart.bgX + dx)));
+      currentBgImageY = Math.max(-100, Math.min(100, Math.round(bgDragStart.bgY + dy)));
+      const xIn = document.getElementById('bgImgXInput'); if (xIn) xIn.value = currentBgImageX;
+      const xV = document.getElementById('bgImgXVal'); if (xV) xV.innerText = currentBgImageX;
+      const yIn = document.getElementById('bgImgYInput'); if (yIn) yIn.value = currentBgImageY;
+      const yV = document.getElementById('bgImgYVal'); if (yV) yV.innerText = currentBgImageY;
+      redraw(); return;
+    }
+    return;
   }
-  return;
-}
+
+  if (gestureTarget === 'subject' && imgLoaded) {
+    if (touches.size === 2 && gesture && gesture.type === 'subject') {
+      const arr = Array.from(touches.values());
+      const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
+      subjectScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
+      redraw(); return;
+    }
+    if (isDraggingSubject && subjectDragStart) {
+      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+      subjectX = subjectDragStart.sx + (pos.x - subjectDragStart.x) / canvas.width;
+      subjectY = subjectDragStart.sy + (pos.y - subjectDragStart.y) / canvas.height;
+      redraw(); return;
+    }
+    return;
+  }
 
   if (touches.size === 2 && gesture) {
     const arr = Array.from(touches.values());
@@ -1795,8 +1689,10 @@ function endTouch(e) {
   if (touches.size < 2) gesture = null;
   if (isDraggingText) { isDraggingText = false; saveState(); syncActiveInputs(); }
   if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
-if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }  
-}if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
+  if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }
+  if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
+}
+
 function showFloatingMenu(x, y) {
   const rect = canvas.getBoundingClientRect();
   const contRect = canvas.parentElement.getBoundingClientRect();
@@ -1861,6 +1757,7 @@ function confirmTextCard() {
   closeTextCard();
   syncActiveInputs(); updateTextLayersUI(); buildFontGrid(); redraw(); saveState();
 }
+
 function deleteActiveTextLayer() {
   if (textLayers.length === 0) { textMenu.style.display = 'none'; return; }
   textLayers = textLayers.filter(x => x.id !== activeLayerId);
@@ -1943,22 +1840,15 @@ function updateColorPreview() {
 
 function syncActiveInputs() {
   const l = textLayers.find(x => x.id === activeLayerId);
-  const px = document.getElementById('posX'), py = document.getElementById('posY');
-  if (px) px.max = Math.max(2000, canvas.width * 1.2);
-  if (py) py.max = Math.max(2000, canvas.height * 1.2);
   if (!l) {
-    if (tInput) tInput.value = '';
     if (sizeInput) sizeInput.value = 36;
     const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = '36';
     const fr = document.getElementById('fontRotation'); if (fr) fr.value = 0;
     const frv = document.getElementById('fRotVal'); if (frv) frv.innerText = '0°';
-    if (px) { px.value = 0; document.getElementById('posXVal').innerText = '0'; }
-    if (py) { py.value = 0; document.getElementById('posYVal').innerText = '0'; }
+    const tp = document.getElementById('textPersp'); if (tp) tp.value = 0;
+    const pv = document.getElementById('perspVal'); if (pv) pv.innerText = '0';
     return;
   }
-  if (px) { px.value = Math.round(l.x); document.getElementById('posXVal').innerText = Math.round(l.x); }
-  if (py) { py.value = Math.round(l.y); document.getElementById('posYVal').innerText = Math.round(l.y); }
-  if (tInput) tInput.value = l.text;
   if (sizeInput) sizeInput.value = l.size;
   const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = l.size;
   const cb = document.getElementById('colorBrightness');
@@ -1970,17 +1860,8 @@ function syncActiveInputs() {
   }
   const fr = document.getElementById('fontRotation');
   if (fr) { const deg = Math.round((l.rotation || 0) * 180 / Math.PI); fr.value = deg; document.getElementById('fRotVal').innerText = deg + '°'; }
-const tp = document.getElementById('textPersp');
-if (tp) { tp.value = l.persp || 0; document.getElementById('perspVal').innerText = (l.persp || 0); }  
-}
-
-function setActivePos(axis, v) {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  v = parseInt(v);
-  if (axis === 'x') { l.x = v; document.getElementById('posXVal').innerText = v; }
-  else { l.y = v; document.getElementById('posYVal').innerText = v; }
-  showFloatingMenu(l.x, l.y); redraw(); saveState();
+  const tp = document.getElementById('textPersp');
+  if (tp) { tp.value = l.persp || 0; document.getElementById('perspVal').innerText = (l.persp || 0); }
 }
 
 function updateActiveTextContent(v) {
@@ -2002,6 +1883,7 @@ function setActiveFontSize(v) {
   const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v;
   redraw(); saveState();
 }
+
 function setActiveTextPersp(v) {
   const l = textLayers.find(x => x.id === activeLayerId);
   const pv = document.getElementById('perspVal');
@@ -2047,11 +1929,11 @@ function saveProjectToHome() {
       filter: currentFilter, border: currentBorder, borderColor: currentBorderColor, borderSize: currentBorderSize,
       bgColor: currentBgColor, bgColorSize: currentBgColorSize,
       bgImageFile: bgFile, bgImageSize: currentBgImageSize,
-customBgData: (currentBgImage && customBgImage && currentBgImage === customBgImage) ? customBgImage.src : null,      
+      customBgData: (currentBgImage && customBgImage && currentBgImage === customBgImage) ? customBgImage.src : null,
       bgImageZoom: currentBgImageZoom, bgImageX: currentBgImageX, bgImageY: currentBgImageY,
       template: currentTemplate, fx: currentFx, fxAmount: currentFxAmount,
-fxX, fxY, fxScale, fxRotation,
-subjectX, subjectY, subjectScale,
+      fxX, fxY, fxScale, fxRotation,
+      subjectX, subjectY, subjectScale,
       subjectMode, strokeColor, subjectAmount: subjAmt.value
     }));
   } catch(e) { alert('Storage full.'); return; }
@@ -2076,7 +1958,6 @@ function saveImage() {
   canvas.toBlob(async function(blob) {
     if (!blob) { showToast('Save failed'); return; }
     const file = new File([blob], filename, { type: 'image/png' });
-
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: filename });
@@ -2086,7 +1967,6 @@ function saveImage() {
         if (err && err.name === 'AbortError') return;
       }
     }
-
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -2094,20 +1974,17 @@ function saveImage() {
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 0);
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
     showToast('Saved');
   }, 'image/png');
 }
 
 function switchPanel(name, btn) {
   if (name === 'fx') gestureTarget = 'fx';
-else if (name === 'bgremover') gestureTarget = 'subject';
-else if (name === 'bgimage') gestureTarget = bgDragMode;
-else gestureTarget = 'text';
-  const view = document.getElementById('view-studio');
+  else if (name === 'bgremover') gestureTarget = 'subject';
+  else if (name === 'bgimage') gestureTarget = bgDragMode;
+  else gestureTarget = 'text';
+
   if (name === 'crop') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
@@ -2488,132 +2365,83 @@ function redraw() {
     plctx.filter = filterString;
     plctx.drawImage(img, -OVER, -OVER, canvas.width+OVER*2, canvas.height+OVER*2);
     plctx.filter = 'none';
-  }if (unshowOpacity < 100 || cutTop > 0 || cutBottom > 0 || cutLeft > 0 || cutRight > 0 || cornerRound > 0) {
-  const mask = document.createElement('canvas');
-  mask.width = canvas.width;
-  mask.height = canvas.height;
-  const mctx = mask.getContext('2d');
-  const topPx = canvas.height * (cutTop / 100);
-  const botPx = canvas.height * (cutBottom / 100);
-  const leftPx = canvas.width * (cutLeft / 100);
-  const rightPx = canvas.width * (cutRight / 100);
-  const x = leftPx, y = topPx;
-  const w = canvas.width - leftPx - rightPx;
-  const h = canvas.height - topPx - botPx;
-  const rr = Math.min(w, h) * (cornerRound / 100);
-  mctx.fillStyle = '#fff';
-  mctx.beginPath();
-  if (rr > 0) {
-    mctx.moveTo(x + rr, y);
-    mctx.lineTo(x + w - rr, y);
-    mctx.quadraticCurveTo(x + w, y, x + w, y + rr);
-    mctx.lineTo(x + w, y + h - rr);
-    mctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
-    mctx.lineTo(x + rr, y + h);
-    mctx.quadraticCurveTo(x, y + h, x, y + h - rr);
-    mctx.lineTo(x, y + rr);
-    mctx.quadraticCurveTo(x, y, x + rr, y);
-    mctx.closePath();
-  } else {
-    mctx.rect(x, y, w, h);
   }
-  mctx.fill();
-  if (cutFeather > 0) {
-    const blurred = document.createElement('canvas');
-    blurred.width = mask.width;
-    blurred.height = mask.height;
-    const bctx = blurred.getContext('2d');
-    bctx.filter = `blur(${cutFeather}px)`;
-    bctx.drawImage(mask, 0, 0);
-    mctx.clearRect(0, 0, mask.width, mask.height);
-    mctx.drawImage(blurred, 0, 0);
+
+  if (unshowOpacity < 100 || cutTop > 0 || cutBottom > 0 || cutLeft > 0 || cutRight > 0 || cornerRound > 0) {
+    const mask = document.createElement('canvas');
+    mask.width = canvas.width; mask.height = canvas.height;
+    const mctx = mask.getContext('2d');
+    const topPx = canvas.height * (cutTop / 100);
+    const botPx = canvas.height * (cutBottom / 100);
+    const leftPx = canvas.width * (cutLeft / 100);
+    const rightPx = canvas.width * (cutRight / 100);
+    const x = leftPx, y = topPx;
+    const w = canvas.width - leftPx - rightPx;
+    const h = canvas.height - topPx - botPx;
+    const rr = Math.min(w, h) * (cornerRound / 100);
+    mctx.fillStyle = '#fff';
+    mctx.beginPath();
+    if (rr > 0) {
+      mctx.moveTo(x + rr, y); mctx.lineTo(x + w - rr, y);
+      mctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+      mctx.lineTo(x + w, y + h - rr);
+      mctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+      mctx.lineTo(x + rr, y + h);
+      mctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+      mctx.lineTo(x, y + rr);
+      mctx.quadraticCurveTo(x, y, x + rr, y);
+      mctx.closePath();
+    } else { mctx.rect(x, y, w, h); }
+    mctx.fill();
+    if (cutFeather > 0) {
+      const blurred = document.createElement('canvas');
+      blurred.width = mask.width; blurred.height = mask.height;
+      const bctx = blurred.getContext('2d');
+      bctx.filter = `blur(${cutFeather}px)`;
+      bctx.drawImage(mask, 0, 0);
+      mctx.clearRect(0, 0, mask.width, mask.height);
+      mctx.drawImage(blurred, 0, 0);
+    }
+    const masked = document.createElement('canvas');
+    masked.width = canvas.width; masked.height = canvas.height;
+    const mm = masked.getContext('2d');
+    mm.drawImage(photoLayer, 0, 0);
+    mm.globalCompositeOperation = 'destination-in';
+    mm.drawImage(mask, 0, 0);
+    plctx.clearRect(0, 0, photoLayer.width, photoLayer.height);
+    plctx.globalAlpha = unshowOpacity / 100;
+    plctx.drawImage(masked, 0, 0);
+    plctx.globalAlpha = 1;
   }
-  const masked = document.createElement('canvas');
-  masked.width = canvas.width;
-  masked.height = canvas.height;
-  const mm = masked.getContext('2d');
-  mm.drawImage(photoLayer, 0, 0);
-  mm.globalCompositeOperation = 'destination-in';
-  mm.drawImage(mask, 0, 0);
-  plctx.clearRect(0, 0, photoLayer.width, photoLayer.height);
-  plctx.globalAlpha = unshowOpacity / 100;
-  plctx.drawImage(masked, 0, 0);
-  plctx.globalAlpha = 1;
-}if (unshowOpacity < 100 || cutTop > 0 || cutBottom > 0 || cutLeft > 0 || cutRight > 0 || cornerRound > 0) {
-  const mask = document.createElement('canvas');
-  mask.width = canvas.width; mask.height = canvas.height;
-  const mctx = mask.getContext('2d');
-  const topPx = canvas.height * (cutTop / 100);
-  const botPx = canvas.height * (cutBottom / 100);
-  const leftPx = canvas.width * (cutLeft / 100);
-  const rightPx = canvas.width * (cutRight / 100);
-  const x = leftPx, y = topPx;
-  const w = canvas.width - leftPx - rightPx;
-  const h = canvas.height - topPx - botPx;
-  const rr = Math.min(w, h) * (cornerRound / 100);
-  mctx.fillStyle = '#fff';
-  mctx.beginPath();
-  if (rr > 0) {
-    mctx.moveTo(x + rr, y); mctx.lineTo(x + w - rr, y);
-    mctx.quadraticCurveTo(x + w, y, x + w, y + rr);
-    mctx.lineTo(x + w, y + h - rr);
-    mctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
-    mctx.lineTo(x + rr, y + h);
-    mctx.quadraticCurveTo(x, y + h, x, y + h - rr);
-    mctx.lineTo(x, y + rr);
-    mctx.quadraticCurveTo(x, y, x + rr, y);
-    mctx.closePath();
-  } else { mctx.rect(x, y, w, h); }
-  mctx.fill();
-  if (cutFeather > 0) {
-    const blurred = document.createElement('canvas');
-    blurred.width = mask.width; blurred.height = mask.height;
-    const bctx = blurred.getContext('2d');
-    bctx.filter = `blur(${cutFeather}px)`;
-    bctx.drawImage(mask, 0, 0);
-    mctx.clearRect(0, 0, mask.width, mask.height);
-    mctx.drawImage(blurred, 0, 0);
-  }
-  const masked = document.createElement('canvas');
-  masked.width = canvas.width; masked.height = canvas.height;
-  const mm = masked.getContext('2d');
-  mm.drawImage(photoLayer, 0, 0);
-  mm.globalCompositeOperation = 'destination-in';
-  mm.drawImage(mask, 0, 0);
-  plctx.clearRect(0, 0, photoLayer.width, photoLayer.height);
-  plctx.globalAlpha = unshowOpacity / 100;
-  plctx.drawImage(masked, 0, 0);
-  plctx.globalAlpha = 1;
-}
 
   const hasBg = !!(currentBgColor || currentBgImage);
-if (currentBgImage) {
-  const w = canvas.width, h = canvas.height;
-  const zoom = currentBgImageZoom / 100;
-  const offsetX = (currentBgImageX / 100) * w * 0.5;
-  const offsetY = (currentBgImageY / 100) * h * 0.5;
-  const scaledW = w * zoom;
-  const scaledH = h * zoom;
-  const dx = (w - scaledW) / 2 + offsetX;
-  const dy = (h - scaledH) / 2 + offsetY;
-  drawCover(dx, dy, scaledW, scaledH, currentBgImage);
-} else if (currentBgColor) {
-  ctx.fillStyle = currentBgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
+  if (currentBgImage) {
+    const w = canvas.width, h = canvas.height;
+    const zoom = currentBgImageZoom / 100;
+    const offsetX = (currentBgImageX / 100) * w * 0.5;
+    const offsetY = (currentBgImageY / 100) * h * 0.5;
+    const scaledW = w * zoom;
+    const scaledH = h * zoom;
+    const dx = (w - scaledW) / 2 + offsetX;
+    const dy = (h - scaledH) / 2 + offsetY;
+    drawCover(dx, dy, scaledW, scaledH, currentBgImage);
+  } else if (currentBgColor) {
+    ctx.fillStyle = currentBgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 
-if (hasBg) {
-  const pad = Math.round(Math.min(canvas.width, canvas.height) * (((currentBgImageSize || currentBgColorSize) || 0) / 100));
-  const baseW = canvas.width - pad * 2;
-  const baseH = canvas.height - pad * 2;
-  const w2 = baseW * subjectScale;
-  const h2 = baseH * subjectScale;
-  const cx = canvas.width / 2 + (subjectX - 0.5) * canvas.width;
-  const cy = canvas.height / 2 + (subjectY - 0.5) * canvas.height;
-  ctx.drawImage(photoLayer, cx - w2 / 2, cy - h2 / 2, w2, h2);
-} else {
-  ctx.drawImage(photoLayer, 0, 0);
-}
+  if (hasBg) {
+    const pad = Math.round(Math.min(canvas.width, canvas.height) * (((currentBgImageSize || currentBgColorSize) || 0) / 100));
+    const baseW = canvas.width - pad * 2;
+    const baseH = canvas.height - pad * 2;
+    const w2 = baseW * subjectScale;
+    const h2 = baseH * subjectScale;
+    const cx = canvas.width / 2 + (subjectX - 0.5) * canvas.width;
+    const cy = canvas.height / 2 + (subjectY - 0.5) * canvas.height;
+    ctx.drawImage(photoLayer, cx - w2 / 2, cy - h2 / 2, w2, h2);
+  } else {
+    ctx.drawImage(photoLayer, 0, 0);
+  }
   const fade = parseInt(nInput.value);
   if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${(fade/100)*0.4})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   if (!currentBgColor && !currentBgImage) drawBorder();
@@ -2630,74 +2458,59 @@ if (hasBg) {
       else if (layer.style === 'glow') { ctx.shadowColor = layer.color; ctx.shadowBlur = 20; }
       ctx.fillStyle = layer.color;
       const persp = layer.persp || 0;
-if (persp === 0) {
-  ctx.fillText(layer.text, 0, 0);
-} else {
-  const mm = ctx.measureText(layer.text);
-  const pad = 30;
-  const textW = Math.ceil(mm.width) + pad * 2;
-  const textH = Math.ceil(layer.size * 1.8);
-
-  const SS = 4;
-  const off = document.createElement('canvas');
-  off.width = textW * SS;
-  off.height = textH * SS;
-  const octx = off.getContext('2d');
-  octx.scale(SS, SS);
-  octx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
-  octx.textAlign = 'center';
-  octx.textBaseline = 'middle';
-  octx.fillStyle = layer.color;
-  octx.fillText(layer.text, textW/2, textH/2);
-
-  ctx.save();
-  ctx.imageSmoothingEnabled = true;
-  if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
-
-  const rows = 200;
-  const k = Math.abs(persp) / 100 * 0.9;
-  const dir = persp > 0 ? 1 : -1;
-  const sAt = (t) => dir > 0 ? (1 - k * (1 - t)) : (1 - k * t);
-
-  const srcRowH = textH / rows;
-  let destY = 0;
-  const rowData = [];
-  for (let i = 0; i < rows; i++) {
-    const t0 = i / rows;
-    const t1 = (i + 1) / rows;
-    const s0 = sAt(t0);
-    const s1 = sAt(t1);
-    const destRowH = srcRowH * (s0 + s1) / 2;
-    rowData.push({ srcY: i * srcRowH, destY, destH: destRowH, scale: (s0 + s1) / 2 });
-    destY += destRowH;
-  }
-
-  const totalH = destY;
-  const startY = -totalH / 2;
-  const OVERLAP_SRC = srcRowH * 1.5;
-
-  for (const r of rowData) {
-    const w = textW * r.scale;
-    const srcY0 = Math.max(0, r.srcY - OVERLAP_SRC);
-    const srcY1 = Math.min(textH, r.srcY + srcRowH + OVERLAP_SRC);
-    const srcH = srcY1 - srcY0;
-
-    const overlapDstTop = (r.srcY - srcY0) * r.scale;
-    const overlapDstBot = (srcY1 - r.srcY - srcRowH) * r.scale;
-
-    const dstY = startY + r.destY - overlapDstTop;
-    const dstH = r.destH + overlapDstTop + overlapDstBot;
-
-    ctx.drawImage(
-      off,
-      0, srcY0 * SS,
-      textW * SS, srcH * SS,
-      -w/2, dstY,
-      w, dstH
-    );
-  }
-  ctx.restore();
-}
+      if (persp === 0) {
+        ctx.fillText(layer.text, 0, 0);
+      } else {
+        const mm = ctx.measureText(layer.text);
+        const pad = 30;
+        const textW = Math.ceil(mm.width) + pad * 2;
+        const textH = Math.ceil(layer.size * 1.8);
+        const SS = 4;
+        const off = document.createElement('canvas');
+        off.width = textW * SS;
+        off.height = textH * SS;
+        const octx = off.getContext('2d');
+        octx.scale(SS, SS);
+        octx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
+        octx.textAlign = 'center';
+        octx.textBaseline = 'middle';
+        octx.fillStyle = layer.color;
+        octx.fillText(layer.text, textW/2, textH/2);
+        ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+        const rows = 200;
+        const k = Math.abs(persp) / 100 * 0.9;
+        const dir = persp > 0 ? 1 : -1;
+        const sAt = (t) => dir > 0 ? (1 - k * (1 - t)) : (1 - k * t);
+        const srcRowH = textH / rows;
+        let destY = 0;
+        const rowData = [];
+        for (let i = 0; i < rows; i++) {
+          const t0 = i / rows;
+          const t1 = (i + 1) / rows;
+          const s0 = sAt(t0);
+          const s1 = sAt(t1);
+          const destRowH = srcRowH * (s0 + s1) / 2;
+          rowData.push({ srcY: i * srcRowH, destY, destH: destRowH, scale: (s0 + s1) / 2 });
+          destY += destRowH;
+        }
+        const totalH = destY;
+        const startY = -totalH / 2;
+        const OVERLAP_SRC = srcRowH * 1.5;
+        for (const r of rowData) {
+          const w = textW * r.scale;
+          const srcY0 = Math.max(0, r.srcY - OVERLAP_SRC);
+          const srcY1 = Math.min(textH, r.srcY + srcRowH + OVERLAP_SRC);
+          const srcH = srcY1 - srcY0;
+          const overlapDstTop = (r.srcY - srcY0) * r.scale;
+          const overlapDstBot = (srcY1 - r.srcY - srcRowH) * r.scale;
+          const dstY = startY + r.destY - overlapDstTop;
+          const dstH = r.destH + overlapDstTop + overlapDstBot;
+          ctx.drawImage(off, 0, srcY0 * SS, textW * SS, srcH * SS, -w/2, dstY, w, dstH);
+        }
+        ctx.restore();
+      }
       if (activeLayerId === layer.id) {
         const m = ctx.measureText(layer.text);
         const bw = m.width + 16, bh = layer.size + 8;
@@ -2736,208 +2549,3 @@ function initHomeUpload() {
 function importOnePhoto(file) {
   return new Promise(resolve => {
     const reader = new FileReader();
-    reader.onload = ev => {
-      const newImg = new Image();
-      newImg.onload = function() {
-        const MAX = 1080; let w = newImg.width, h = newImg.height;
-        if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
-        const tmp = document.createElement('canvas');
-        tmp.width = w; tmp.height = h;
-        tmp.getContext('2d').drawImage(newImg, 0, 0, w, h);
-        const dataURL = tmp.toDataURL('image/jpeg', 0.85);
-        const id = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-        const now = new Date();
-        try {
-          localStorage.setItem('music_' + id, JSON.stringify({
-            name: 'Cover ' + (Object.keys(localStorage).filter(k => k.startsWith('music_proj_')).length + 1),
-            date: now.toISOString(), savedAt: now.getTime(),
-            image: dataURL, originalImage: dataURL,
-            canvasW: w, canvasH: h, textLayers: [],
-            brightness: 100, contrast: 100, saturation: 100, noise: 0,
-            filter: 'none', border: 'none', borderColor: '#ffffff', borderSize: 5,
-            bgColor: null, bgColorSize: 8, template: 'none', fx: 'none', fxAmount: 70,
-            subjectMode: 'none', strokeColor: '#ffffff', subjectAmount: 12,
-            bgImageFile: null, bgImageSize: 8,
-            bgImageZoom: 100, bgImageX: 0, bgImageY: 0
-          }));
-        } catch(err) {}
-        resolve();
-      };
-      newImg.onerror = () => resolve();
-      newImg.src = ev.target.result;
-    };
-    reader.onerror = () => resolve();
-    reader.readAsDataURL(file);
-  });
-}
-
-function loadProject(key) {
-  resetStudioState();
-  const p = JSON.parse(localStorage.getItem(key));
-  currentProjectId = key.replace('music_', '');
-  currentProjectName = p.name || 'Untitled';
-  textLayers = p.textLayers || [];
-  activeLayerId = null;
-  bInput.value = p.brightness ?? 100; cInput.value = p.contrast ?? 100; sInput.value = p.saturation ?? 100; nInput.value = p.noise ?? 0;
-  subjAmt.value = p.subjectAmount ?? 12;
-  currentFilter = p.filter ?? 'none';
-  currentBorder = p.border ?? 'none'; currentBorderColor = p.borderColor ?? '#ffffff'; currentBorderSize = p.borderSize ?? 5;
-  currentBgColor = p.bgColor ?? null; currentBgColorSize = p.bgColorSize ?? 8;
-  currentBgImageSize = p.bgImageSize ?? 8;
-  currentBgImageZoom = p.bgImageZoom ?? 100;
-  currentBgImageX = p.bgImageX ?? 0;
-  currentBgImageY = p.bgImageY ?? 0;
-  currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
-fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p.fxRotation ?? 0;
-subjectX = p.subjectX ?? 0.5; subjectY = p.subjectY ?? 0.5; subjectScale = p.subjectScale ?? 1;
-  
-  fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p.fxRotation ?? 0;
-  const fxAmt = document.getElementById('fxAmount'); if (fxAmt) fxAmt.value = currentFxAmount;
-  const fxV = document.getElementById('fxVal'); if (fxV) fxV.innerText = currentFxAmount;
-  const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
-  const zV = document.getElementById('bgImgZoomVal'); if (zV) zV.innerText = currentBgImageZoom;
-  const xIn = document.getElementById('bgImgXInput'); if (xIn) xIn.value = currentBgImageX;
-  const xV = document.getElementById('bgImgXVal'); if (xV) xV.innerText = currentBgImageX;
-  const yIn = document.getElementById('bgImgYInput'); if (yIn) yIn.value = currentBgImageY;
-  const yV = document.getElementById('bgImgYVal'); if (yV) yV.innerText = currentBgImageY;
-currentBgImage = null;
-if (p.bgImageFile) {
-  const bgKey = p.bgImageFile;
-  if (bgImages[bgKey]) {
-    currentBgImage = bgImages[bgKey];
-  } else {
-    loadImage(EFFECTS_BASE + bgKey).then(im => {
-      if (im) {
-        bgImages[bgKey] = im;
-        currentBgImage = im;
-        if (imgLoaded) redraw();
-      }
-    });
-  }
-}
-if (p.customBgData && !currentBgImage) {
-  const ci = new Image();
-  ci.onload = () => { currentBgImage = ci; customBgImage = ci; if (imgLoaded) redraw(); };
-  ci.src = p.customBgData;
-}  
-  const bsi = document.getElementById('borderSizeInput'); if (bsi) bsi.value = currentBorderSize;
-  const bsv = document.getElementById('borderSizeVal'); if (bsv) bsv.innerText = currentBorderSize;
-  const bcsi = document.getElementById('bgColorSizeInput'); if (bcsi) bcsi.value = currentBgColorSize;
-  const bcsv = document.getElementById('bgColorSizeVal'); if (bcsv) bcsv.innerText = currentBgColorSize;
-  const bgsi = document.getElementById('bgImgSizeInput'); if (bgsi) bgsi.value = currentBgImageSize;
-  const bgsv = document.getElementById('bgImgSizeVal'); if (bgsv) bgsv.innerText = currentBgImageSize;
-  currentTemplate = p.template ?? 'none';
-  subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
-  const sourceImage = p.originalImage || p.image;
-  originalImageSrc = sourceImage;
-  window.__originalBeforeBgRemove = p.preBgRemoveImage || null;
-  img.onload = function() {
-    if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
-    imgLoaded = true;
-    buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-    buildFxGrids(); buildBgImageGrid(); buildFontGrid(); buildPresetThumbs();
-    redraw();
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
-    }
-    setTimeout(() => { if (imgLoaded) redraw(); }, 400);
-    if (currentFx && currentFx !== 'none' && !currentFx.endsWith(':none')) {
-  const parts = currentFx.split(':');
-  const catKey = parts[0], fname = parts[1];
-  const imgKey = catKey + ':' + fname;
-  if (fxImages[imgKey]) {
-    redraw();
-  } else {
-    loadImage(EFFECTS_BASE + fname).then(im => {
-      if (im) {
-        fxImages[imgKey] = im;
-        if (imgLoaded) redraw();
-      }
-    });
-  }
-}
-    saveState();
-  };
-  img.src = sourceImage;
-  document.getElementById('view-home').classList.remove('active');
-  document.getElementById('view-studio').classList.add('active');
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-adjust').classList.add('active');
-  document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
-}
-
-function goHome() {
-  document.getElementById('view-studio').classList.remove('active');
-  document.getElementById('view-home').classList.add('active');
-  textMenu.style.display = 'none';
-  resetStudioState();
-  renderProjectsList();
-}
-
-function resetEverything() {
-  bInput.value = 100; cInput.value = 100; sInput.value = 100; nInput.value = 0;
-  currentFilter = 'none'; currentBorder = 'none'; currentBgColor = null; currentBgImage = null;
-  currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
-  currentFx = 'none'; currentFxAmount = 70;
-  textLayers = []; activeLayerId = null;
-  subjectMode = 'none'; personMask = null; subjectReady = false;
-  preCropImageSrc = null;
-  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
-  subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
-  currentTemplate = 'none';
-  document.querySelectorAll('.template-thumb, .filter-thumb, .border-thumb, .bgcolor-swatch, .bg-item, .fx-card').forEach(c => c.classList.remove('selected'));
-
-  // Restore original photo if it was replaced by BG removal
-  if (window.__originalBeforeBgRemove && window.__originalBeforeBgRemove !== originalImageSrc) {
-    const restoreImg = new Image();
-    restoreImg.onload = () => {
-      img = restoreImg;
-      originalImageSrc = window.__originalBeforeBgRemove;
-      setupCanvasFromImage(restoreImg);
-      window.__originalBeforeBgRemove = null;
-      buildFilterThumbs(); buildTemplates();
-      syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
-      showToast('Reset to original');
-    };
-    restoreImg.src = window.__originalBeforeBgRemove;
-    return;
-  }
-
-  syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  const el = document.getElementById('splashScreen');
-  if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
-  (async () => {
-    buildFontGrid(); buildTemplates(); buildBorders(); buildBgColors();
-    buildPresetThumbs();
-    updateTextLayersUI(); initHomeUpload(); renderProjectsList();
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
-    }
-    setTimeout(() => {
-      try { if (typeof preloadEffects === 'function') preloadEffects(); } catch (e) { console.warn(e); }
-    }, 0);
-    setTimeout(() => {
-      const s = document.getElementById('splashScreen');
-      if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 300); }
-    }, 400);
-  })();
-});
-document.addEventListener('visibilitychange', function() {
-  if (!document.hidden && imgLoaded) redraw();
-});
-window.addEventListener('focus', function() {
-  if (imgLoaded) redraw();
-});
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(e => console.warn('SW failed', e));
-  });
-}
-</script>
-
-</body>
-</html>
