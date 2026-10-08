@@ -1,11 +1,31 @@
 {
-  "categories": [
-    { "prefix": "grunge",      "label": "Grunge",       "blend": "screen" },
-    { "prefix": "lightleak",   "label": "Light Leak",   "blend": "screen" },
-    { "prefix": "fire",        "label": "Fire",         "blend": "screen" },
-    { "prefix": "noise",       "label": "Noise",        "blend": "overlay" },
-    { "prefix": "streetlight", "label": "Street Light", "blend": "screen" },
-    { "prefix": "af",          "label": "AF",           "blend": "screen" },
-    { "prefix": "heart",       "label": "Heart",        "blend": "normal" }
+  "tabs": [
+    { "label": "Grunge",       "prefix": "grunge",      "blend": "screen",   "files": [] },
+    { "label": "Light Leak",   "prefix": "lightleak",   "blend": "screen",   "files": [] },
+    { "label": "Fire",         "prefix": "fire",        "blend": "screen",   "files": [] },
+    { "label": "Noise",        "prefix": "noise",       "blend": "overlay",  "files": [] },
+    { "label": "Street Light", "prefix": "streetlight", "blend": "screen",   "files": [] },
+    { "label": "AF",           "prefix": "af",          "blend": "screen",   "files": [] },
+    { "label": "Heart",        "prefix": "heart",       "blend": "normal",   "files": [] },
+
+    { "label": "Grunge Noise", "prefix": "grunge-noise", "blend": "overlay", "files": [
+      "grunge-noise1.jpg","grunge-noise2.jpg","grunge-noise3.jpg","grunge-noise4.jpg","grunge-noise5.jpg",
+      "grunge-noise6.jpg","grunge-noise7.jpg","grunge-noise8.jpg","grunge-noise9.jpg","grunge-noise10.jpg",
+      "grunge-noise11.jpg","grunge-noise12.jpg","grunge-noise13.jpg","grunge-noise14.jpg","grunge-noise15.jpg",
+      "grunge-noise16.jpg","grunge-noise17.jpg","grunge-noise18.jpg","grunge-noise19.jpg","grunge-noise20.jpg",
+      "grunge-noise21.jpg","grunge-noise22.jpg","grunge-noise23.jpg","grunge-noise24.jpg","grunge-noise25.jpg"
+    ]},
+
+    { "label": "Moody Leak", "prefix": "Mood-leak", "blend": "screen", "files": [
+      "Mood-leak1.jpg","Mood-leak2.jpg","Mood-leak3.jpg","Mood-leak4.jpg","Mood-leak5.jpg",
+      "Mood-leak6.jpg","Mood-leak7.jpg","Mood-leak8.jpg","Mood-leak9.jpg","Mood-leak10.jpg",
+      "Mood-leak11.jpg","Mood-leak12.jpg","Mood-leak13.jpg","Mood-leak14.jpg","Mood-leak15.jpg",
+      "Mood-leak16.jpg","Mood-leak17.jpg","Mood-leak18.jpg","Mood-leak19.jpg","Mood-leak20.jpg",
+      "Mood-leak21.jpg","Mood-leak22.jpg","Mood-leak23.jpg","Mood-leak24.jpg","Mood-leak25.jpg",
+      "Mood-leak26.jpg","Mood-leak27.jpg","Mood-leak28.jpg","Mood-leak29.jpg","Mood-leak30.jpg",
+      "Mood-leak31.jpg","Mood-leak32.jpg","Mood-leak33.jpg","Mood-leak34.jpg","Mood-leak35.jpg",
+      "Mood-leak36.jpg","Mood-leak37.jpg","Mood-leak38.jpg","Mood-leak39.jpg","Mood-leak40.jpg",
+      "Mood-leak41.jpg","Mood-leak42.jpg","Mood-leak43.jpg","Mood-leak44.jpg"
+    ]}
   ]
 }
