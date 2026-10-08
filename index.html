@@ -1081,6 +1081,26 @@ function resetSubjectTransform() {
 if (!window.__originalBeforeBgRemove) window.__originalBeforeBgRemove = originalImageSrc;
 async function removeBgBest() {
   if (!imgLoaded) { alert('Load a photo first'); return; }
+
+  // If BG was already removed this session, tapping again restores the original
+  if (window.__originalBeforeBgRemove && originalImageSrc !== window.__originalBeforeBgRemove) {
+    const restoreImg = new Image();
+    restoreImg.onload = () => {
+      img = restoreImg;
+      originalImageSrc = window.__originalBeforeBgRemove;
+      canvas.width = restoreImg.width;
+      canvas.height = restoreImg.height;
+      currentBgColor = null;
+      currentBgImage = null;
+      personMask = null;
+      subjectReady = false;
+      buildBgColors(); redraw(); saveState();
+      showToast('Original restored');
+    };
+    restoreImg.src = window.__originalBeforeBgRemove;
+    return;
+  }
+
   playCount(async () => {
     try {
       const tmp = document.createElement('canvas');
@@ -1091,8 +1111,8 @@ async function removeBgBest() {
       if (!r.ok) { const err = await r.json().catch(() => ({})); alert('Failed: ' + (err.error || r.status)); return; }
       const data = await r.json();
       if (!data.image) { alert('No image returned'); return; }
+      if (!window.__originalBeforeBgRemove) window.__originalBeforeBgRemove = originalImageSrc;
       const newImg = new Image();
-      
       newImg.onload = () => { img = newImg; originalImageSrc = data.image; canvas.width = newImg.width; canvas.height = newImg.height; imgLoaded = true; currentBgColor = '#ffffff'; buildBgColors(); redraw(); saveState(); };
       newImg.src = data.image;
     } catch (e) { alert('Failed: ' + e.message); }
