@@ -590,7 +590,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <div style="padding:20px 8px;">
       <button class="crop-tool" onclick="document.getElementById('cleanPickInput').click()" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;">+ PICK PHOTO FROM GALLERY</button>
       <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — the background will be removed automatically.</div>
-<input type="file" id="cleanPickInput" accept="image/*" style="display:none;" onchange="handleCleanPick(this)">
+<input type="file" id="cleanPickInput" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="handleCleanPick(this)">
     </div>
   </div>
 
