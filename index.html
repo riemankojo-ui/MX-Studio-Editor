@@ -507,7 +507,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <div style="padding:20px 8px;">
       <button class="crop-tool" onclick="document.getElementById('cleanPickInput').click()" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;">+ PICK PHOTO FROM GALLERY</button>
       <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — the background will be removed automatically.</div>
-      <input type="file" id="cleanPickInput" accept="image/*" style="display:none;">
+    <input type="file" id="cleanPickInput" accept="image/*" style="display:none;" onchange="handleCleanPick(this)">
     </div>
   </div>
 
@@ -1085,19 +1085,17 @@ function buildBgImageGrid() {
   });
   g.innerHTML = html;
 }
+let customBgImage = null;
 document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(function() {
-    const cleanInp = document.getElementById('cleanPickInput');
-    if (cleanInp && !cleanInp.dataset.bound) {
-      cleanInp.dataset.bound = '1';
-      cleanInp.addEventListener('change', function(e) {
-        const file = (e.target.files || [])[0];
-        if (!file) return;
-        e.target.value = '';
-        pickAndClean(file);
-      });
-    }
-  }, 300);
+const cleanInp = document.getElementById('cleanPickInput');
+if (cleanInp) {
+  cleanInp.addEventListener('change', function(e) {
+    const file = (e.target.files || [])[0];
+    if (!file) return;
+    e.target.value = '';
+    pickAndClean(file);
+  });
+}
   const inp = document.getElementById('bgUploadInput');
   if (!inp) return;
   inp.addEventListener('change', function(e) {
@@ -1222,6 +1220,13 @@ function resetUnshow() {
   set('cutFeatherInput', 0); label('cutFeatherVal', '0');
   set('cornerRoundInput', 0); label('cornerRoundVal', '0');
   redraw(); saveState();
+}function handleCleanPick(input) {
+  alert('picked!');
+  const file = (input.files || [])[0];
+  if (!file) { alert('no file'); return; }
+  alert('file: ' + Math.round(file.size/1024) + ' KB');
+  input.value = '';
+  pickAndClean(file);
 }
 
 function pickAndClean(file) {
