@@ -1267,7 +1267,7 @@ function renderProjectsList() {
   let html = `<div class="home-top-bar"><button class="home-new-btn" onclick="document.getElementById('homeImageUpload').click()"><div class="plus-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>New Project</span></button></div>`;
 
   if (items.length === 0) {
-    html += `<div class="home-empty"><div class="home-empty-icon">🎨</div><div class="home-empty-title">START YOUR FIRST COVER</div><div class="home-empty-sub">Upload a photo and make something real.</div></div>`;
+    html += `<div class="home-empty"><div class="home-empty-icon"> </div><div class="home-empty-title">START YOUR FIRST COVER</div><div class="home-empty-sub">Upload a photo and make something real.</div></div>`;
   } else {
     html += `<div class="section-title">Drafts</div><div class="projects-grid">`;
     items.forEach(it => {
@@ -1326,28 +1326,73 @@ function resetStudioState() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+function captureState() {
+  return {
+    textLayers: JSON.parse(JSON.stringify(textLayers)),
+    currentFilter, currentBorder, currentBorderColor, currentBorderSize, currentTemplate,
+    currentBgColor, currentBgColorSize, currentBgImage, currentBgImageSize,
+    currentBgImageZoom, currentBgImageX, currentBgImageY,
+    currentFx, currentFxAmount, fxX, fxY, fxScale, fxRotation,
+    subjectMode, subjectX, subjectY, subjectScale,
+    personMask, subjectReady,
+    brightness: bInput.value, contrast: cInput.value, saturation: sInput.value, noise: nInput.value,
+    imgRef: img, originalImageSrc,
+    canvasW: canvas.width, canvasH: canvas.height
+  };
+}
+
+function applyState(s) {
+  if (!s) return;
+  textLayers = JSON.parse(JSON.stringify(s.textLayers));
+  activeLayerId = null;
+  currentFilter = s.currentFilter;
+  currentBorder = s.currentBorder;
+  currentBorderColor = s.currentBorderColor;
+  currentBorderSize = s.currentBorderSize;
+  currentTemplate = s.currentTemplate;
+  currentBgColor = s.currentBgColor;
+  currentBgColorSize = s.currentBgColorSize;
+  currentBgImage = s.currentBgImage;
+  currentBgImageSize = s.currentBgImageSize;
+  currentBgImageZoom = s.currentBgImageZoom;
+  currentBgImageX = s.currentBgImageX;
+  currentBgImageY = s.currentBgImageY;
+  currentFx = s.currentFx;
+  currentFxAmount = s.currentFxAmount;
+  fxX = s.fxX; fxY = s.fxY; fxScale = s.fxScale; fxRotation = s.fxRotation;
+  subjectMode = s.subjectMode;
+  subjectX = s.subjectX; subjectY = s.subjectY; subjectScale = s.subjectScale;
+  personMask = s.personMask;
+  subjectReady = s.subjectReady;
+  bInput.value = s.brightness;
+  cInput.value = s.contrast;
+  sInput.value = s.saturation;
+  nInput.value = s.noise;
+  img = s.imgRef;
+  originalImageSrc = s.originalImageSrc;
+  canvas.width = s.canvasW;
+  canvas.height = s.canvasH;
+  const fa = document.getElementById('fxAmount'); if (fa) fa.value = s.currentFxAmount;
+  const fv = document.getElementById('fxVal'); if (fv) fv.innerText = s.currentFxAmount;
+  redraw();
+  updateTextLayersUI();
+}
+
 function saveState() {
   if (!imgLoaded) return;
-  const state = canvas.toDataURL();
-  if (state.length < 500) return;
-  if (undoStack.length && undoStack[undoStack.length - 1] === state) return;
-  undoStack.push(state);
+  undoStack.push(captureState());
   if (undoStack.length > 25) undoStack.shift();
   redoStack = [];
   updateHistoryButtons();
 }
-
-function undo() {
-  if (undoStack.length > 1) {
-    redoStack.push(undoStack.pop());
-    const prev = undoStack[undoStack.length - 1];
-    if (!prev || prev.length < 500) { updateHistoryButtons(); return; }
-    const t = new Image();
-    t.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(t, 0, 0); updateHistoryButtons(); };
-    t.src = prev;
+function redo() {
+  if (redoStack.length) {
+    const nxt = redoStack.pop();
+    undoStack.push(nxt);
+    applyState(nxt);
+    updateHistoryButtons();
   }
 }
-
 function redo() {
   if (redoStack.length) {
     const nxt = redoStack.pop();
