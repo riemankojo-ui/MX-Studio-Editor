@@ -484,18 +484,58 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
   </div>
 </div>
+<div id="panel-bgremover" class="panel">
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchSubTab('bgrmcurrent', this)">CLEAN CURRENT</button>
+    <button class="sub-tab" onclick="switchSubTab('bgrmpick', this)">PICK & CLEAN</button>
+    <button class="sub-tab" onclick="switchSubTab('unshow', this)">UNSHOW</button>
+  </div>
 
-  <div id="panel-bgremover" class="panel">
+  <div id="subtab-bgrmcurrent" class="sub-view active">
     <div class="bgremover-menu">
       <div class="bgremover-btn" onclick="removeBgBest()">
         <div class="label">
           <span class="title">REMOVE BACKGROUND</span>
         </div>
-      </div><button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:14px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
+      </div>
+      <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:14px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
       <div style="font-size:10px;color:#555;text-align:center;margin-top:16px;line-height:1.6;">After removal, add a new background from the BG tab</div>
     </div>
   </div>
 
+  <div id="subtab-bgrmpick" class="sub-view">
+    <div style="padding:20px 8px;">
+      <button class="crop-tool" onclick="document.getElementById('cleanPickInput').click()" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;">+ PICK PHOTO FROM GALLERY</button>
+      <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — the background will be removed automatically.</div>
+      <input type="file" id="cleanPickInput" accept="image/*" style="display:none;">
+    </div>
+  </div>
+
+  <div id="subtab-unshow" class="sub-view">
+    <label class="section-label">OPACITY: <span id="unshowOpacityVal">100</span>%</label>
+    <input type="range" id="unshowOpacityInput" min="0" max="100" value="100" oninput="setUnshowOpacity(this.value)">
+
+    <label class="section-label">CUT TOP: <span id="cutTopVal">0</span>%</label>
+    <input type="range" id="cutTopInput" min="0" max="50" value="0" oninput="setCut('top', this.value)">
+
+    <label class="section-label">CUT BOTTOM: <span id="cutBottomVal">0</span>%</label>
+    <input type="range" id="cutBottomInput" min="0" max="50" value="0" oninput="setCut('bottom', this.value)">
+
+    <label class="section-label">CUT LEFT: <span id="cutLeftVal">0</span>%</label>
+    <input type="range" id="cutLeftInput" min="0" max="50" value="0" oninput="setCut('left', this.value)">
+
+    <label class="section-label">CUT RIGHT: <span id="cutRightVal">0</span>%</label>
+    <input type="range" id="cutRightInput" min="0" max="50" value="0" oninput="setCut('right', this.value)">
+
+    <label class="section-label">SOFT EDGE: <span id="cutFeatherVal">0</span></label>
+    <input type="range" id="cutFeatherInput" min="0" max="50" value="0" oninput="setCutFeather(this.value)">
+
+    <label class="section-label">CORNER ROUND: <span id="cornerRoundVal">0</span>%</label>
+    <input type="range" id="cornerRoundInput" min="0" max="50" value="0" oninput="setCornerRound(this.value)">
+
+    <button class="crop-tool" onclick="resetUnshow()" style="margin-top:14px;width:100%;justify-content:center;">RESET UNSHOW</button>
+  </div>
+</div>
   <div id="panel-bgimage" class="panel">
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
@@ -540,6 +580,46 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
   </div>
 </div>
+<div id="panel-clean" class="panel">
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchSubTab('cleanpick', this)">PICK & CLEAN</button>
+    <button class="sub-tab" onclick="switchSubTab('unshow', this)">UNSHOW</button>
+  </div>
+
+  <div id="subtab-cleanpick" class="sub-view active">
+    <div style="padding:20px 8px;">
+      <button class="crop-tool" onclick="document.getElementById('cleanPickInput').click()" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;">+ PICK PHOTO FROM GALLERY</button>
+      <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — the background will be removed automatically.</div>
+      <input type="file" id="cleanPickInput" accept="image/*" style="display:none;">
+    </div>
+  </div>
+
+  <div id="subtab-unshow" class="sub-view">
+    <label class="section-label">OPACITY: <span id="unshowOpacityVal">100</span>%</label>
+    <input type="range" id="unshowOpacityInput" min="0" max="100" value="100" oninput="setUnshowOpacity(this.value)">
+
+    <label class="section-label">CUT TOP: <span id="cutTopVal">0</span>%</label>
+    <input type="range" id="cutTopInput" min="0" max="50" value="0" oninput="setCut('top', this.value)">
+
+    <label class="section-label">CUT BOTTOM: <span id="cutBottomVal">0</span>%</label>
+    <input type="range" id="cutBottomInput" min="0" max="50" value="0" oninput="setCut('bottom', this.value)">
+
+    <label class="section-label">CUT LEFT: <span id="cutLeftVal">0</span>%</label>
+    <input type="range" id="cutLeftInput" min="0" max="50" value="0" oninput="setCut('left', this.value)">
+
+    <label class="section-label">CUT RIGHT: <span id="cutRightVal">0</span>%</label>
+    <input type="range" id="cutRightInput" min="0" max="50" value="0" oninput="setCut('right', this.value)">
+
+    <label class="section-label">SOFT EDGE: <span id="cutFeatherVal">0</span></label>
+    <input type="range" id="cutFeatherInput" min="0" max="50" value="0" oninput="setCutFeather(this.value)">
+
+    <label class="section-label">CORNER ROUND: <span id="cornerRoundVal">0</span>%</label>
+    <input type="range" id="cornerRoundInput" min="0" max="50" value="0" oninput="setCornerRound(this.value)">
+
+    <button class="crop-tool" onclick="resetUnshow()" style="margin-top:14px;width:100%;justify-content:center;">RESET UNSHOW</button>
+  </div>
+</div>
+
   <div class="bottom-nav">
     <button class="nav-btn active" data-panel="adjust" onclick="switchPanel('adjust', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Adjust</span></button>
     <button class="nav-btn" data-panel="crop" onclick="switchPanel('crop', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/></svg><span>Crop</span></button>
@@ -550,6 +630,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <button class="nav-btn" data-panel="border" onclick="switchPanel('border', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg><span>Border</span></button>
     <button class="nav-btn" data-panel="bgremover" onclick="switchPanel('bgremover', this)"><svg width="24" height="24" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="11" r="4.5"/><path d="M5 25a8 8 0 0 1 16 0"/><circle cx="22" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="25" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="26" cy="17" r="0.9" fill="currentColor" stroke="none"/><circle cx="24" cy="21" r="1" fill="currentColor" stroke="none"/><circle cx="21" cy="24" r="0.8" fill="currentColor" stroke="none"/></svg><span>BG Rmv</span></button>
     <button class="nav-btn" data-panel="bgimage" onclick="switchPanel('bgimage', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>BG</span></button>
+<button class="nav-btn" data-panel="clean" onclick="switchPanel('clean', this)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="3"/><path d="M21 8v8a5 5 0 0 1-5 5h-8"/></svg><span>Double Bg</span></button>    
   </div>
 </div>
 
@@ -671,6 +752,10 @@ let subjectDragStart = null;
 let bgDragMode = 'subject';
 let isDraggingBg = false;
 let bgDragStart = null;
+let unshowOpacity = 100;
+let cutTop = 0, cutBottom = 0, cutLeft = 0, cutRight = 0;
+let cutFeather = 0;
+let cornerRound = 0;
 let fxDragStart = null;
 let crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
 
@@ -1001,8 +1086,25 @@ function buildBgImageGrid() {
   g.innerHTML = html;
 }
 let customBgImage = null;
-
+const cleanInp = document.getElementById('cleanPickInput');
+if (cleanInp) {
+  cleanInp.addEventListener('change', function(e) {
+    const file = (e.target.files || [])[0];
+    if (!file) return;
+    e.target.value = '';
+    pickAndClean(file);
+  });
+}
 document.addEventListener('DOMContentLoaded', function() {
+const cleanInp = document.getElementById('cleanPickInput');
+if (cleanInp) {
+  cleanInp.addEventListener('change', function(e) {
+    const file = (e.target.files || [])[0];
+    if (!file) return;
+    e.target.value = '';
+    pickAndClean(file);
+  });
+}
   const inp = document.getElementById('bgUploadInput');
   if (!inp) return;
   inp.addEventListener('change', function(e) {
@@ -1092,6 +1194,102 @@ function resetSubjectTransform() {
 }
 if (!window.__originalBeforeBgRemove) window.__originalBeforeBgRemove = originalImageSrc;
 async function removeBgBest() {
+function setUnshowOpacity(v) {
+  unshowOpacity = parseInt(v);
+  const e = document.getElementById('unshowOpacityVal'); if (e) e.innerText = v;
+  redraw(); saveState();
+}
+function setCut(edge, v) {
+  v = parseInt(v);
+  if (edge === 'top') { cutTop = v; const e = document.getElementById('cutTopVal'); if (e) e.innerText = v; }
+  else if (edge === 'bottom') { cutBottom = v; const e = document.getElementById('cutBottomVal'); if (e) e.innerText = v; }
+  else if (edge === 'left') { cutLeft = v; const e = document.getElementById('cutLeftVal'); if (e) e.innerText = v; }
+  else if (edge === 'right') { cutRight = v; const e = document.getElementById('cutRightVal'); if (e) e.innerText = v; }
+  redraw(); saveState();
+}
+function setCutFeather(v) {
+  cutFeather = parseInt(v);
+  const e = document.getElementById('cutFeatherVal'); if (e) e.innerText = v;
+  redraw(); saveState();
+}
+function setCornerRound(v) {
+  cornerRound = parseInt(v);
+  const e = document.getElementById('cornerRoundVal'); if (e) e.innerText = v;
+  redraw(); saveState();
+}
+function resetUnshow() {
+  unshowOpacity = 100; cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0; cutFeather = 0; cornerRound = 0;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  const label = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+  set('unshowOpacityInput', 100); label('unshowOpacityVal', '100');
+  set('cutTopInput', 0); label('cutTopVal', '0');
+  set('cutBottomInput', 0); label('cutBottomVal', '0');
+  set('cutLeftInput', 0); label('cutLeftVal', '0');
+  set('cutRightInput', 0); label('cutRightVal', '0');
+  set('cutFeatherInput', 0); label('cutFeatherVal', '0');
+  set('cornerRoundInput', 0); label('cornerRoundVal', '0');
+  redraw(); saveState();
+}
+
+function pickAndClean(file) {
+  const status = document.getElementById('cleanStatus');
+  if (status) status.textContent = 'Loading photo...';
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const newImg = new Image();
+    newImg.onload = () => {
+      setupCanvasFromImage(newImg);
+      img = newImg;
+      originalImageSrc = ev.target.result;
+      imgLoaded = true;
+      window.__originalBeforeBgRemove = ev.target.result;
+      currentBgColor = null;
+      currentBgImage = null;
+      redraw();
+      runCleanOnCurrent();
+    };
+    newImg.onerror = () => { if (status) status.textContent = 'Failed to load image.'; };
+    newImg.src = ev.target.result;
+  };
+  reader.onerror = () => { if (status) status.textContent = 'Failed to read file.'; };
+  reader.readAsDataURL(file);
+}
+
+async function runCleanOnCurrent() {
+  const status = document.getElementById('cleanStatus');
+  if (!imgLoaded) { if (status) status.textContent = 'No image loaded.'; return; }
+  if (status) status.textContent = 'Removing background...';
+  try {
+    const tmp = document.createElement('canvas');
+    tmp.width = canvas.width; tmp.height = canvas.height;
+    tmp.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    const dataUrl = tmp.toDataURL('image/jpeg', 0.9);
+    const r = await fetch('/api/remove-bg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl })
+    });
+    if (!r.ok) { if (status) status.textContent = 'Failed: ' + r.status; return; }
+    const data = await r.json();
+    if (!data.image) { if (status) status.textContent = 'No image returned.'; return; }
+    const bgImg = new Image();
+    bgImg.onload = () => {
+      img = bgImg;
+      originalImageSrc = data.image;
+      setupCanvasFromImage(bgImg);
+      currentBgColor = '#ffffff';
+      currentBgImage = null;
+      buildBgColors();
+      redraw(); saveState();
+      if (status) status.textContent = 'Done! Now go to BG tab to add a background.';
+      showToast('Background removed');
+    };
+    bgImg.src = data.image;
+  } catch (e) {
+    if (status) status.textContent = 'Failed: ' + e.message;
+  }
+}
+
   if (!imgLoaded) { alert('Load a photo first'); return; }
 
   // If BG was already removed this session, tapping again restores the original
@@ -2301,7 +2499,104 @@ function redraw() {
     plctx.filter = filterString;
     plctx.drawImage(img, -OVER, -OVER, canvas.width+OVER*2, canvas.height+OVER*2);
     plctx.filter = 'none';
+  }if (unshowOpacity < 100 || cutTop > 0 || cutBottom > 0 || cutLeft > 0 || cutRight > 0 || cornerRound > 0) {
+  const mask = document.createElement('canvas');
+  mask.width = canvas.width;
+  mask.height = canvas.height;
+  const mctx = mask.getContext('2d');
+  const topPx = canvas.height * (cutTop / 100);
+  const botPx = canvas.height * (cutBottom / 100);
+  const leftPx = canvas.width * (cutLeft / 100);
+  const rightPx = canvas.width * (cutRight / 100);
+  const x = leftPx, y = topPx;
+  const w = canvas.width - leftPx - rightPx;
+  const h = canvas.height - topPx - botPx;
+  const rr = Math.min(w, h) * (cornerRound / 100);
+  mctx.fillStyle = '#fff';
+  mctx.beginPath();
+  if (rr > 0) {
+    mctx.moveTo(x + rr, y);
+    mctx.lineTo(x + w - rr, y);
+    mctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    mctx.lineTo(x + w, y + h - rr);
+    mctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    mctx.lineTo(x + rr, y + h);
+    mctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+    mctx.lineTo(x, y + rr);
+    mctx.quadraticCurveTo(x, y, x + rr, y);
+    mctx.closePath();
+  } else {
+    mctx.rect(x, y, w, h);
   }
+  mctx.fill();
+  if (cutFeather > 0) {
+    const blurred = document.createElement('canvas');
+    blurred.width = mask.width;
+    blurred.height = mask.height;
+    const bctx = blurred.getContext('2d');
+    bctx.filter = `blur(${cutFeather}px)`;
+    bctx.drawImage(mask, 0, 0);
+    mctx.clearRect(0, 0, mask.width, mask.height);
+    mctx.drawImage(blurred, 0, 0);
+  }
+  const masked = document.createElement('canvas');
+  masked.width = canvas.width;
+  masked.height = canvas.height;
+  const mm = masked.getContext('2d');
+  mm.drawImage(photoLayer, 0, 0);
+  mm.globalCompositeOperation = 'destination-in';
+  mm.drawImage(mask, 0, 0);
+  plctx.clearRect(0, 0, photoLayer.width, photoLayer.height);
+  plctx.globalAlpha = unshowOpacity / 100;
+  plctx.drawImage(masked, 0, 0);
+  plctx.globalAlpha = 1;
+}if (unshowOpacity < 100 || cutTop > 0 || cutBottom > 0 || cutLeft > 0 || cutRight > 0 || cornerRound > 0) {
+  const mask = document.createElement('canvas');
+  mask.width = canvas.width; mask.height = canvas.height;
+  const mctx = mask.getContext('2d');
+  const topPx = canvas.height * (cutTop / 100);
+  const botPx = canvas.height * (cutBottom / 100);
+  const leftPx = canvas.width * (cutLeft / 100);
+  const rightPx = canvas.width * (cutRight / 100);
+  const x = leftPx, y = topPx;
+  const w = canvas.width - leftPx - rightPx;
+  const h = canvas.height - topPx - botPx;
+  const rr = Math.min(w, h) * (cornerRound / 100);
+  mctx.fillStyle = '#fff';
+  mctx.beginPath();
+  if (rr > 0) {
+    mctx.moveTo(x + rr, y); mctx.lineTo(x + w - rr, y);
+    mctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    mctx.lineTo(x + w, y + h - rr);
+    mctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    mctx.lineTo(x + rr, y + h);
+    mctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+    mctx.lineTo(x, y + rr);
+    mctx.quadraticCurveTo(x, y, x + rr, y);
+    mctx.closePath();
+  } else { mctx.rect(x, y, w, h); }
+  mctx.fill();
+  if (cutFeather > 0) {
+    const blurred = document.createElement('canvas');
+    blurred.width = mask.width; blurred.height = mask.height;
+    const bctx = blurred.getContext('2d');
+    bctx.filter = `blur(${cutFeather}px)`;
+    bctx.drawImage(mask, 0, 0);
+    mctx.clearRect(0, 0, mask.width, mask.height);
+    mctx.drawImage(blurred, 0, 0);
+  }
+  const masked = document.createElement('canvas');
+  masked.width = canvas.width; masked.height = canvas.height;
+  const mm = masked.getContext('2d');
+  mm.drawImage(photoLayer, 0, 0);
+  mm.globalCompositeOperation = 'destination-in';
+  mm.drawImage(mask, 0, 0);
+  plctx.clearRect(0, 0, photoLayer.width, photoLayer.height);
+  plctx.globalAlpha = unshowOpacity / 100;
+  plctx.drawImage(masked, 0, 0);
+  plctx.globalAlpha = 1;
+}
+
   const hasBg = !!(currentBgColor || currentBgImage);
 if (currentBgImage) {
   const w = canvas.width, h = canvas.height;
