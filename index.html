@@ -1085,26 +1085,19 @@ function buildBgImageGrid() {
   });
   g.innerHTML = html;
 }
-let customBgImage = null;
-const cleanInp = document.getElementById('cleanPickInput');
-if (cleanInp) {
-  cleanInp.addEventListener('change', function(e) {
-    const file = (e.target.files || [])[0];
-    if (!file) return;
-    e.target.value = '';
-    pickAndClean(file);
-  });
-}
 document.addEventListener('DOMContentLoaded', function() {
-const cleanInp = document.getElementById('cleanPickInput');
-if (cleanInp) {
-  cleanInp.addEventListener('change', function(e) {
-    const file = (e.target.files || [])[0];
-    if (!file) return;
-    e.target.value = '';
-    pickAndClean(file);
-  });
-}
+  setTimeout(function() {
+    const cleanInp = document.getElementById('cleanPickInput');
+    if (cleanInp && !cleanInp.dataset.bound) {
+      cleanInp.dataset.bound = '1';
+      cleanInp.addEventListener('change', function(e) {
+        const file = (e.target.files || [])[0];
+        if (!file) return;
+        e.target.value = '';
+        pickAndClean(file);
+      });
+    }
+  }, 300);
   const inp = document.getElementById('bgUploadInput');
   if (!inp) return;
   inp.addEventListener('change', function(e) {
@@ -1232,7 +1225,7 @@ function resetUnshow() {
 }
 
 function pickAndClean(file) {
-  const status = document.getElementById('cleanStatus');
+  const status =alert('pickAndClean called, file size: ' + Math.round(file.size/1024) + ' KB'); document.getElementById('cleanStatus');
   if (status) status.textContent = 'Loading photo...';
   const reader = new FileReader();
   reader.onload = (ev) => {
