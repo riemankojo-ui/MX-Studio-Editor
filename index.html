@@ -540,8 +540,8 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
 
     <div id="subtab-unshow2" class="sub-view">
-      <label class="section-label">OPACITY: <span id="unshowOpacityVal">100</span>%</label>
-      <input type="range" id="unshowOpacityInput" min="0" max="100" value="100" oninput="setUnshowOpacity(this.value)">
+      <label class="section-label">OPACITY: <span id="unshowOpacityVal">110</span>%</label>
+    <input type="range" id="unshowOpacityInput" min="0" max="100" value="0" oninput="setUnshowOpacity(this.value)">
 
       <label class="section-label">CUT TOP: <span id="cutTopVal">0</span>%</label>
       <input type="range" id="cutTopInput" min="0" max="50" value="0" oninput="setCut('top', this.value)">
@@ -699,6 +699,11 @@ let bgDragMode = 'subject';
 let isDraggingBg = false;
 let bgDragStart = null;
 let unshowOpacity = 100;
+let overlayImg = null;
+let overlayX = 0.5, overlayY = 0.5, overlayScale = 1, overlayRotation = 0, overlayOpacity = 0;
+let isDraggingOverlay = false;
+let overlayDragStart = null;
+let overlayGesture = null;
 let cutTop = 0, cutBottom = 0, cutLeft = 0, cutRight = 0;
 let cutFeather = 0;
 let cornerRound = 0;
@@ -1091,7 +1096,8 @@ function resetSubjectTransform() {
 }
 
 function setUnshowOpacity(v) {
-  unshowOpacity = parseInt(v);
+  v = parseInt(v);
+  overlayOpacity = v;
   const e = document.getElementById('unshowOpacityVal'); if (e) e.innerText = v;
   redraw(); saveState();
 }
@@ -1141,17 +1147,27 @@ function pickAndClean(file) {
   reader.onload = (ev) => {
     const newImg = new Image();
     newImg.onload = () => {
-      img = newImg;
-      originalImageSrc = ev.target.result;
-      imgLoaded = true;
-      window.__originalBeforeBgRemove = ev.target.result;
-      currentBgColor = null;
-      currentBgImage = null;
-      setupCanvasFromImage(newImg);
-      buildFilterThumbs(); buildTemplates(); buildBorders();
-      redraw();
-      if (status) status.textContent = 'Removing background...';
-      setTimeout(() => { removeBgBest(); }, 100);
+      overlayImg = newImg;
+      overlayX = 0.5;
+      overlayY = 0.5;
+      overlayScale = 0.35;
+      overlayRotation = 0;
+      overlayOpacity = 0;
+      const op = document.getElementById('unshowOpacityInput'); if (op) op.value = 100;
+      const opv = document.getElementById('unshowOpacityVal'); if (opv) opv.innerText = '0';
+      if (!imgLoaded) {
+        img = newImg;
+        originalImageSrc = ev.target.result;
+        imgLoaded = true;
+        window.__originalBeforeBgRemove = ev.target.result;
+        currentBgColor = null;
+        currentBgImage = null;
+        setupCanvasFromImage(newImg);
+        buildFilterThumbs(); buildTemplates(); buildBorders();
+      }
+      redraw(); saveState();
+      if (status) status.textContent = 'Photo added as layer. Drag to move, pinch to resize.';
+      showToast('Photo added as layer');
     };
     newImg.onerror = () => { if (status) status.textContent = 'Failed to load image.'; };
     newImg.src = ev.target.result;
@@ -1159,42 +1175,6 @@ function pickAndClean(file) {
   reader.onerror = () => { if (status) status.textContent = 'Failed to read file.'; };
   reader.readAsDataURL(file);
 }
-async function removeBgBest() {
-  if (!imgLoaded) { alert('Load a photo first'); return; }
-  if (window.__originalBeforeBgRemove && originalImageSrc !== window.__originalBeforeBgRemove) {
-    const restoreImg = new Image();
-    restoreImg.onload = () => {
-      img = restoreImg;
-      originalImageSrc = window.__originalBeforeBgRemove;
-      setupCanvasFromImage(restoreImg);
-      currentBgColor = null;
-      currentBgImage = null;
-      personMask = null;
-      subjectReady = false;
-      buildBgColors(); redraw(); saveState();
-      showToast('Original restored');
-    };
-    restoreImg.src = window.__originalBeforeBgRemove;
-    return;
-  }
-  playCount(async () => {
-    try {
-      const tmp = document.createElement('canvas');
-      tmp.width = canvas.width; tmp.height = canvas.height;
-      tmp.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = tmp.toDataURL('image/jpeg', 0.9);
-      const r = await fetch('/api/remove-bg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: dataUrl }) });
-      if (!r.ok) { const err = await r.json().catch(() => ({})); alert('Failed: ' + (err.error || r.status)); return; }
-      const data = await r.json();
-      if (!data.image) { alert('No image returned'); return; }
-      if (!window.__originalBeforeBgRemove) window.__originalBeforeBgRemove = originalImageSrc;
-      const newImg = new Image();
-      newImg.onload = () => { img = newImg; originalImageSrc = data.image; setupCanvasFromImage(newImg); imgLoaded = true; currentBgColor = '#ffffff'; buildBgColors(); redraw(); saveState(); };
-      newImg.src = data.image;
-    } catch (e) { alert('Failed: ' + e.message); }
-  });
-}
-
 function buildFontGrid() {
   const c = document.getElementById('fontGridContainer');
   if (!c) return;
@@ -1544,6 +1524,21 @@ function startTouch(e) {
     return;
   }
 
+if (gestureTarget === 'overlay' && overlayImg) {
+  if (touches.size === 2) {
+    const arr = Array.from(touches.values());
+    gesture = { type:'overlay', startDist: touchDist(arr[0], arr[1]), startAngle: touchAngle(arr[0], arr[1]), startScale: overlayScale, startRot: overlayRotation };
+    return;
+  }
+  if (touches.size === 1) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    isDraggingOverlay = true;
+    overlayDragStart = { x: pos.x, y: pos.y, ox: overlayX, oy: overlayY };
+    return;
+  }
+  return;
+}
+
   if (gestureTarget === 'subject' && imgLoaded) {
     if (touches.size === 2) {
       const arr = Array.from(touches.values());
@@ -1611,6 +1606,24 @@ function startTouch(e) {
     }
     return;
   }
+
+if (gestureTarget === 'overlay' && overlayImg) {
+  if (touches.size === 2 && gesture && gesture.type === 'overlay') {
+    const arr = Array.from(touches.values());
+    const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
+    const rotDelta = touchAngle(arr[0], arr[1]) - gesture.startAngle;
+    overlayScale = Math.max(0.1, Math.min(5, gesture.startScale * scale));
+    overlayRotation = gesture.startRot + rotDelta;
+    redraw(); return;
+  }
+  if (isDraggingOverlay && overlayDragStart) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    overlayX = overlayDragStart.ox + (pos.x - overlayDragStart.x) / canvas.width;
+    overlayY = overlayDragStart.oy + (pos.y - overlayDragStart.y) / canvas.height;
+    redraw(); return;
+  }
+  return;
+}
 
   if (gestureTarget === 'bg' && imgLoaded && currentBgImage) {
     if (touches.size === 2 && gesture && gesture.type === 'bg') {
@@ -1971,7 +1984,7 @@ function switchPanel(name, btn) {
 if (name === 'fx') gestureTarget = 'fx';
 else if (name === 'bgremover') gestureTarget = 'subject';
 else if (name === 'bgimage') gestureTarget = bgDragMode;
-else if (name === 'clean') gestureTarget = 'subject';
+else if (name === 'clean') gestureTarget = 'overlay';
 else gestureTarget = 'text';
   if (name === 'crop') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -2434,6 +2447,31 @@ function redraw() {
   if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${(fade/100)*0.4})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   if (!currentBgColor && !currentBgImage) drawBorder();
   drawFxLayer();
+if (overlayImg) {
+  ctx.save();
+  const cw = canvas.width, ch = canvas.height;
+  const imAspect = overlayImg.naturalWidth / overlayImg.naturalHeight;
+  const baseW = cw * overlayScale;
+  const baseH = baseW / imAspect;
+  const ox = overlayX * cw;
+  const oy = overlayY * ch;
+  const t = overlayOpacity / 100;
+  ctx.translate(ox, oy);
+  if (overlayRotation) ctx.rotate(overlayRotation);
+
+  if (t < 1) {
+    ctx.globalAlpha = 1 - t;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(overlayImg, -baseW/2, -baseH/2, baseW, baseH);
+  }
+  if (t > 0) {
+    ctx.globalAlpha = t;
+    ctx.globalCompositeOperation = 'screen';
+    ctx.drawImage(overlayImg, -baseW/2, -baseH/2, baseW, baseH);
+  }
+
+  ctx.restore();
+}
   textLayers.forEach(layer => {
     if (layer.text && layer.text.trim() !== '') {
       ctx.save();
