@@ -1088,8 +1088,7 @@ async function removeBgBest() {
     restoreImg.onload = () => {
       img = restoreImg;
       originalImageSrc = window.__originalBeforeBgRemove;
-      canvas.width = restoreImg.width;
-      canvas.height = restoreImg.height;
+      setupCanvasFromImage(restoreImg);
       currentBgColor = null;
       currentBgImage = null;
       personMask = null;
@@ -2554,8 +2553,7 @@ function resetEverything() {
     restoreImg.onload = () => {
       img = restoreImg;
       originalImageSrc = window.__originalBeforeBgRemove;
-      canvas.width = restoreImg.width;
-      canvas.height = restoreImg.height;
+      setupCanvasFromImage(restoreImg);
       window.__originalBeforeBgRemove = null;
       buildFilterThumbs(); buildTemplates();
       syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
