@@ -1615,46 +1615,34 @@ function buildMxData() {
   };
 }
 
-function shareMxProject() {
-  if (!imgLoaded) { showToast('Load a photo first'); return; }
-  try {
-    const data = buildMxData();
-    const json = JSON.stringify(data);
-    const baseName = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-');
-
-    // Build file as .txt so Android accepts it
-    const blob = new Blob([json], { type: 'text/plain' });
-    const file = new File([blob], baseName + '.mx.txt', { type: 'text/plain' });
-
-    if (navigator.share) {
-      const shareData = {
-        files: [file],
-        title: baseName + ' — Mx Studio Project',
-        text: 'Mx Studio project file. Open in Mx Studio → Backup → Import.'
-      };
-      // Try files first
-      if (navigator.canShare && navigator.canShare(shareData)) {
-        navigator.share(shareData)
-          .then(function() { closeBackupSheet(); })
-          .catch(function() {});
-        return;
-      }
-      // Try without files
-      if (navigator.canShare && navigator.canShare({ text: shareData.text })) {
-        navigator.share({ text: shareData.text, title: shareData.title })
-          .then(function() { closeBackupSheet(); })
-          .catch(function() {});
-        return;
-      }
-    }
-
-    // Last resort
-    downloadMxBlob(blob, baseName + '.mx.txt');
-    showToast('Share not available — saved to Downloads');
-
-  } catch (err) {
-    showToast('Error: ' + (err.message || 'unknown'));
+function importMxProject() {
+  let inp = document.getElementById('mxImportInput');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file';
+    inp.id = 'mxImportInput';
+    inp.accept = '.mx,.txt,application/json';
+    inp.style.display = 'none';
+    inp.addEventListener('change', handleMxImport);
+    document.body.appendChild(inp);
   }
+  inp.click();
+}
+
+function handleMxImport(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      applyMxData(data);
+    } catch (err) {
+      showToast('Invalid .mx file');
+    }
+  };
+  reader.readAsText(file);
 }
 function importMxProject() {
   const inp = document.getElementById('mxImportInput');
@@ -1962,7 +1950,10 @@ function renderProjectsList() {
   items.sort((a, b) => b.timestamp - a.timestamp);
 
   let html = `<div class="home-top-bar"><button class="home-new-btn" onclick="document.getElementById('homeImageUpload').click()"><div class="plus-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>New Project</span></button></div>`;
-
+html += `<button onclick="importMxProject()" style="width:100%;background:transparent;color:#fff;border:1.5px dashed #555;padding:18px 16px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;margin-bottom:16px;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  IMPORT .mx PROJECT
+</button>`;
   if (items.length === 0) {
     html += `<div class="home-empty"><div class="home-empty-icon"> </div><div class="home-empty-title">START YOUR FIRST COVER</div><div class="home-empty-sub">Upload a photo and make something real.</div></div>`;
   } else {
