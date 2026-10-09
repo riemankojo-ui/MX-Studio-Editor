@@ -2006,6 +2006,50 @@ function setupCanvasFromImage(newImg) {
   let w = newImg.width, h = newImg.height;
   if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
   canvas.width = w; canvas.height = h;
+  // Reset previous project state
+textLayers = [];
+activeLayerId = null;
+currentProjectId = null;
+currentProjectName = '';
+currentFilter = 'none';
+currentTemplate = 'none';
+currentBorder = 'none';
+currentBorderColor = '#ffffff';
+currentBorderSize = 5;
+currentBgColor = null;
+currentBgColorSize = 8;
+currentBgImage = null;
+currentBgImageSize = 8;
+currentBgImageZoom = 100;
+currentBgImageX = 0;
+currentBgImageY = 0;
+currentFx = 'none';
+currentFxAmount = 70;
+fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
+subjectMode = 'none';
+subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
+personMask = null;
+subjectReady = false;
+overlayImg = null;
+overlayOpacity = 0;
+overlayX = 0.5; overlayY = 0.5; overlayScale = 0.7; overlayRotation = 0;
+overlayTint = null;
+overlayTintAmount = 60;
+overlayCropRatio = 'free';
+overlayRound = 0;
+cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0;
+cutFeather = 0;
+cornerRound = 0;
+unshowOpacity = 100;
+customBgImage = null;
+undoStack = []; redoStack = [];
+updateHistoryButtons();
+
+const bi = document.getElementById('brightness'); if (bi) bi.value = 100;
+const ci = document.getElementById('contrast'); if (ci) ci.value = 100;
+const si = document.getElementById('saturation'); if (si) si.value = 100;
+const ni = document.getElementById('noise'); if (ni) ni.value = 0;
+const sa = document.getElementById('subjectAmount'); if (sa) sa.value = 12;
 }
 
 function resetStudioState() {
