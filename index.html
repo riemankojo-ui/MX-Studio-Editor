@@ -529,6 +529,8 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="switchSubTab('cleanpick', this)">PICK & CLEAN</button>
       <button class="sub-tab" onclick="switchSubTab('unshow2', this)">UNSHOW</button>
+      <button class="sub-tab" onclick="switchSubTab('overlaycolor', this)">COLORS</button>
+<button class="sub-tab" onclick="switchSubTab('overlaycrop', this)">CROP</button>
     </div>
 
     <div id="subtab-cleanpick" class="sub-view active">
@@ -540,7 +542,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
 
     <div id="subtab-unshow2" class="sub-view">
-      <label class="section-label">OPACITY: <span id="unshowOpacityVal">110</span>%</label>
+      <label class="section-label">OPACITY: <span id="unshowOpacityVal">0</span>%</label>
     <input type="range" id="unshowOpacityInput" min="0" max="100" value="0" oninput="setUnshowOpacity(this.value)">
 
       <label class="section-label">CUT TOP: <span id="cutTopVal">0</span>%</label>
@@ -562,9 +564,61 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
       <input type="range" id="cornerRoundInput" min="0" max="50" value="0" oninput="setCornerRound(this.value)">
 
       <button class="crop-tool" onclick="resetUnshow()" style="margin-top:14px;width:100%;justify-content:center;">RESET UNSHOW</button>
+      </div>
+      <div id="subtab-overlaycolor" class="sub-view">
+  <label class="section-label">COLOR TINT</label>
+  <div class="color-row">
+    <div class="color-circle selected" style="background:linear-gradient(135deg,#2a2a2a 45%,#111 45%,#111 55%,#2a2a2a 55%);display:flex;align-items:center;justify-content:center;" onclick="setOverlayTint(null,this)"><span style="color:#888;font-size:9px;font-weight:700;">OFF</span></div>
+    <div class="color-circle" style="background:#ffffff;" onclick="setOverlayTint('#ffffff',this)"></div>
+    <div class="color-circle" style="background:#000000;" onclick="setOverlayTint('#000000',this)"></div>
+    <div class="color-circle" style="background:#ff2c2c;" onclick="setOverlayTint('#ff2c2c',this)"></div>
+    <div class="color-circle" style="background:#00d4ff;" onclick="setOverlayTint('#00d4ff',this)"></div>
+    <div class="color-circle" style="background:#00ff88;" onclick="setOverlayTint('#00ff88',this)"></div>
+    <div class="color-circle" style="background:#ffd700;" onclick="setOverlayTint('#ffd700',this)"></div>
+    <div class="color-circle" style="background:#ff69b4;" onclick="setOverlayTint('#ff69b4',this)"></div>
+    <div class="color-circle" style="background:#9d4edd;" onclick="setOverlayTint('#9d4edd',this)"></div>
+  </div>
+  <label class="section-label">TINT AMOUNT: <span id="overlayTintAmtVal">60</span>%</label>
+  <input type="range" id="overlayTintAmt" min="0" max="100" value="60" oninput="setOverlayTintAmt(this.value)">
+  <label class="section-label">CUSTOM COLOR</label>
+  <div class="color-slider-wrap">
+    <div class="color-slider-row">
+      <div class="color-slider-preview" id="overlayColorPreview" style="background:#ffffff;"></div>
+      <div style="flex:1;">
+        <div style="font-size:10px;color:#888;margin-bottom:4px;">Brightness: <span id="ocBrVal">100</span></div>
+        <input type="range" id="overlayColorBrightness" min="5" max="100" value="100" oninput="setOverlayBrightness(this.value)">
+      </div>
+    </div>
+    <div class="color-slider-row">
+      <div style="width:38px;flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-size:10px;color:#888;margin-bottom:4px;">Hue: <span id="ocHueVal">0°</span></div>
+        <input type="range" id="overlayColorHue" min="0" max="360" value="0" oninput="setOverlayHue(this.value)">
+      </div>
     </div>
   </div>
+  <button class="crop-tool" onclick="resetOverlayTint()" style="margin-top:14px;width:100%;justify-content:center;">RESET COLOR</button>
+</div>
 
+<div id="subtab-overlaycrop" class="sub-view">
+  <label class="section-label">CROP SHAPE</label>
+  <div class="h-scroll">
+    <div class="h-card selected" onclick="setOverlayCrop('free', this)">Free</div>
+    <div class="h-card" onclick="setOverlayCrop('1:1', this)">1:1</div>
+    <div class="h-card" onclick="setOverlayCrop('4:5', this)">4:5</div>
+    <div class="h-card" onclick="setOverlayCrop('9:16', this)">9:16</div>
+    <div class="h-card" onclick="setOverlayCrop('16:9', this)">16:9</div>
+    <div class="h-card" onclick="setOverlayCrop('3:4', this)">3:4</div>
+  </div>
+  <label class="section-label">CORNER ROUND: <span id="overlayRoundVal">0</span>%</label>
+  <input type="range" id="overlayRound" min="0" max="50" value="0" oninput="setOverlayRound(this.value)">
+  <label class="section-label">SCALE: <span id="overlayScaleVal">70</span>%</label>
+  <input type="range" id="overlayScaleSlider" min="10" max="200" value="70" oninput="setOverlayScale(this.value)">
+  <label class="section-label">ROTATION: <span id="overlayRotVal">0</span>°</label>
+  <input type="range" id="overlayRotSlider" min="-180" max="180" value="0" oninput="setOverlayRot(this.value)">
+  <button class="crop-tool" onclick="resetOverlayTransform()" style="margin-top:14px;width:100%;justify-content:center;">RESET CROP</button>
+</div>
+    </div>
   <div class="bottom-nav">
     <button class="nav-btn active" data-panel="adjust" onclick="switchPanel('adjust', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Adjust</span></button>
     <button class="nav-btn" data-panel="crop" onclick="switchPanel('crop', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/></svg><span>Crop</span></button>
@@ -701,6 +755,10 @@ let bgDragStart = null;
 let unshowOpacity = 100;
 let overlayImg = null;
 let overlayX = 0.5, overlayY = 0.5, overlayScale = 1, overlayRotation = 0, overlayOpacity = 0;
+let overlayTint = null;
+let overlayTintAmount = 60;
+let overlayCropRatio = 'free';
+let overlayRound = 0;
 let isDraggingOverlay = false;
 let overlayDragStart = null;
 let overlayGesture = null;
@@ -1140,6 +1198,105 @@ function handleCleanPick(input) {
   pickAndClean(file);
 }
 
+function setOverlayTint(color, el) {
+  overlayTint = color;
+  const row = document.querySelector('#subtab-overlaycolor .color-row');
+  if (row) row.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  redraw(); saveState();
+}
+
+function setOverlayTintAmt(v) {
+  overlayTintAmount = parseInt(v);
+  const e = document.getElementById('overlayTintAmtVal'); if (e) e.innerText = v;
+  redraw(); saveState();
+}
+
+function setOverlayBrightness(v) {
+  v = parseInt(v);
+  const e = document.getElementById('ocBrVal'); if (e) e.innerText = v;
+  if (!overlayTint) overlayTint = '#ffffff';
+  const hsl = hexToHsl(overlayTint);
+  overlayTint = hslToHex(hsl.h, hsl.s, v);
+  const prev = document.getElementById('overlayColorPreview');
+  if (prev) prev.style.background = overlayTint;
+  redraw(); saveState();
+}
+
+function setOverlayHue(v) {
+  v = parseInt(v);
+  const e = document.getElementById('ocHueVal'); if (e) e.innerText = v + '°';
+  if (!overlayTint) overlayTint = '#ffffff';
+  const hsl = hexToHsl(overlayTint);
+  overlayTint = hslToHex(v, Math.max(hsl.s, 70), hsl.l);
+  const prev = document.getElementById('overlayColorPreview');
+  if (prev) prev.style.background = overlayTint;
+  redraw(); saveState();
+}
+
+function resetOverlayTint() {
+  overlayTint = null;
+  overlayTintAmount = 60;
+  const row = document.querySelector('#subtab-overlaycolor .color-row');
+  if (row) {
+    row.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
+    const first = row.querySelector('.color-circle');
+    if (first) first.classList.add('selected');
+  }
+  const amt = document.getElementById('overlayTintAmt'); if (amt) amt.value = 60;
+  const amtV = document.getElementById('overlayTintAmtVal'); if (amtV) amtV.innerText = '60';
+  redraw(); saveState();
+}
+
+function setOverlayCrop(ratio, el) {
+  overlayCropRatio = ratio;
+  if (el && el.parentElement) {
+    el.parentElement.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  redraw(); saveState();
+}
+
+function setOverlayRound(v) {
+  overlayRound = parseInt(v);
+  const e = document.getElementById('overlayRoundVal'); if (e) e.innerText = v;
+  redraw(); saveState();
+}
+
+function setOverlayScale(v) {
+  v = parseInt(v);
+  overlayScale = v / 100;
+  const e = document.getElementById('overlayScaleVal'); if (e) e.innerText = v;
+  redraw(); saveState();
+}
+
+function setOverlayRot(v) {
+  v = parseInt(v);
+  overlayRotation = v * Math.PI / 180;
+  const e = document.getElementById('overlayRotVal'); if (e) e.innerText = v;
+  redraw(); saveState();
+}
+
+function resetOverlayTransform() {
+  overlayCropRatio = 'free';
+  overlayRound = 0;
+  overlayScale = 0.7;
+  overlayRotation = 0;
+  const s = document.getElementById('overlayScaleSlider'); if (s) s.value = 70;
+  const sv = document.getElementById('overlayScaleVal'); if (sv) sv.innerText = '70';
+  const r = document.getElementById('overlayRotSlider'); if (r) r.value = 0;
+  const rv = document.getElementById('overlayRotVal'); if (rv) rv.innerText = '0';
+  const rd = document.getElementById('overlayRound'); if (rd) rd.value = 0;
+  const rdv = document.getElementById('overlayRoundVal'); if (rdv) rdv.innerText = '0';
+  const cropRow = document.querySelector('#subtab-overlaycrop .h-scroll');
+  if (cropRow) {
+    cropRow.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
+    const first = cropRow.querySelector('.h-card');
+    if (first) first.classList.add('selected');
+  }
+  redraw(); saveState();
+}
+
 function pickAndClean(file) {
   const status = document.getElementById('cleanStatus');
   if (status) status.textContent = 'Loading photo...';
@@ -1150,10 +1307,10 @@ function pickAndClean(file) {
       overlayImg = newImg;
       overlayX = 0.5;
       overlayY = 0.5;
-      overlayScale = 0.35;
+      overlayScale = 0.7;
       overlayRotation = 0;
       overlayOpacity = 0;
-      const op = document.getElementById('unshowOpacityInput'); if (op) op.value = 100;
+      const op = document.getElementById('unshowOpacityInput'); if (op) op.value = 0;
       const opv = document.getElementById('unshowOpacityVal'); if (opv) opv.innerText = '0';
       if (!imgLoaded) {
         img = newImg;
@@ -2453,23 +2610,62 @@ if (overlayImg) {
   const imAspect = overlayImg.naturalWidth / overlayImg.naturalHeight;
   const baseW = cw * overlayScale;
   const baseH = baseW / imAspect;
-  const ox = overlayX * cw;
-  const oy = overlayY * ch;
-  const t = overlayOpacity / 100;
-  ctx.translate(ox, oy);
+
+  let displayW = baseW, displayH = baseH;
+  if (overlayCropRatio !== 'free') {
+    const p = overlayCropRatio.split(':');
+    const targetAspect = parseFloat(p[0]) / parseFloat(p[1]);
+    if (targetAspect > imAspect) {
+      displayW = baseW;
+      displayH = baseW / targetAspect;
+    } else {
+      displayH = baseH;
+      displayW = baseH * targetAspect;
+    }
+  }
+
+  const off = document.createElement('canvas');
+  off.width = Math.max(1, Math.round(displayW));
+  off.height = Math.max(1, Math.round(displayH));
+  const octx = off.getContext('2d');
+
+  if (overlayRound > 0) {
+    const r = Math.min(off.width, off.height) * (overlayRound / 100);
+    octx.beginPath();
+    octx.moveTo(r, 0);
+    octx.lineTo(off.width - r, 0);
+    octx.quadraticCurveTo(off.width, 0, off.width, r);
+    octx.lineTo(off.width, off.height - r);
+    octx.quadraticCurveTo(off.width, off.height, off.width - r, off.height);
+    octx.lineTo(r, off.height);
+    octx.quadraticCurveTo(0, off.height, 0, off.height - r);
+    octx.lineTo(0, r);
+    octx.quadraticCurveTo(0, 0, r, 0);
+    octx.closePath();
+    octx.clip();
+  }
+
+  const sr = overlayImg.naturalWidth / overlayImg.naturalHeight;
+  const dr = off.width / off.height;
+  let sx = 0, sy = 0, sw = overlayImg.naturalWidth, sh = overlayImg.naturalHeight;
+  if (sr > dr) { sw = sh * dr; sx = (overlayImg.naturalWidth - sw) / 2; }
+  else { sh = sw / dr; sy = (overlayImg.naturalHeight - sh) / 2; }
+  octx.drawImage(overlayImg, sx, sy, sw, sh, 0, 0, off.width, off.height);
+
+  if (overlayTint && overlayTintAmount > 0) {
+    octx.globalCompositeOperation = 'source-atop';
+    octx.globalAlpha = overlayTintAmount / 100;
+    octx.fillStyle = overlayTint;
+    octx.fillRect(0, 0, off.width, off.height);
+    octx.globalAlpha = 1;
+    octx.globalCompositeOperation = 'source-over';
+  }
+
+  ctx.globalAlpha = overlayOpacity / 100;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.translate(overlayX * cw, overlayY * ch);
   if (overlayRotation) ctx.rotate(overlayRotation);
-
-  if (t < 1) {
-    ctx.globalAlpha = 1 - t;
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.drawImage(overlayImg, -baseW/2, -baseH/2, baseW, baseH);
-  }
-  if (t > 0) {
-    ctx.globalAlpha = t;
-    ctx.globalCompositeOperation = 'screen';
-    ctx.drawImage(overlayImg, -baseW/2, -baseH/2, baseW, baseH);
-  }
-
+  ctx.drawImage(off, -off.width / 2, -off.height / 2);
   ctx.restore();
 }
   textLayers.forEach(layer => {
