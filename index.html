@@ -3410,6 +3410,33 @@ function importOnePhoto(file) {
       newImg.onload = function() {
         const MAX = 1080; let w = newImg.width, h = newImg.height;
         if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
+// Reset previous project state
+textLayers = []; activeLayerId = null;
+currentProjectId = null; currentProjectName = '';
+currentFilter = 'none'; currentTemplate = 'none';
+currentBorder = 'none'; currentBorderColor = '#ffffff'; currentBorderSize = 5;
+currentBgColor = null; currentBgColorSize = 8;
+currentBgImage = null; currentBgImageSize = 8;
+currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
+currentFx = 'none'; currentFxAmount = 70;
+fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
+subjectMode = 'none';
+subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
+personMask = null; subjectReady = false;
+overlayImg = null; overlayOpacity = 0;
+overlayX = 0.5; overlayY = 0.5; overlayScale = 0.7; overlayRotation = 0;
+overlayTint = null; overlayTintAmount = 60;
+overlayCropRatio = 'free'; overlayRound = 0;
+cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0;
+cutFeather = 0; cornerRound = 0; unshowOpacity = 100;
+customBgImage = null;
+undoStack = []; redoStack = [];
+if (typeof updateHistoryButtons === 'function') updateHistoryButtons();
+const _bi = document.getElementById('brightness'); if (_bi) _bi.value = 100;
+const _ci = document.getElementById('contrast'); if (_ci) _ci.value = 100;
+const _si = document.getElementById('saturation'); if (_si) _si.value = 100;
+const _ni = document.getElementById('noise'); if (_ni) _ni.value = 0;
+const _sa = document.getElementById('subjectAmount'); if (_sa) _sa.value = 12;
         const tmp = document.createElement('canvas');
         tmp.width = w; tmp.height = h;
         tmp.getContext('2d').drawImage(newImg, 0, 0, w, h);
