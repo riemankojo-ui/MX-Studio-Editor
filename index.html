@@ -1615,6 +1615,128 @@ function buildMxData() {
   };
 }
 
+function shareMxProject() {
+  if (!imgLoaded) { showToast('Load a photo first'); return; }
+  const data = buildMxData();
+  const json = JSON.stringify(data);
+  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
+  const blob = new Blob([json], { type: 'application/octet-stream' });
+  const file = new File([blob], filename, { type: 'application/octet-stream' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename })
+      .then(() => { closeBackupSheet(); showToast('Shared'); })
+      .catch(() => {});
+  } else {
+    showToast('Sharing not supported — use Export');
+  }
+}
+
+function importMxProject() {
+  const inp = document.getElementById('mxImportInput');
+  if (!inp) { showToast('Import input missing'); return; }
+  inp.click();
+}
+
+function applyMxData(data) {
+  if (!data || data.app !== 'MxStudio') { showToast('Invalid .mx file'); return; }
+  const newImg = new Image();
+  newImg.onload = function() {
+    img = newImg;
+    imgLoaded = true;
+    originalImageSrc = data.photo;
+    window.__originalBeforeBgRemove = data.photo;
+    canvas.width = data.canvasW || newImg.width;
+    canvas.height = data.canvasH || newImg.height;
+    currentProjectId = null;
+    currentProjectName = data.name || 'Imported';
+    textLayers = (data.textLayers || []).map(l => ({
+      id: l.id || Date.now() + Math.random(),
+      text: l.text || '', x: l.x, y: l.y,
+      size: l.size || 40, font: l.font || 'Impact',
+      color: l.color || '#ffffff', style: l.style || 'normal',
+      rotation: l.rotation || 0, persp: l.persp || 0
+    }));
+    activeLayerId = null;
+    if (data.brightness !== undefined) bInput.value = data.brightness;
+    if (data.contrast !== undefined) cInput.value = data.contrast;
+    if (data.saturation !== undefined) sInput.value = data.saturation;
+    if (data.noise !== undefined) nInput.value = data.noise;
+    currentFilter = data.filter || 'none';
+    currentBorder = data.border || 'none';
+    currentBorderColor = data.borderColor || '#ffffff';
+    currentBorderSize = data.borderSize || 5;
+    currentBgColor = data.bgColor || null;
+    currentBgColorSize = data.bgColorSize || 8;
+    currentBgImageSize = data.bgImageSize || 8;
+    currentBgImageZoom = data.bgImageZoom || 100;
+    currentBgImageX = data.bgImageX || 0;
+    currentBgImageY = data.bgImageY || 0;
+    currentTemplate = data.template || 'none';
+    currentFx = data.fx || 'none';
+    currentFxAmount = data.fxAmount || 70;
+    fxX = data.fxX !== undefined ? data.fxX : 0.5;
+    fxY = data.fxY !== undefined ? data.fxY : 0.5;
+    fxScale = data.fxScale || 1;
+    fxRotation = data.fxRotation || 0;
+    subjectX = data.subjectX !== undefined ? data.subjectX : 0.5;
+    subjectY = data.subjectY !== undefined ? data.subjectY : 0.5;
+    subjectScale = data.subjectScale || 1;
+    subjectMode = data.subjectMode || 'none';
+    strokeColor = data.strokeColor || '#ffffff';
+    if (data.bgImageFile && bgImages[data.bgImageFile]) {
+      currentBgImage = bgImages[data.bgImageFile];
+    } else if (data.customBgData) {
+      const c = new Image();
+      c.onload = () => { currentBgImage = c; customBgImage = c; redraw(); };
+      c.src = data.customBgData;
+    } else {
+      currentBgImage = null;
+    }
+    if (data.customBgData) {
+      const c = new Image();
+      c.onload = () => { customBgImage = c; redraw(); };
+      c.src = data.customBgData;
+    }
+    personMask = null; subjectReady = false;
+    buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
+    buildBgImageGrid();
+    redraw();
+    undoStack = []; redoStack = []; updateHistoryButtons();
+    closeBackupSheet();
+    showToast('Imported: ' + currentProjectName);
+  };
+  newImg.onerror = function() { showToast('Image data failed to load'); };
+  newImg.src = data.photo;
+}
+
+function deleteCurrentProject() {
+  if (!currentProjectId) { showToast('Nothing to delete'); return; }
+  localStorage.removeItem('music_' + currentProjectId);
+  currentProjectId = null;
+  currentProjectName = '';
+  closeBackupSheet();
+  showToast('Deleted from Studio');
+  setTimeout(() => { goHome(); }, 800);
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.id === 'mxImportInput') {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        applyMxData(data);
+      } catch (err) {
+        showToast('Invalid .mx file');
+      }
+    };
+    reader.readAsText(file);
+  }
+});
+
 function exportMxProject() {
   if (!imgLoaded) { showToast('Load a photo first'); return; }
   const data = buildMxData();
