@@ -1570,6 +1570,69 @@ document.addEventListener('click', function(e) {
   if (e.target && e.target.id === 'backupSheet') closeBackupSheet();
 });
 
+function buildMxData() {
+  const serializedLayers = textLayers.map(l => ({
+    id: l.id, text: l.text, x: l.x, y: l.y, size: l.size,
+    font: l.font, color: l.color, style: l.style,
+    rotation: l.rotation, persp: l.persp || 0
+  }));
+  let bgFile = null;
+  if (currentBgImage) {
+    for (const f of BG_CONFIG.files) if (bgImages[f.fname] === currentBgImage) { bgFile = f.fname; break; }
+  }
+  return {
+    version: 1,
+    app: 'MxStudio',
+    savedAt: new Date().toISOString(),
+    name: currentProjectName || 'Untitled',
+    photo: originalImageSrc,
+    canvasW: canvas.width,
+    canvasH: canvas.height,
+    textLayers: serializedLayers,
+    brightness: bInput.value,
+    contrast: cInput.value,
+    saturation: sInput.value,
+    noise: nInput.value,
+    filter: currentFilter,
+    border: currentBorder,
+    borderColor: currentBorderColor,
+    borderSize: currentBorderSize,
+    bgColor: currentBgColor,
+    bgColorSize: currentBgColorSize,
+    bgImageFile: bgFile,
+    bgImageSize: currentBgImageSize,
+    customBgData: (currentBgImage && customBgImage && currentBgImage === customBgImage) ? customBgImage.src : null,
+    bgImageZoom: currentBgImageZoom,
+    bgImageX: currentBgImageX,
+    bgImageY: currentBgImageY,
+    template: currentTemplate,
+    fx: currentFx,
+    fxAmount: currentFxAmount,
+    fxX, fxY, fxScale, fxRotation,
+    subjectX, subjectY, subjectScale,
+    subjectMode, strokeColor,
+    subjectAmount: subjAmt.value
+  };
+}
+
+function exportMxProject() {
+  if (!imgLoaded) { showToast('Load a photo first'); return; }
+  const data = buildMxData();
+  const json = JSON.stringify(data);
+  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
+  const blob = new Blob([json], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  closeBackupSheet();
+  showToast('Exported ' + filename);
+}
+
 function pickAndClean(file) {
   const status = document.getElementById('cleanStatus');
   if (status) status.textContent = 'Loading photo...';
