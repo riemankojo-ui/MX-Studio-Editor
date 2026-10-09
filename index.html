@@ -1417,122 +1417,93 @@ function generateCartoon(srcCanvas) {
   const out = document.createElement('canvas');
   out.width = w; out.height = h;
   const octx = out.getContext('2d');
+  octx.drawImage(srcCanvas, 0, 0);
 
-  // Downscale for smoothness (50%)
-  const SCALE = 0.5;
-  const sw = Math.max(1, Math.floor(w * SCALE));
-  const sh = Math.max(1, Math.floor(h * SCALE));
-  const small = document.createElement('canvas');
-  small.width = sw; small.height = sh;
-  const smctx = small.getContext('2d');
-  smctx.imageSmoothingEnabled = true;
-  smctx.imageSmoothingQuality = 'high';
-  smctx.drawImage(srcCanvas, 0, 0, sw, sh);
-
-  // Heavy multi-pass blur = very smooth
-  const blurred = document.createElement('canvas');
-  blurred.width = sw; blurred.height = sh;
-  const bctx = blurred.getContext('2d');
-  const blurPx = cartoonSmooth * 0.8;
-  bctx.filter = 'blur(' + blurPx + 'px)';
-  bctx.drawImage(small, 0, 0);
-  bctx.filter = 'none';
-
-  const blurred2 = document.createElement('canvas');
-  blurred2.width = sw; blurred2.height = sh;
-  const b2ctx = blurred2.getContext('2d');
-  b2ctx.filter = 'blur(' + (blurPx * 0.6) + 'px)';
-  b2ctx.drawImage(blurred, 0, 0);
-  b2ctx.filter = 'none';
-
-  // Posterize
   const levels = cartoonLevels;
   const step = 255 / (levels - 1);
-  const imgData = b2ctx.getImageData(0, 0, sw, sh);
-  const d = imgData.data;
+  const edgeAmt = cartoonEdge;
+  const style = cartoonStyle;
+
+  const src = octx.getImageData(0, 0, w, h);
+  const d = src.data;
+
+  // Smooth pass (box blur 3x3) for comic/anime/cell
+  if (style === 'anime' || style === 'cell' || style === 'oil') {
+    const blur = document.createElement('canvas');
+    blur.width = w; blur.height = h;
+    const bctx = blur.getContext('2d');
+    bctx.filter = 'blur(1.2px)';
+    bctx.drawImage(srcCanvas, 0, 0);
+    const bd = bctx.getImageData(0, 0, w, h).data;
+    for (let i = 0; i < d.length; i++) d[i] = bd[i];
+  }
+
+  // Posterize
   for (let i = 0; i < d.length; i += 4) {
     d[i]   = Math.round(d[i]   / step) * step;
     d[i+1] = Math.round(d[i+1] / step) * step;
     d[i+2] = Math.round(d[i+2] / step) * step;
   }
-  b2ctx.putImageData(imgData, 0, 0);
 
-  // Soft blur to melt banding
-  const post = document.createElement('canvas');
-  post.width = sw; post.height = sh;
-  const pctx = post.getContext('2d');
-  pctx.filter = 'blur(1.5px)';
-  pctx.drawImage(blurred2, 0, 0);
-  pctx.filter = 'none';
-
-  // Edge detection from the smooth source
-  let edgeCanvas = null;
-  if (cartoonEdge > 0 && cartoonStyle !== 'oil') {
-    const sd = b2ctx.getImageData(0, 0, sw, sh).data;
-    const lum = new Float32Array(sw * sh);
-    for (let i = 0, j = 0; i < sd.length; i += 4, j++) {
-      lum[j] = sd[i] * 0.299 + sd[i+1] * 0.587 + sd[i+2] * 0.114;
+  // Edge detection (Sobel) if edgeAmt > 0
+  if (edgeAmt > 0 && style !== 'oil') {
+    const lum = new Uint8ClampedArray(w * h);
+    for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+      lum[j] = (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114);
     }
-    edgeCanvas = document.createElement('canvas');
-    edgeCanvas.width = sw; edgeCanvas.height = sh;
-    const ectx = edgeCanvas.getContext('2d');
-    const eData = ectx.createImageData(sw, sh);
-    const ed = eData.data;
-    const THRESH = 42;
-    for (let y = 1; y < sh - 1; y++) {
-      for (let x = 1; x < sw - 1; x++) {
-        const i = y * sw + x;
-        const gx = -lum[i-sw-1] - 2*lum[i-1] - lum[i+sw-1] + lum[i-sw+1] + 2*lum[i+1] + lum[i+sw+1];
-        const gy = -lum[i-sw-1] - 2*lum[i-sw] - lum[i-sw+1] + lum[i+sw-1] + 2*lum[i+sw] + lum[i+sw+1];
+    const edge = new Uint8ClampedArray(w * h);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        const gx =
+          -lum[i-w-1] - 2*lum[i-1] - lum[i+w-1] +
+           lum[i-w+1] + 2*lum[i+1] + lum[i+w+1];
+        const gy =
+          -lum[i-w-1] - 2*lum[i-w] - lum[i-w+1] +
+           lum[i+w-1] + 2*lum[i+w] + lum[i+w+1];
         const mag = Math.sqrt(gx*gx + gy*gy);
+        edge[i] = Math.min(255, mag * edgeAmt);
+      }
+    }
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
         const p = i * 4;
-        if (mag > THRESH) {
-          const a = Math.min(1, (mag - THRESH) / 70) * Math.min(1, cartoonEdge);
-          ed[p] = 0; ed[p+1] = 0; ed[p+2] = 0;
-          ed[p+3] = Math.round(255 * a);
+        const e = edge[i];
+        if (e > 60) {
+          const k = Math.min(1, (e - 60) / 80);
+          d[p]   = d[p]   * (1 - k);
+          d[p+1] = d[p+1] * (1 - k);
+          d[p+2] = d[p+2] * (1 - k);
         }
       }
     }
-    ectx.putImageData(eData, 0, 0);
-  }
-
-  // Sketch style
-  if (cartoonStyle === 'sketch') {
-    const g = document.createElement('canvas');
-    g.width = sw; g.height = sh;
-    const gctx = g.getContext('2d');
-    gctx.filter = 'grayscale(100%) contrast(150%)';
-    gctx.drawImage(small, 0, 0);
-    const inv = document.createElement('canvas');
-    inv.width = sw; inv.height = sh;
-    const ictx = inv.getContext('2d');
-    ictx.filter = 'invert(100%) blur(3px)';
-    ictx.drawImage(g, 0, 0);
-    const sk = document.createElement('canvas');
-    sk.width = sw; sk.height = sh;
-    const skctx = sk.getContext('2d');
-    skctx.drawImage(g, 0, 0);
-    skctx.globalCompositeOperation = 'color-dodge';
-    skctx.drawImage(inv, 0, 0);
-    skctx.globalCompositeOperation = 'source-over';
-    octx.imageSmoothingEnabled = true;
-    octx.imageSmoothingQuality = 'high';
-    octx.drawImage(sk, 0, 0, w, h);
+    octx.putImageData(src, 0, 0);
     return out;
   }
 
-  // Compose
-  const composed = document.createElement('canvas');
-  composed.width = sw; composed.height = sh;
-  const cctx = composed.getContext('2d');
-  cctx.drawImage(post, 0, 0);
-  if (edgeCanvas) cctx.drawImage(edgeCanvas, 0, 0);
+  octx.putImageData(src, 0, 0);
 
-  octx.imageSmoothingEnabled = true;
-  octx.imageSmoothingQuality = 'high';
-  octx.drawImage(composed, 0, 0, w, h);
+  // Sketch style: convert to grayscale + invert blend
+  if (style === 'sketch') {
+    const g = document.createElement('canvas');
+    g.width = w; g.height = h;
+    const gctx = g.getContext('2d');
+    gctx.filter = 'grayscale(100%) contrast(140%)';
+    gctx.drawImage(srcCanvas, 0, 0);
+    const inv = document.createElement('canvas');
+    inv.width = w; inv.height = h;
+    const ictx = inv.getContext('2d');
+    ictx.filter = 'invert(100%) blur(2px)';
+    ictx.drawImage(g, 0, 0);
+    const sctx = out.getContext('2d');
+    sctx.globalCompositeOperation = 'color-dodge';
+    sctx.drawImage(inv, 0, 0);
+  }
+
   return out;
 }
+
 function pickAndClean(file) {
   const status = document.getElementById('cleanStatus');
   if (status) status.textContent = 'Loading photo...';
