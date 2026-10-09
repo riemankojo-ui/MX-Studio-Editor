@@ -774,6 +774,11 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 <div id="toast">Saved</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
+<script type="module">
+  import removeBg from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm';
+  window.imglyRemoveBg = removeBg;
+  window.imglyReady = true;
+</script>
 <script>const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const textMenu = document.getElementById('textFloatingMenu');
@@ -2867,46 +2872,38 @@ function resetCropAngle() {
 window.removeBackgroundCompletely = async function() {
   const status = document.getElementById('bgRmvStatus');
   if (!imgLoaded) { if (status) status.textContent = 'Load a photo first.'; return; }
-  if (typeof SelfieSegmentation === 'undefined') { if (status) status.textContent = 'Model failed to load — check internet.'; return; }
 
-  if (status) status.textContent = 'Loading model...';
+  if (status) status.textContent = 'Loading AI model (first time ~40MB)...';
+
   try {
-    if (!selfieSeg) {
-      selfieSeg = new SelfieSegmentation({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/${f}` });
-      selfieSeg.setOptions({ modelSelection: 1 });
+    let waited = 0;
+    while (!window.imglyRemoveBg && waited < 15000) {
+      await new Promise(r => setTimeout(r, 200));
+      waited += 200;
     }
-    if (status) status.textContent = 'Analysing photo...';
+    if (!window.imglyRemoveBg) {
+      if (status) status.textContent = 'AI library failed to load. Check internet.';
+      return;
+    }
 
-    const result = await new Promise((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error('Timeout')), 30000);
-      selfieSeg.onResults(r => { clearTimeout(t); resolve(r); });
-      selfieSeg.send({ image: img });
+    if (status) status.textContent = 'Removing background...';
+
+    const tmp = document.createElement('canvas');
+    tmp.width = canvas.width;
+    tmp.height = canvas.height;
+    tmp.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const srcBlob = await new Promise(res => tmp.toBlob(res, 'image/png'));
+
+    const resultBlob = await window.imglyRemoveBg(srcBlob, {
+      progress: (key, current, total) => {
+        if (status && total) {
+          status.textContent = 'Downloading model ' + Math.round((current/total)*100) + '%';
+        }
+      }
     });
 
-    if (status) status.textContent = 'Cutting out...';
-
-    const cut = document.createElement('canvas');
-    cut.width = canvas.width;
-    cut.height = canvas.height;
-    const cctx = cut.getContext('2d');
-    cctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const cData = cctx.getImageData(0, 0, canvas.width, canvas.height);
-    const cd = cData.data;
-
-    const maskCanvas = document.createElement('canvas');
-    maskCanvas.width = canvas.width;
-    maskCanvas.height = canvas.height;
-    const mctx = maskCanvas.getContext('2d');
-    mctx.drawImage(result.segmentationMask, 0, 0, canvas.width, canvas.height);
-    const mData = mctx.getImageData(0, 0, canvas.width, canvas.height);
-    const md = mData.data;
-
-    for (let i = 0; i < cd.length; i += 4) {
-      cd[i + 3] = md[i];
-    }
-    cctx.putImageData(cData, 0, 0);
-
-    const url = cut.toDataURL('image/png');
+    const url = URL.createObjectURL(resultBlob);
     const newImg = new Image();
     newImg.onload = function() {
       img = newImg;
