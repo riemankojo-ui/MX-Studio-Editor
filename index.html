@@ -3413,6 +3413,7 @@ function importOnePhoto(file) {
         const MAX = 1080; let w = newImg.width, h = newImg.height;
         if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
 // Reset previous project state
+showToast('RESET 2 FIRED');
 textLayers = []; activeLayerId = null;
 currentProjectId = null; currentProjectName = '';
 currentFilter = 'none'; currentTemplate = 'none';
