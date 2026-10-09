@@ -1199,9 +1199,39 @@ function handleCleanPick(input) {
 }
 
 function setOverlayTint(color, el) {
-  overlayTint = color;
+  if (color === null) {
+    if (overlayImg && overlayImg._isColorFill) overlayImg = null;
+    overlayTint = null;
+    overlayOpacity = 0;
+    const op = document.getElementById('unshowOpacityInput'); if (op) op.value = 0;
+    const opv = document.getElementById('unshowOpacityVal'); if (opv) opv.innerText = '0';
+  } else {
+    const c = document.createElement('canvas');
+    c.width = 400;
+    c.height = 400;
+    const cx = c.getContext('2d');
+    cx.fillStyle = color;
+    cx.fillRect(0, 0, 400, 400);
+    const im = new Image();
+    im.onload = function() {
+      im._isColorFill = true;
+      overlayImg = im;
+      overlayTint = null;
+      overlayX = 0.5;
+      overlayY = 0.5;
+      overlayScale = 0.7;
+      overlayRotation = 0;
+      overlayOpacity = 100;
+      const op = document.getElementById('unshowOpacityInput'); if (op) op.value = 100;
+      const opv = document.getElementById('unshowOpacityVal'); if (opv) opv.innerText = '100';
+      const s = document.getElementById('overlayScaleSlider'); if (s) s.value = 70;
+      const sv = document.getElementById('overlayScaleVal'); if (sv) sv.innerText = '70';
+      redraw(); saveState();
+    };
+    im.src = c.toDataURL();
+  }
   const row = document.querySelector('#subtab-overlaycolor .color-row');
-  if (row) row.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
+  if (row) row.querySelectorAll('.color-circle').forEach(cc => cc.classList.remove('selected'));
   if (el) el.classList.add('selected');
   redraw(); saveState();
 }
