@@ -290,7 +290,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
       <div class="filter-thumbs" id="presetThumbsContainer"></div>
     </div>
     <div id="adjust-sliders" class="sub-view">
-      <div class="adjust-sliders">
+      <div class="adjust-sliders" style="background:#141414;border-radius:12px;padding:16px 14px;">
         <input type="range" id="brightness" min="0" max="200" value="100">
         <input type="range" id="contrast" min="50" max="200" value="100">
         <input type="range" id="saturation" min="0" max="200" value="100">
@@ -499,6 +499,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
         <div class="h-card" onclick="switchBgDrag('bg', this)">Move Background</div>
       </div>
 
+<div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:10px;">
       <label class="section-label">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
       <input type="range" id="bgImgSizeInput" min="0" max="40" value="8" oninput="setBgImageSize(this.value)">
 
@@ -512,6 +513,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
       <input type="range" id="bgImgYInput" min="-100" max="100" value="0" oninput="setBgImageY(this.value)">
 
       <button class="crop-tool" onclick="resetBgPosition()" style="margin-top:14px;width:100%;justify-content:center;">RESET BG POSITION</button>
+      </div>
       <button class="crop-tool" onclick="clearBgImage()" style="margin-top:8px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
       <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:8px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
     </div>
@@ -542,6 +544,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
 
     <div id="subtab-unshow2" class="sub-view">
+ <div style="background:#141414;border-radius:12px;padding:16px 14px;">       
       <label class="section-label">OPACITY: <span id="unshowOpacityVal">0</span>%</label>
     <input type="range" id="unshowOpacityInput" min="0" max="100" value="0" oninput="setUnshowOpacity(this.value)">
 
@@ -565,6 +568,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 
       <button class="crop-tool" onclick="resetUnshow()" style="margin-top:14px;width:100%;justify-content:center;">RESET UNSHOW</button>
       </div>
+      </div>
       <div id="subtab-overlaycolor" class="sub-view">
   <label class="section-label">COLOR TINT</label>
   <div class="color-row">
@@ -578,7 +582,8 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <div class="color-circle" style="background:#ff69b4;" onclick="setOverlayTint('#ff69b4',this)"></div>
     <div class="color-circle" style="background:#9d4edd;" onclick="setOverlayTint('#9d4edd',this)"></div>
   </div>
-  <label class="section-label">TINT AMOUNT: <span id="overlayTintAmtVal">60</span>%</label>
+<div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:10px;">
+ <label class="section-label">TINT AMOUNT: <span id="overlayTintAmtVal">60</span>%</label>
   <input type="range" id="overlayTintAmt" min="0" max="100" value="60" oninput="setOverlayTintAmt(this.value)">
   <label class="section-label">CUSTOM COLOR</label>
   <div class="color-slider-wrap">
@@ -598,9 +603,11 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
   </div>
   <button class="crop-tool" onclick="resetOverlayTint()" style="margin-top:14px;width:100%;justify-content:center;">RESET COLOR</button>
+  </div>
 </div>
 
 <div id="subtab-overlaycrop" class="sub-view">
+<div style="background:#141414;border-radius:12px;padding:16px 14px;">    
   <label class="section-label">CROP SHAPE</label>
   <div class="h-scroll">
     <div class="h-card selected" onclick="setOverlayCrop('free', this)">Free</div>
@@ -617,6 +624,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   <label class="section-label">ROTATION: <span id="overlayRotVal">0</span>°</label>
   <input type="range" id="overlayRotSlider" min="-180" max="180" value="0" oninput="setOverlayRot(this.value)">
   <button class="crop-tool" onclick="resetOverlayTransform()" style="margin-top:14px;width:100%;justify-content:center;">RESET CROP</button>
+  </div>
 </div>
     </div>
   <div class="bottom-nav">
@@ -2555,7 +2563,7 @@ function redraw() {
     plctx.filter = 'none';
   }
 
-  if (unshowOpacity < 100 || cutTop > 0 || cutBottom > 0 || cutLeft > 0 || cutRight > 0 || cornerRound > 0) {
+  if (unshowOpacity < 100 || cornerRound > 0) {
     const mask = document.createElement('canvas');
     mask.width = canvas.width; mask.height = canvas.height;
     const mctx = mask.getContext('2d');
@@ -2691,6 +2699,31 @@ if (overlayImg) {
     octx.globalCompositeOperation = 'source-over';
   }
 
+if (cutTop > 0 || cutBottom > 0 || cutLeft > 0 || cutRight > 0 || cutFeather > 0) {
+  const mask = document.createElement('canvas');
+  mask.width = off.width;
+  mask.height = off.height;
+  const mctx = mask.getContext('2d');
+  const topPx = off.height * (cutTop / 100);
+  const botPx = off.height * (cutBottom / 100);
+  const leftPx = off.width * (cutLeft / 100);
+  const rightPx = off.width * (cutRight / 100);
+  mctx.fillStyle = '#fff';
+  mctx.fillRect(leftPx, topPx, off.width - leftPx - rightPx, off.height - topPx - botPx);
+  if (cutFeather > 0) {
+    const blurred = document.createElement('canvas');
+    blurred.width = mask.width;
+    blurred.height = mask.height;
+    const bctx = blurred.getContext('2d');
+    bctx.filter = `blur(${cutFeather}px)`;
+    bctx.drawImage(mask, 0, 0);
+    mctx.clearRect(0, 0, mask.width, mask.height);
+    mctx.drawImage(blurred, 0, 0);
+  }
+  octx.globalCompositeOperation = 'destination-in';
+  octx.drawImage(mask, 0, 0);
+  octx.globalCompositeOperation = 'source-over';
+}
   ctx.globalAlpha = overlayOpacity / 100;
   ctx.globalCompositeOperation = 'source-over';
   ctx.translate(overlayX * cw, overlayY * ch);
