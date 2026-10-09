@@ -2867,78 +2867,34 @@ function resetCropAngle() {
 window.removeBackgroundCompletely = async function() {
   const status = document.getElementById('bgRmvStatus');
   if (!imgLoaded) { if (status) status.textContent = 'Load a photo first.'; return; }
-  if (typeof SelfieSegmentation === 'undefined') { if (status) status.textContent = 'Model failed to load — check internet.'; return; }
 
-  if (status) status.textContent = 'Loading model...';
+  if (status) status.textContent = 'Sending to AI...';
+
   try {
-    if (!selfieSeg) {
-      selfieSeg = new SelfieSegmentation({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/${f}` });
-      selfieSeg.setOptions({ modelSelection: 1 });
-    }
-    if (status) status.textContent = 'Analysing photo...';
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
-    const result = await new Promise((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error('Timeout')), 30000);
-      selfieSeg.onResults(r => { clearTimeout(t); resolve(r); });
-      selfieSeg.send({ image: img });
+    const r = await fetch('https://mx-studio-editor.vercel.app/api/remove-bg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl })
     });
 
-    if (status) status.textContent = 'Cutting out...';
-
-    const cut = document.createElement('canvas');
-    cut.width = canvas.width;
-    cut.height = canvas.height;
-    const cctx = cut.getContext('2d');
-    cctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const cData = cctx.getImageData(0, 0, canvas.width, canvas.height);
-    const cd = cData.data;
-
-    const rawMask = document.createElement('canvas');
-    rawMask.width = canvas.width;
-    rawMask.height = canvas.height;
-    const rmctx = rawMask.getContext('2d');
-    rmctx.drawImage(result.segmentationMask, 0, 0, canvas.width, canvas.height);
-
-    const smoothCanvas = document.createElement('canvas');
-    smoothCanvas.width = canvas.width;
-    smoothCanvas.height = canvas.height;
-    const sctx = smoothCanvas.getContext('2d');
-    sctx.filter = 'blur(6px)';
-    sctx.drawImage(rawMask, 0, 0);
-    sctx.filter = 'none';
-
-    const sData = sctx.getImageData(0, 0, canvas.width, canvas.height);
-    const sd = sData.data;
-    for (let i = 0; i < sd.length; i += 4) {
-      let a = sd[i];
-      a = (a - 100) * 6 + 100;
-      if (a < 0) a = 0;
-      if (a > 255) a = 255;
-      sd[i] = a; sd[i + 1] = a; sd[i + 2] = a; sd[i + 3] = 255;
+    if (!r.ok) {
+      const err = await r.text();
+      if (status) status.textContent = 'Server error: ' + r.status;
+      return;
     }
-    sctx.putImageData(sData, 0, 0);
 
-    const finalMask = document.createElement('canvas');
-    finalMask.width = canvas.width;
-    finalMask.height = canvas.height;
-    const fmctx = finalMask.getContext('2d');
-    fmctx.filter = 'blur(0.5px)';
-    fmctx.drawImage(smoothCanvas, 0, 0);
-    fmctx.filter = 'none';
+    const json = await r.json();
+    if (!json.image) { if (status) status.textContent = 'No image in response.'; return; }
 
-    const mData = fmctx.getImageData(0, 0, canvas.width, canvas.height);
-    const md = mData.data;
-    for (let i = 0; i < cd.length; i += 4) {
-      cd[i + 3] = md[i];
-    }
-    cctx.putImageData(cData, 0, 0);
+    if (status) status.textContent = 'Applying cutout...';
 
-    const url = cut.toDataURL('image/png');
     const newImg = new Image();
     newImg.onload = function() {
       img = newImg;
-      originalImageSrc = url;
-      window.__originalBeforeBgRemove = url;
+      originalImageSrc = json.image;
+      window.__originalBeforeBgRemove = json.image;
       subjectReady = false;
       personMask = null;
       if (!currentBgColor && !currentBgImage) currentBgColor = '#000000';
@@ -2946,7 +2902,7 @@ window.removeBackgroundCompletely = async function() {
       buildBgColors();
       redraw(); saveState();
     };
-    newImg.src = url;
+    newImg.src = json.image;
 
   } catch (err) {
     if (status) status.textContent = 'Failed: ' + (err.message || 'unknown');
