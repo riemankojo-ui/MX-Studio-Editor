@@ -1617,20 +1617,45 @@ function buildMxData() {
 
 function shareMxProject() {
   if (!imgLoaded) { showToast('Load a photo first'); return; }
-  const data = buildMxData();
-  const json = JSON.stringify(data);
-  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
-  const blob = new Blob([json], { type: 'application/octet-stream' });
-  const file = new File([blob], filename, { type: 'application/octet-stream' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: filename })
-      .then(() => { closeBackupSheet(); showToast('Shared'); })
-      .catch(() => {});
-  } else {
-    showToast('Sharing not supported — use Export');
+  try {
+    const data = buildMxData();
+    const json = JSON.stringify(data);
+    const baseName = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-');
+
+    // Build file as .txt so Android accepts it
+    const blob = new Blob([json], { type: 'text/plain' });
+    const file = new File([blob], baseName + '.mx.txt', { type: 'text/plain' });
+
+    if (navigator.share) {
+      const shareData = {
+        files: [file],
+        title: baseName + ' — Mx Studio Project',
+        text: 'Mx Studio project file. Open in Mx Studio → Backup → Import.'
+      };
+      // Try files first
+      if (navigator.canShare && navigator.canShare(shareData)) {
+        navigator.share(shareData)
+          .then(function() { closeBackupSheet(); })
+          .catch(function() {});
+        return;
+      }
+      // Try without files
+      if (navigator.canShare && navigator.canShare({ text: shareData.text })) {
+        navigator.share({ text: shareData.text, title: shareData.title })
+          .then(function() { closeBackupSheet(); })
+          .catch(function() {});
+        return;
+      }
+    }
+
+    // Last resort
+    downloadMxBlob(blob, baseName + '.mx.txt');
+    showToast('Share not available — saved to Downloads');
+
+  } catch (err) {
+    showToast('Error: ' + (err.message || 'unknown'));
   }
 }
-
 function importMxProject() {
   const inp = document.getElementById('mxImportInput');
   if (!inp) { showToast('Import input missing'); return; }
