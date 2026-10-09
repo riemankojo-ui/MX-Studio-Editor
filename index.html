@@ -500,6 +500,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 
   <div id="panel-bgremover" class="panel">
     <div class="bgremover-menu">
+        <div id="bgRmvStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Tap REMOVE BACKGROUND to detect the subject.</div>
       <div class="bgremover-btn" onclick="detectsubject()">
         <div class="label">
           <span class="title">REMOVE BACKGROUND</span>
@@ -2864,7 +2865,7 @@ function resetCropAngle() {
 }
 
 window.detectSubject = async function() {
-  const status = document.getElementById('subjectStatus');
+  const status = document.getElementById('bgRmvStatus') || document.getElementById('subjectStatus');
   const btn = document.getElementById('detectBtn');
   if (!imgLoaded) { status.textContent = 'Upload an image first.'; return; }
   if (typeof SelfieSegmentation === 'undefined') { status.textContent = 'Model failed to load — tap again in a moment.'; return; }
