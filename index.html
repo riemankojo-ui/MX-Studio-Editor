@@ -258,30 +258,30 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 
   <div class="canvas-container">
     <canvas id="canvas" width="400" height="400"></canvas>
-    <div id="textFloatingMenu">
-      <div class="arrow-grid">
-        <div></div>
-        <button class="arrow-btn" onclick="moveActiveText(0,-5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-        <div></div>
-        <button class="arrow-btn" onclick="moveActiveText(-5,0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-        <button class="arrow-btn" onclick="centerActiveTextHoriz()"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></button>
-        <button class="arrow-btn" onclick="moveActiveText(5,0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
-        <div></div>
-        <button class="arrow-btn" onclick="moveActiveText(0,5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
-        <div></div>
-      </div>
-      <div class="menu-actions">
-        <button class="menu-action-btn center-btn" onclick="centerActiveTextHoriz()">Center</button>
-        <button class="menu-action-btn delete" onclick="deleteActiveTextLayer()">Delete</button>
-      </div>
-    </div>
+<div id="textFloatingMenu">
+  <div class="arrow-grid">
+    <div></div>
+    <button class="arrow-btn" onclick="moveActiveText(0,-5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+    <div></div>
+    <button class="arrow-btn" onclick="moveActiveText(-5,0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <button class="arrow-btn" onclick="centerActiveTextHoriz()"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></button>
+    <button class="arrow-btn" onclick="moveActiveText(5,0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    <div></div>
+    <button class="arrow-btn" onclick="moveActiveText(0,5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
+    <div></div>
   </div>
-
+  <div class="menu-actions">
+    <button class="menu-action-btn center-btn" onclick="editActiveText()">Edit</button>
+    <button class="menu-action-btn delete" onclick="deleteActiveTextLayer()">Delete</button>
+  </div>
+</div>
+</div>
   <div id="panel-adjust" class="panel active">
     <div class="sub-tabs" id="adjustSubTabs">
       <button class="sub-tab active" onclick="switchAdjustCat('templates', this)">TEMPLATES</button>
       <button class="sub-tab" onclick="switchAdjustCat('presets', this)">PRESETS</button>
       <button class="sub-tab" onclick="switchAdjustCat('sliders', this)">SLIDERS</button>
+<button class="sub-tab" onclick="switchAdjustCat('cartoon', this)">CARTOON</button>      
     </div>
     <div id="adjust-templates" class="sub-view active">
       <div class="template-thumbs" id="templateContainer"></div>
@@ -297,6 +297,26 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
         <input type="range" id="noise" min="0" max="100" value="0">
       </div>
     </div>
+<div id="adjust-cartoon" class="sub-view">
+  <div style="background:#141414;border-radius:12px;padding:16px 14px;">
+    <label class="section-label" style="margin-top:0;">CARTOON STYLE</label>
+    <div class="h-scroll">
+      <div class="h-card selected" onclick="setCartoonStyle('none', this)">None</div>
+      <div class="h-card" onclick="setCartoonStyle('anime', this)">Anime</div>
+      <div class="h-card" onclick="setCartoonStyle('comic', this)">Comic</div>
+      <div class="h-card" onclick="setCartoonStyle('sketch', this)">Sketch</div>
+      <div class="h-card" onclick="setCartoonStyle('oil', this)">Oil</div>
+      <div class="h-card" onclick="setCartoonStyle('cell', this)">Cell</div>
+    </div>
+    <label class="section-label">STRENGTH: <span id="cartoonAmtVal">70</span>%</label>
+    <input type="range" id="cartoonAmt" min="0" max="100" value="70" oninput="setCartoonAmount(this.value)">
+    <label class="section-label">LEVELS: <span id="cartoonLevelsVal">6</span></label>
+    <input type="range" id="cartoonLevels" min="2" max="12" value="6" oninput="setCartoonLevels(this.value)">
+    <label class="section-label">EDGE: <span id="cartoonEdgeVal">1.2</span></label>
+    <input type="range" id="cartoonEdge" min="0" max="4" step="0.1" value="1.2" oninput="setCartoonEdge(this.value)">
+  </div>
+  <button class="crop-tool" onclick="resetCartoon()" style="margin-top:14px;width:100%;justify-content:center;">RESET CARTOON</button>
+</div>
   </div>
 
   <div id="panel-crop" class="panel"></div>
@@ -767,6 +787,11 @@ let overlayTint = null;
 let overlayTintAmount = 60;
 let overlayCropRatio = 'free';
 let overlayRound = 0;
+let cartoonStyle = 'none';
+let cartoonAmount = 70;
+let cartoonLevels = 6;
+let cartoonEdge = 1.2;
+let cartoonCanvas = null;
 let isDraggingOverlay = false;
 let overlayDragStart = null;
 let overlayGesture = null;
@@ -1335,6 +1360,164 @@ function resetOverlayTransform() {
   redraw(); saveState();
 }
 
+function setCartoonStyle(name, el) {
+  cartoonStyle = name;
+  if (el && el.parentElement) {
+    el.parentElement.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  cartoonCanvas = null;
+  redraw(); saveState();
+}
+
+function setCartoonAmount(v) {
+  cartoonAmount = parseInt(v);
+  const e = document.getElementById('cartoonAmtVal'); if (e) e.innerText = v;
+  cartoonCanvas = null;
+  redraw(); saveState();
+}
+
+function setCartoonLevels(v) {
+  cartoonLevels = parseInt(v);
+  const e = document.getElementById('cartoonLevelsVal'); if (e) e.innerText = v;
+  cartoonCanvas = null;
+  redraw(); saveState();
+}
+
+function setCartoonEdge(v) {
+  cartoonEdge = parseFloat(v);
+  const e = document.getElementById('cartoonEdgeVal'); if (e) e.innerText = v;
+  cartoonCanvas = null;
+  redraw(); saveState();
+}
+
+function resetCartoon() {
+  cartoonStyle = 'none';
+  cartoonAmount = 70;
+  cartoonLevels = 6;
+  cartoonEdge = 1.2;
+  cartoonCanvas = null;
+  const a = document.getElementById('cartoonAmt'); if (a) a.value = 70;
+  const av = document.getElementById('cartoonAmtVal'); if (av) av.innerText = '70';
+  const l = document.getElementById('cartoonLevels'); if (l) l.value = 6;
+  const lv = document.getElementById('cartoonLevelsVal'); if (lv) lv.innerText = '6';
+  const e = document.getElementById('cartoonEdge'); if (e) e.value = 1.2;
+  const ev = document.getElementById('cartoonEdgeVal'); if (ev) ev.innerText = '1.2';
+  const row = document.querySelector('#adjust-cartoon .h-scroll');
+  if (row) {
+    row.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
+    const first = row.querySelector('.h-card');
+    if (first) first.classList.add('selected');
+  }
+  redraw(); saveState();
+}
+
+function generateCartoon(srcCanvas) {
+  const w = srcCanvas.width, h = srcCanvas.height;
+  const out = document.createElement('canvas');
+  out.width = w; out.height = h;
+
+  // ---- PASS 1: strong smooth (kills noise before posterize) ----
+  const sm = document.createElement('canvas');
+  sm.width = w; sm.height = h;
+  const smctx = sm.getContext('2d');
+  smctx.filter = 'blur(3px)';
+  smctx.drawImage(srcCanvas, 0, 0);
+  smctx.filter = 'none';
+
+  const sm2 = document.createElement('canvas');
+  sm2.width = w; sm2.height = h;
+  const sm2ctx = sm2.getContext('2d');
+  sm2ctx.filter = 'blur(1.5px)';
+  sm2ctx.drawImage(sm, 0, 0);
+  sm2ctx.filter = 'none';
+
+  // ---- PASS 2: posterize ----
+  const levels = cartoonLevels;
+  const step = 255 / (levels - 1);
+  const src = sm2ctx.getImageData(0, 0, w, h);
+  const d = src.data;
+  for (let i = 0; i < d.length; i += 4) {
+    d[i]   = Math.round(d[i]   / step) * step;
+    d[i+1] = Math.round(d[i+1] / step) * step;
+    d[i+2] = Math.round(d[i+2] / step) * step;
+  }
+  sm2ctx.putImageData(src, 0, 0);
+
+  // ---- PASS 3: clean blur on posterized result ----
+  const post = document.createElement('canvas');
+  post.width = w; post.height = h;
+  const pctx = post.getContext('2d');
+  pctx.filter = 'blur(0.8px)';
+  pctx.drawImage(sm2, 0, 0);
+  pctx.filter = 'none';
+
+  // ---- PASS 4: edge detection from SMOOTHED source ----
+  if (cartoonEdge > 0 && cartoonStyle !== 'oil') {
+    const lum = new Uint8ClampedArray(w * h);
+    const sd = sm2ctx.getImageData(0, 0, w, h).data;
+    for (let i = 0, j = 0; i < sd.length; i += 4, j++) {
+      lum[j] = sd[i] * 0.299 + sd[i+1] * 0.587 + sd[i+2] * 0.114;
+    }
+    const edge = new Uint8ClampedArray(w * h);
+    const THRESH = 45;
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        const gx =
+          -lum[i-w-1] - 2*lum[i-1] - lum[i+w-1] +
+           lum[i-w+1] + 2*lum[i+1] + lum[i+w+1];
+        const gy =
+          -lum[i-w-1] - 2*lum[i-w] - lum[i-w+1] +
+           lum[i+w-1] + 2*lum[i+w] + lum[i+w+1];
+        edge[i] = Math.sqrt(gx*gx + gy*gy);
+      }
+    }
+    const octx = post.getContext('2d');
+    const imgData = octx.getImageData(0, 0, w, h);
+    const pd = imgData.data;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
+        const p = i * 4;
+        const e = edge[i];
+        if (e > THRESH) {
+          const k = Math.min(1, (e - THRESH) / 120) * Math.min(1, cartoonEdge);
+          pd[p]   = pd[p]   * (1 - k);
+          pd[p+1] = pd[p+1] * (1 - k);
+          pd[p+2] = pd[p+2] * (1 - k);
+        }
+      }
+    }
+    octx.putImageData(imgData, 0, 0);
+  }
+
+  // ---- PASS 5: style-specific ----
+  const final = document.createElement('canvas');
+  final.width = w; final.height = h;
+  const fctx = final.getContext('2d');
+
+  if (cartoonStyle === 'sketch') {
+    const g = document.createElement('canvas');
+    g.width = w; g.height = h;
+    const gctx = g.getContext('2d');
+    gctx.filter = 'grayscale(100%) contrast(140%)';
+    gctx.drawImage(srcCanvas, 0, 0);
+    const inv = document.createElement('canvas');
+    inv.width = w; inv.height = h;
+    const ictx = inv.getContext('2d');
+    ictx.filter = 'invert(100%) blur(2px)';
+    ictx.drawImage(g, 0, 0);
+    fctx.drawImage(g, 0, 0);
+    fctx.globalCompositeOperation = 'color-dodge';
+    fctx.drawImage(inv, 0, 0);
+    fctx.globalCompositeOperation = 'source-over';
+    return final;
+  }
+
+  fctx.drawImage(post, 0, 0);
+  return final;
+}
 function pickAndClean(file) {
   const status = document.getElementById('cleanStatus');
   if (status) status.textContent = 'Loading photo...';
@@ -1954,6 +2137,12 @@ function confirmTextCard() {
   syncActiveInputs(); updateTextLayersUI(); buildFontGrid(); redraw(); saveState();
 }
 
+function editActiveText() {
+  if (activeLayerId === null) return;
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l) return;
+  openTextCard('edit', activeLayerId);
+}
 function deleteActiveTextLayer() {
   if (textLayers.length === 0) { textMenu.style.display = 'none'; return; }
   textLayers = textLayers.filter(x => x.id !== activeLayerId);
@@ -2519,6 +2708,36 @@ function redraw() {
   const photoLayer = document.createElement('canvas');
   photoLayer.width = canvas.width; photoLayer.height = canvas.height;
   const plctx = photoLayer.getContext('2d');
+  let srcImg = img;
+let useCartoonDraw = false;
+if (cartoonStyle !== 'none' && cartoonAmount > 0) {
+  const cacheKey = (img.src || '') + '|' + cartoonStyle + '|' + cartoonAmount + '|' + cartoonLevels + '|' + cartoonEdge + '|' + canvas.width;
+  if (!cartoonCanvas || cartoonCanvas._key !== cacheKey) {
+    const tmp = document.createElement('canvas');
+    tmp.width = canvas.width;
+    tmp.height = canvas.height;
+    const tctx = tmp.getContext('2d');
+    tctx.drawImage(img, -OVER, -OVER, canvas.width + OVER*2, canvas.height + OVER*2);
+    const cart = generateCartoon(tmp);
+    if (cartoonAmount < 100) {
+      const blended = document.createElement('canvas');
+      blended.width = canvas.width;
+      blended.height = canvas.height;
+      const bctx = blended.getContext('2d');
+      bctx.drawImage(tmp, 0, 0);
+      bctx.globalAlpha = cartoonAmount / 100;
+      bctx.drawImage(cart, 0, 0);
+      bctx.globalAlpha = 1;
+      blended._key = cacheKey;
+      cartoonCanvas = blended;
+    } else {
+      cart._key = cacheKey;
+      cartoonCanvas = cart;
+    }
+  }
+  srcImg = cartoonCanvas;
+  useCartoonDraw = true;
+}
   if (subjectReady && personMask && subjectMode !== 'none') {
     const amt = parseInt(subjAmt.value);
     const blurred = document.createElement('canvas');
@@ -2557,12 +2776,15 @@ function redraw() {
       plctx.drawImage(ring, 0, 0);
       plctx.drawImage(person, 0, 0);
     }
+} else {
+  plctx.filter = filterString;
+  if (useCartoonDraw) {
+    plctx.drawImage(srcImg, 0, 0, canvas.width, canvas.height);
   } else {
-    plctx.filter = filterString;
     plctx.drawImage(img, -OVER, -OVER, canvas.width+OVER*2, canvas.height+OVER*2);
-    plctx.filter = 'none';
   }
-
+  plctx.filter = 'none';
+}
   if (unshowOpacity < 100 || cornerRound > 0) {
     const mask = document.createElement('canvas');
     mask.width = canvas.width; mask.height = canvas.height;
