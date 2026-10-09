@@ -1717,6 +1717,12 @@ function applyMxData(data) {
     undoStack = []; redoStack = []; updateHistoryButtons();
     closeBackupSheet();
     showToast('Imported: ' + currentProjectName);
+   setTimeout(function() {
+  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+  var sv = document.getElementById('view-studio');
+  if (sv) sv.classList.add('active');
+  redraw();
+}, 400); 
   };
   newImg.onerror = function() { showToast('Image data failed to load'); };
   newImg.src = data.photo;
