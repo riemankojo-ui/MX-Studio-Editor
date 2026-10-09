@@ -501,7 +501,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
   <div id="panel-bgremover" class="panel">
     <div class="bgremover-menu">
         <div id="bgRmvStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Tap REMOVE BACKGROUND to detect the subject.</div>
-      <div class="bgremover-btn" onclick="detectsubject()">
+      <div class="bgremover-btn" onclick="removeBackgroundCompletely()">
         <div class="label">
           <span class="title">REMOVE BACKGROUND</span>
         </div>
@@ -2863,6 +2863,68 @@ function resetCropAngle() {
   const a = document.getElementById('cropAngleInput');
   if (a) a.value = 0;
 }
+
+window.removeBackgroundCompletely = async function() {
+  const status = document.getElementById('bgRmvStatus');
+  if (!imgLoaded) { if (status) status.textContent = 'Load a photo first.'; return; }
+  if (typeof SelfieSegmentation === 'undefined') { if (status) status.textContent = 'Model failed to load — check internet.'; return; }
+
+  if (status) status.textContent = 'Loading model...';
+  try {
+    if (!selfieSeg) {
+      selfieSeg = new SelfieSegmentation({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/${f}` });
+      selfieSeg.setOptions({ modelSelection: 1 });
+    }
+    if (status) status.textContent = 'Analysing photo...';
+
+    const result = await new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('Timeout')), 30000);
+      selfieSeg.onResults(r => { clearTimeout(t); resolve(r); });
+      selfieSeg.send({ image: img });
+    });
+
+    if (status) status.textContent = 'Cutting out...';
+
+    const cut = document.createElement('canvas');
+    cut.width = canvas.width;
+    cut.height = canvas.height;
+    const cctx = cut.getContext('2d');
+    cctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const cData = cctx.getImageData(0, 0, canvas.width, canvas.height);
+    const cd = cData.data;
+
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = canvas.width;
+    maskCanvas.height = canvas.height;
+    const mctx = maskCanvas.getContext('2d');
+    mctx.drawImage(result.segmentationMask, 0, 0, canvas.width, canvas.height);
+    const mData = mctx.getImageData(0, 0, canvas.width, canvas.height);
+    const md = mData.data;
+
+    for (let i = 0; i < cd.length; i += 4) {
+      cd[i + 3] = md[i];
+    }
+    cctx.putImageData(cData, 0, 0);
+
+    const url = cut.toDataURL('image/png');
+    const newImg = new Image();
+    newImg.onload = function() {
+      img = newImg;
+      originalImageSrc = url;
+      window.__originalBeforeBgRemove = url;
+      subjectReady = false;
+      personMask = null;
+      if (!currentBgColor && !currentBgImage) currentBgColor = '#000000';
+      if (status) status.textContent = 'Background removed ✓ Pick color or image from BG tab.';
+      buildBgColors();
+      redraw(); saveState();
+    };
+    newImg.src = url;
+
+  } catch (err) {
+    if (status) status.textContent = 'Failed: ' + (err.message || 'unknown');
+  }
+};
 
 window.detectSubject = async function() {
   const status = document.getElementById('bgRmvStatus') || document.getElementById('subjectStatus');
