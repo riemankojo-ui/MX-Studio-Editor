@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mx Studio</title>
 <link rel="manifest" href="./manifest2.json">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Audiowide&family=Alfa+Slab+One&family=Bebas+Neue&family=Black+Ops+One&family=Bungee&family=Bungee+Inline&family=Chango&family=Chewy&family=Cinzel:wght@700&family=Coiny&family=Creepster&family=Damion&family=Dancing+Script:wght@700&family=Diplomata+SC&family=Frijole&family=Gloria+Hallelujah&family=Great+Vibes&family=Gugi&family=Knewave&family=Lobster&family=Luckiest+Guy&family=Merriweather:wght@700&family=Monoton&family=Montserrat:wght@800&family=Orbitron:wght@900&family=Oswald:wght@700&family=Pacifico&family=Parisienne&family=Permanent+Marker&family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Press+Start+2P&family=Righteous&family=Russo+One&family=Rye&family=Satisfy&family=Special+Elite&family=Yellowtail&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Audiowide&family=Alfa+Slab+One&family=Bebas+Neue&family=Black+Ops+One&family=Bungee&family=Bungee+Inline&family=Chango&family=Chewy&family=Cinzel:wght@700&family=Coiny&family=Creepster&family=Damion&family=Dancing+Script:wght@700&family=Diplomata+SC&family=Frijole&family=Gloria+Hallelujah&family=Great+Vibes&family=Gugi&family=Knewave&family=Lobster&family=Luckiest+Guy&family=Merriweather:wght@700&family=Monoton&family=Montserrat:wght@800&family=Orbitron:wght@900&family=Oswald:wght@700&family=Pacifico&family=Parisienne&family=Permanent+Marker&family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Press+Start+2P&family=Righteous&family=Russo+One&family=Rye&family=Satisfy&family=Special+Elite&family=Yellowtail&family=Caveat:wght@700&family=Cormorant+Garamond:wght@700&family=Crimson+Text:wght@700&family=Exo+2:wght@800&family=Fjalla+One&family=Indie+Flower&family=Josefin+Sans:wght@700&family=Lora:wght@700&family=Lobster+Two:wght@700&family=Merienda:wght@800&family=Nanum+Pen+Script&family=Neucha&family=Nunito:wght@800&family=Oleo+Script:wght@700&family=Pattaya&family=Peralta&family=Rajdhani:wght@700&family=Rock+Salt&family=Sacramento&family=Shadows+Into+Light&family=Share+Tech+Mono&family=Sigmar+One&family=Spectral:wght@800&family=Teko:wght@700&family=Titan+One&family=Ubuntu:wght@700&family=Unica+One&family=Varela+Round&family=Vollkorn:wght@800&family=Yanone+Kaffeesatz:wght@700&family=Zilla+Slab:wght@700&family=Abril+Fatface&family=Alegreya:wght@800&family=Archivo+Black&family=Barlow+Condensed:wght@800&family=Bitter:wght@800&family=Bree+Serif&family=Cabin:wght@700&family=Catamaran:wght@800&family=Comfortaa:wght@700&family=DM+Serif+Display&family=EB+Garamond:wght@800&family=Fira+Sans:wght@800&family=Frank+Ruhl+Libre:wght@800&family=Fugaz+One&family=Gothic+A1:wght@800&family=Heebo:wght@800&family=IBM+Plex+Sans:wght@700&family=Inconsolata:wght@800&family=Jost:wght@700&family=Karla:wght@800&family=Kaushan+Script&family=Libre+Baskerville:wght@700&family=Lilita+One&family=M+PLUS+Rounded+1c:wght@800&family=Manrope:wght@800&family=Marcellus&family=Maven+Pro:wght@800&display=swap" rel="stylesheet">
 <style>
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none; position:fixed; top:0; left:0; margin:0; padding:0; background:#0a0a0a; color:#fff; font-family:-apple-system,'Segoe UI',sans-serif; text-align:center; touch-action:manipulation; }
@@ -131,8 +131,10 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .color-circle { width:36px; height:36px; border-radius:50%; cursor:pointer; flex-shrink:0; border:2px solid #333; }
 .color-circle.selected { box-shadow:0 0 0 2px #fff; }
 
-.font-grid { display:flex; flex-wrap:wrap; gap:8px; max-height:200px; overflow-y:auto; padding:4px 0; }
-.font-pill { background:#161616; border:none; color:#fff; padding:8px 12px; border-radius:16px; cursor:pointer; font-size:11px; font-weight:bold; white-space:nowrap; }
+.font-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:4px 0 20px 0; max-height:400px; overflow-y:auto; }
+.font-pill { background:#141414; border:1.5px solid #333; color:#fff; padding:8px 8px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:600; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:36px; display:flex; align-items:center; justify-content:center; }
+.font-pill.selected { border-color:#00d4ff; background:#0d1a1f; }
+.font-pill:active { background:#1a1a1a; }
 
 .text-layers-list { max-height:120px; overflow-y:auto; margin-bottom:10px; }
 .text-layer-item { display:flex; justify-content:space-between; align-items:center; background:#141414; padding:8px 10px; border-radius:6px; margin-bottom:5px; }
@@ -351,14 +353,14 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     </div>
 
     <div id="subtab-layers" class="sub-view active" style="padding-bottom:70px;">
-      <div id="textLayersList" class="text-layers-list"></div>
+  <div id="textLayersList" class="text-layers-list" style="display:none;"></div>
       <button class="corner-btn" onclick="openTextCard()">+</button>
     </div>
 
     <div id="subtab-font" class="sub-view">
-      <label>Select Font (40):</label>
+      <label></label>
       <div class="font-grid" id="fontGridContainer"></div>
-    </div>
+    </div>    
 
     <div id="subtab-color" class="sub-view">
       <label class="section-label">QUICK COLORS</label>
@@ -1813,7 +1815,7 @@ function pickAndClean(file) {
 function buildFontGrid() {
   const c = document.getElementById('fontGridContainer');
   if (!c) return;
-  const fontList = ["Impact","Bebas Neue","Oswald","Montserrat","Anton","Pacifico","Permanent Marker","Russo One","Press Start 2P","Righteous","Orbitron","Bungee","Bungee Inline","Creepster","Monoton","Luckiest Guy","Rye","Satisfy","Yellowtail","Chewy","Alfa Slab One","Cinzel","Audiowide","Black Ops One","Chango","Coiny","Damion","Diplomata SC","Frijole","Gloria Hallelujah","Gugi","Knewave","Lobster","Parisienne","Poppins","Playfair Display","Special Elite","Great Vibes","Merriweather","Dancing Script"];
+  const fontList = ["Impact","Bebas Neue","Oswald","Montserrat","Anton","Pacifico","Permanent Marker","Russo One","Press Start 2P","Righteous","Orbitron","Bungee","Bungee Inline","Creepster","Monoton","Luckiest Guy","Rye","Satisfy","Yellowtail","Chewy","Alfa Slab One","Cinzel","Audiowide","Black Ops One","Chango","Coiny","Damion","Diplomata SC","Frijole","Gloria Hallelujah","Gugi","Knewave","Lobster","Parisienne","Poppins","Playfair Display","Special Elite","Great Vibes","Merriweather","Dancing Script","Caveat","Cormorant Garamond","Crimson Text","Exo 2","Fjalla One","Indie Flower","Josefin Sans","Lora","Lobster Two","Merienda","Nanum Pen Script","Neucha","Nunito","Oleo Script","Pattaya","Peralta","Rajdhani","Rock Salt","Sacramento","Shadows Into Light","Share Tech Mono","Sigmar One","Spectral","Teko","Titan One","Ubuntu","Unica One","Varela Round","Vollkorn","Yanone Kaffeesatz","Zilla Slab","Abril Fatface","Alegreya","Archivo Black","Barlow Condensed","Bitter","Bree Serif","Cabin","Catamaran","Comfortaa","DM Serif Display","EB Garamond","Fira Sans","Frank Ruhl Libre","Fugaz One","Gothic A1","Heebo","IBM Plex Sans","Inconsolata","Jost","Karla","Kaushan Script","Libre Baskerville","Lilita One","M PLUS Rounded 1c","Manrope","Marcellus","Maven Pro"];
   const activeFont = (textLayers.find(l => l.id === activeLayerId) || {}).font;
   let html = '';
   fontList.forEach(f => {
@@ -2247,6 +2249,29 @@ if (gestureTarget === 'overlay' && overlayImg) {
   if (touches.size !== 1) return;
   const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
   let clickedLayer = null;
+  // Check if touching a resize/rotate handle of the active text
+if (activeLayerId !== null) {
+  const activeLayer = textLayers.find(x => x.id === activeLayerId);
+  if (activeLayer) {
+    const hit = hitHandle(pos, activeLayer);
+    if (hit) {
+      gesture = {
+        type: 'handle',
+        handle: hit,
+        id: activeLayer.id,
+        startX: pos.x,
+        startY: pos.y,
+        startSize: activeLayer.size,
+        startRot: activeLayer.rotation || 0,
+        centerX: activeLayer.x,
+        centerY: activeLayer.y,
+        startAngle: Math.atan2(pos.y - activeLayer.y, pos.x - activeLayer.x)
+      };
+      return;
+    }
+  }
+}
+
   for (let i = textLayers.length - 1; i >= 0; i--) {
     const layer = textLayers[i];
     ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
@@ -2361,6 +2386,24 @@ if (gestureTarget === 'overlay' && overlayImg) {
     redraw(); return;
   }
   const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+if (gesture && gesture.type === 'handle') {
+  const l = textLayers.find(x => x.id === gesture.id);
+  if (l) {
+    if (gesture.handle === 'rot') {
+      const angle = Math.atan2(pos.y - gesture.centerY, pos.x - gesture.centerX);
+      l.rotation = gesture.startRot + (angle - gesture.startAngle);
+    } else {
+      const dist = Math.hypot(pos.x - gesture.centerX, pos.y - gesture.centerY);
+      const startDist = Math.hypot(gesture.startX - gesture.centerX, gesture.startY - gesture.centerY);
+      const ratio = dist / Math.max(startDist, 1);
+      l.size = Math.max(8, Math.min(400, Math.round(gesture.startSize * ratio)));
+      syncActiveInputs();
+    }
+    redraw();
+  }
+  return;
+}
+
   if (isDraggingText) {
     const l = textLayers.find(x => x.id === activeLayerId);
     if (l) { l.x = pos.x; l.y = pos.y; showFloatingMenu(l.x, l.y); redraw(); }
@@ -2369,11 +2412,46 @@ if (gestureTarget === 'overlay' && overlayImg) {
 
 function endTouch(e) {
   if (e && e.changedTouches) { for (const t of e.changedTouches) touches.delete(t.identifier); } else { touches.delete('mouse'); }
+if (gesture && gesture.type === 'handle') {
+  gesture = null;
+  saveState();
+}
+
   if (touches.size < 2) gesture = null;
   if (isDraggingText) { isDraggingText = false; saveState(); syncActiveInputs(); }
   if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
   if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }
   if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
+}
+
+function getSelectionHandles(layer) {
+  ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
+  const m = ctx.measureText(layer.text);
+  const bw = m.width + 16;
+  const bh = layer.size + 8;
+  const rot = layer.rotation || 0;
+  const cos = Math.cos(rot), sin = Math.sin(rot);
+  const corners = [
+    { id: 'tl', dx: -bw/2, dy: -bh/2 },
+    { id: 'tr', dx:  bw/2, dy: -bh/2 },
+    { id: 'bl', dx: -bw/2, dy:  bh/2 },
+    { id: 'br', dx:  bw/2, dy:  bh/2 },
+    { id: 'rot', dx: 0, dy: -bh/2 - 38 }
+  ];
+  return corners.map(c => ({
+    id: c.id,
+    x: layer.x + c.dx * cos - c.dy * sin,
+    y: layer.y + c.dx * sin + c.dy * cos
+  }));
+}
+
+function hitHandle(pos, layer) {
+  if (!layer) return null;
+  const handles = getSelectionHandles(layer);
+  for (const h of handles) {
+    if (Math.hypot(pos.x - h.x, pos.y - h.y) < 26) return h.id;
+  }
+  return null;
 }
 
 function showFloatingMenu(x, y) {
@@ -3037,17 +3115,28 @@ function drawCover(x, y, w, h, im) {
 }
 
 function drawSelectionBox(bx, by, bw, bh) {
-  ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+  ctx.strokeStyle = 'rgba(255,255,255,.95)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([]);
   ctx.strokeRect(bx, by, bw, bh);
+
+  const r = 9;
   ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(bx, by, 5, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(bx+bw, by, 5, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(bx, by+bh, 5, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(bx+bw, by+bh, 5, 0, Math.PI*2); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,.7)';
-  ctx.beginPath(); ctx.moveTo(bx + bw/2, by); ctx.lineTo(bx + bw/2, by - 26); ctx.stroke();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(bx+bw, by, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(bx, by+bh, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(bx+bw, by+bh, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255,255,255,.9)';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(bx + bw/2, by); ctx.lineTo(bx + bw/2, by - 32); ctx.stroke();
+
   ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(bx + bw/2, by - 30, 6, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(bx + bw/2, by - 38, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
 }
 
 function redraw() {
