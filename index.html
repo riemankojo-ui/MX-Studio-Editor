@@ -6,7 +6,7 @@
 <title>Mx Studio</title>
 <link rel="manifest" href="./manifest2.json">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Audiowide&family=Alfa+Slab+One&family=Bebas+Neue&family=Black+Ops+One&family=Bungee&family=Bungee+Inline&family=Chango&family=Chewy&family=Cinzel:wght@700&family=Coiny&family=Creepster&family=Damion&family=Dancing+Script:wght@700&family=Diplomata+SC&family=Frijole&family=Gloria+Hallelujah&family=Great+Vibes&family=Gugi&family=Knewave&family=Lobster&family=Luckiest+Guy&family=Merriweather:wght@700&family=Monoton&family=Montserrat:wght@800&family=Orbitron:wght@900&family=Oswald:wght@700&family=Pacifico&family=Parisienne&family=Permanent+Marker&family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Press+Start+2P&family=Righteous&family=Russo+One&family=Rye&family=Satisfy&family=Special+Elite&family=Yellowtail&family=Caveat:wght@700&family=Cormorant+Garamond:wght@700&family=Crimson+Text:wght@700&family=Exo+2:wght@800&family=Fjalla+One&family=Indie+Flower&family=Josefin+Sans:wght@700&family=Lora:wght@700&family=Lobster+Two:wght@700&family=Merienda:wght@800&family=Nanum+Pen+Script&family=Neucha&family=Nunito:wght@800&family=Oleo+Script:wght@700&family=Pattaya&family=Peralta&family=Rajdhani:wght@700&family=Rock+Salt&family=Sacramento&family=Shadows+Into+Light&family=Share+Tech+Mono&family=Sigmar+One&family=Spectral:wght@800&family=Teko:wght@700&family=Titan+One&family=Ubuntu:wght@700&family=Unica+One&family=Varela+Round&family=Vollkorn:wght@800&family=Yanone+Kaffeesatz:wght@700&family=Zilla+Slab:wght@700&family=Abril+Fatface&family=Alegreya:wght@800&family=Archivo+Black&family=Barlow+Condensed:wght@800&family=Bitter:wght@800&family=Bree+Serif&family=Cabin:wght@700&family=Catamaran:wght@800&family=Comfortaa:wght@700&family=DM+Serif+Display&family=EB+Garamond:wght@800&family=Fira+Sans:wght@800&family=Frank+Ruhl+Libre:wght@800&family=Fugaz+One&family=Gothic+A1:wght@800&family=Heebo:wght@800&family=IBM+Plex+Sans:wght@700&family=Inconsolata:wght@800&family=Jost:wght@700&family=Karla:wght@800&family=Kaushan+Script&family=Libre+Baskerville:wght@700&family=Lilita+One&family=M+PLUS+Rounded+1c:wght@800&family=Manrope:wght@800&family=Marcellus&family=Maven+Pro:wght@800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -20,7 +20,9 @@
 </div>
 
 <div id="view-home" class="view active">
-  <div class="home-container"><div id="gallery" class="gallery"></div></div>
+  <div class="home-container">
+    <div id="gallery" class="gallery"></div>
+  </div>
   <input type="file" id="homeImageUpload" accept="image/*" multiple style="display:none;">
 </div>
 
@@ -31,10 +33,18 @@
       <button class="icon-btn" id="redoBtn" onclick="redo()" disabled><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016.36 2.64L21 13"/></svg></button>
     </div>
     <div style="display:flex;gap:4px;align-items:center;margin-left:auto;">
-      <button class="icon-action" onclick="resetEverything()" title="Clear"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 8a9 9 0 1017 5"/></svg></button>
-      <button class="icon-action" onclick="saveProjectToHome()" title="Save"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
-      <button class="icon-action" onclick="saveImage()" title="Download"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-      <button class="icon-action" onclick="openBackupSheet()" title="Backup"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><polyline points="12 17 12 11"/><polyline points="9 14 12 11 15 14"/></svg></button>
+      <button class="icon-action" onclick="resetEverything()" title="Clear">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 8a9 9 0 1017 5"/></svg>
+      </button>
+      <button class="icon-action" onclick="saveProjectToHome()" title="Save">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      </button>
+      <button class="icon-action" onclick="saveImage()" title="Download">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+      <button class="icon-action" onclick="openBackupSheet()" title="Backup">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><polyline points="12 17 12 11"/><polyline points="9 14 12 11 15 14"/></svg>
+      </button>
     </div>
   </div>
 
@@ -59,7 +69,440 @@
     </div>
   </div>
 
-  <!-- PANELS: Adjust, Crop, Filters, FX, Text, Color, BG, Border, BgRemover, BgImage, Clean, CutBody (all HTML from your original file) -->
+  <div id="panel-adjust" class="panel active">
+    <div class="sub-tabs" id="adjustSubTabs">
+      <button class="sub-tab active" onclick="switchAdjustCat('templates', this)">TEMPLATES</button>
+      <button class="sub-tab" onclick="switchAdjustCat('presets', this)">PRESETS</button>
+      <button class="sub-tab" onclick="switchAdjustCat('sliders', this)">SLIDERS</button>
+      <button class="sub-tab" onclick="switchAdjustCat('cartoon', this)">CARTOON</button>
+    </div>
+    <div id="adjust-templates" class="sub-view active">
+      <div class="template-thumbs" id="templateContainer"></div>
+    </div>
+    <div id="adjust-presets" class="sub-view">
+      <div class="filter-thumbs" id="presetThumbsContainer"></div>
+    </div>
+    <div id="adjust-sliders" class="sub-view">
+      <div class="adjust-sliders" style="background:#141414;border-radius:12px;padding:16px 14px;">
+        <input type="range" id="brightness" min="0" max="200" value="100">
+        <input type="range" id="contrast" min="50" max="200" value="100">
+        <input type="range" id="saturation" min="0" max="200" value="100">
+        <input type="range" id="noise" min="0" max="100" value="0">
+      </div>
+    </div>
+    <div id="adjust-cartoon" class="sub-view">
+      <div style="background:#141414;border-radius:12px;padding:16px 14px;">
+        <label class="section-label" style="margin-top:0;">CARTOON STYLE</label>
+        <div class="h-scroll">
+          <div class="h-card selected" onclick="setCartoonStyle('none', this)">None</div>
+          <div class="h-card" onclick="setCartoonStyle('anime', this)">Anime</div>
+          <div class="h-card" onclick="setCartoonStyle('comic', this)">Comic</div>
+          <div class="h-card" onclick="setCartoonStyle('sketch', this)">Sketch</div>
+          <div class="h-card" onclick="setCartoonStyle('oil', this)">Oil</div>
+          <div class="h-card" onclick="setCartoonStyle('cell', this)">Cell</div>
+        </div>
+        <label class="section-label">STRENGTH: <span id="cartoonAmtVal">70</span>%</label>
+        <input type="range" id="cartoonAmt" min="0" max="100" value="70" oninput="setCartoonAmount(this.value)">
+        <label class="section-label">LEVELS: <span id="cartoonLevelsVal">6</span></label>
+        <input type="range" id="cartoonLevels" min="2" max="12" value="6" oninput="setCartoonLevels(this.value)">
+        <label class="section-label">EDGE: <span id="cartoonEdgeVal">1.2</span></label>
+        <input type="range" id="cartoonEdge" min="0" max="4" step="0.1" value="1.2" oninput="setCartoonEdge(this.value)">
+      </div>
+      <button class="crop-tool" onclick="resetCartoon()" style="margin-top:14px;width:100%;justify-content:center;">RESET CARTOON</button>
+    </div>
+  </div>
+
+  <div id="panel-crop" class="panel"></div>
+
+  <div id="panel-filters" class="panel">
+    <div class="filter-thumbs" id="filterThumbsContainer" style="margin-top:8px;"></div>
+  </div>
+
+  <div id="panel-fx" class="panel">
+    <div class="sub-tabs" id="fxTabBar"></div>
+    <div id="fxGrids"></div>
+    <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
+    <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
+    <button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
+  </div>
+
+  <div id="panel-text" class="panel">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('layers', this)">TEXT</button>
+      <button class="sub-tab" onclick="switchSubTab('font', this)">FONTS</button>
+      <button class="sub-tab" onclick="switchSubTab('color', this)">COLOR</button>
+      <button class="sub-tab" onclick="switchSubTab('basic', this)">STYLE</button>
+      <button class="sub-tab" onclick="switchSubTab('featured', this)">EFFECTS</button>
+    </div>
+
+    <div id="subtab-layers" class="sub-view active" style="padding-bottom:70px;">
+      <div id="textLayersList" class="text-layers-list" style="display:none;"></div>
+      <button class="corner-btn" onclick="openTextCard()">+</button>
+    </div>
+
+    <div id="subtab-font" class="sub-view">
+      <label></label>
+      <div class="font-grid" id="fontGridContainer"></div>
+    </div>
+
+    <div id="subtab-color" class="sub-view">
+      <label class="section-label">QUICK COLORS</label>
+      <div class="color-row">
+        <div class="color-circle" style="background:#ffffff;" onclick="setActiveTextColor('#ffffff',this)"></div>
+        <div class="color-circle" style="background:#000000;" onclick="setActiveTextColor('#000000',this)"></div>
+        <div class="color-circle" style="background:#ff2c2c;" onclick="setActiveTextColor('#ff2c2c',this)"></div>
+        <div class="color-circle" style="background:#00d4ff;" onclick="setActiveTextColor('#00d4ff',this)"></div>
+        <div class="color-circle" style="background:#ffd700;" onclick="setActiveTextColor('#ffd700',this)"></div>
+        <div class="color-circle" style="background:#00ff88;" onclick="setActiveTextColor('#00ff88',this)"></div>
+        <div class="color-circle" style="background:#ff69b4;" onclick="setActiveTextColor('#ff69b4',this)"></div>
+      </div>
+
+      <label class="section-label">CUSTOM COLOR</label>
+      <div class="color-slider-wrap">
+        <div class="color-slider-row">
+          <div class="color-slider-preview" id="colorPreview" style="background:#ffffff;"></div>
+          <div style="flex:1;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">Brightness: <span id="brVal">100</span></div>
+            <input type="range" id="colorBrightness" min="5" max="100" value="100" oninput="setActiveTextBrightness(this.value)">
+          </div>
+        </div>
+        <div class="color-slider-row">
+          <div style="width:38px;flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">Hue: <span id="hueVal">0°</span></div>
+            <input type="range" id="colorHue" min="0" max="360" value="0" oninput="setActiveTextHue(this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="subtab-basic" class="sub-view" style="padding-bottom:70px;">
+      <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:4px;">
+        <label class="section-label" style="margin-top:0;">TEXT SIZE</label>
+        <div class="slider-row">
+          <span class="slider-label">Size</span>
+          <input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)">
+          <span class="slider-val" id="fSizeVal">36</span>
+        </div>
+
+        <label class="section-label">ROTATION</label>
+        <div class="slider-row">
+          <span class="slider-label">Rot</span>
+          <input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)">
+          <span class="slider-val" id="fRotVal">0°</span>
+        </div>
+
+        <label class="section-label">PERSPECTIVE</label>
+        <div class="slider-row">
+          <span class="slider-label">Persp</span>
+          <input type="range" id="textPersp" min="-100" max="100" value="0" oninput="setActiveTextPersp(this.value)">
+          <span class="slider-val" id="perspVal">0</span>
+        </div>
+        <div style="font-size:9px;color:#555;margin-top:8px;line-height:1.5;">Slide right to make text lie down on the ground.</div>
+      </div>
+
+      <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:14px;width:100%;justify-content:center;background:#ff2c2c;color:#fff;font-weight:800;">DELETE THIS LAYER</button>
+    </div>
+
+    <div id="subtab-featured" class="sub-view">
+      <label class="section-label">TEXT STYLE</label>
+      <div class="h-scroll">
+        <div class="h-card selected" onclick="setActiveTextStyle('normal', this)">Standard</div>
+        <div class="h-card" onclick="setActiveTextStyle('stroke', this)">Outline</div>
+        <div class="h-card" onclick="setActiveTextStyle('shadow', this)">Shadow</div>
+        <div class="h-card" onclick="setActiveTextStyle('glow', this)">Glow</div>
+      </div>
+
+      <label class="section-label">MOVE TEXT</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px 2px 8px;max-width:240px;margin:0 auto;">
+        <div></div>
+        <button class="arrow-btn" onclick="moveActiveText(0,-5)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        <div></div>
+        <button class="arrow-btn" onclick="moveActiveText(-5,0)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <button class="arrow-btn" onclick="centerActiveTextHoriz()" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></button>
+        <button class="arrow-btn" onclick="moveActiveText(5,0)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        <div></div>
+        <button class="arrow-btn" onclick="moveActiveText(0,5)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
+        <div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-color" class="panel">
+    <label class="section-label">BACKGROUND COLOR</label>
+    <div class="bgcolor-row" id="bgColorRow"></div>
+    <label class="section-label">FRAME SIZE: <span id="bgColorSizeVal">8</span>%</label>
+    <input type="range" id="bgColorSizeInput" min="1" max="30" value="8" oninput="setBgColorSize(this.value)">
+  </div>
+
+  <div id="panel-bg" class="panel">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('subjmain', this)">DETECT</button>
+      <button class="sub-tab" onclick="switchSubTab('subjeffect', this)">EFFECT</button>
+    </div>
+
+    <div id="subtab-subjmain" class="sub-view active">
+      <div id="subjectStatus" style="font-size:11px;color:#666;line-height:1.6;text-align:center;padding:14px 8px;">Tap DETECT — first run downloads a small AI model.</div>
+      <button class="bgremover-btn" id="detectBtn" onclick="detectSubject()" style="margin-bottom:8px;">
+        <div class="label">
+          <span class="title" style="color:#00d4ff;">DETECT SUBJECT</span>
+        </div>
+      </button>
+    </div>
+
+    <div id="subtab-subjeffect" class="sub-view">
+      <label class="section-label">EFFECT</label>
+      <div class="h-scroll">
+        <div class="h-card selected" onclick="setSubjectMode('none', this)">None</div>
+        <div class="h-card" onclick="setSubjectMode('blur', this)">BG Blur</div>
+        <div class="h-card" onclick="setSubjectMode('stroke', this)">Stroke</div>
+      </div>
+      <label class="section-label">AMOUNT: <span id="subjectAmtVal">12</span></label>
+      <input type="range" id="subjectAmount" min="1" max="25" value="12">
+    </div>
+  </div>
+
+  <div id="panel-border" class="panel">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('borderstyle', this)">STYLE</button>
+      <button class="sub-tab" onclick="switchSubTab('bordercolor', this)">COLOR</button>
+    </div>
+    <div id="subtab-borderstyle" class="sub-view active">
+      <label class="section-label">FRAME STYLE</label>
+      <div class="border-thumbs" id="borderContainer"></div>
+      <label class="section-label">FRAME SIZE: <span id="borderSizeVal">5</span>%</label>
+      <input type="range" id="borderSizeInput" min="1" max="20" value="5" oninput="setBorderSize(this.value)">
+    </div>
+    <div id="subtab-bordercolor" class="sub-view">
+      <label class="section-label">FRAME COLOR</label>
+      <div style="display:flex;gap:12px;padding:4px 2px 8px;">
+        <div class="bcolor-circle selected" style="background:#ffffff;" onclick="setBorderColor('#ffffff', this)"></div>
+        <div class="bcolor-circle" style="background:#ff2c2c;" onclick="setBorderColor('#ff2c2c', this)"></div>
+        <div class="bcolor-circle" style="background:#000000;" onclick="setBorderColor('#000000', this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-bgremover" class="panel">
+    <div class="bgremover-menu">
+      <div id="bgRmvStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Tap REMOVE BACKGROUND to detect the subject.</div>
+      <div class="bgremover-btn" onclick="removeBackgroundCompletely()">
+        <div class="label">
+          <span class="title">REMOVE BACKGROUND</span>
+        </div>
+      </div>
+      <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:14px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
+      <div style="font-size:10px;color:#555;text-align:center;margin-top:16px;line-height:1.6;">After removal, add a new background from the BG tab</div>
+    </div>
+  </div>
+
+  <div id="panel-bgimage" class="panel">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
+      <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
+      <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
+    </div>
+
+    <div id="subtab-bggrid" class="sub-view active">
+      <div class="bg-grid" id="bgImageGrid"></div>
+    </div>
+
+    <div id="subtab-bglayers" class="sub-view">
+      <button class="crop-tool" onclick="clearAllBg()" style="width:100%;justify-content:center;padding:12px;background:#242424;color:#fff;font-weight:800;margin-bottom:14px;">NONE</button>
+
+      <div class="h-scroll" style="margin-bottom:8px;">
+        <div class="h-card selected" onclick="switchBgDrag('subject', this)">Move Subject</div>
+        <div class="h-card" onclick="switchBgDrag('bg', this)">Move Background</div>
+      </div>
+
+      <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:10px;">
+        <label class="section-label">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
+        <input type="range" id="bgImgSizeInput" min="0" max="40" value="8" oninput="setBgImageSize(this.value)">
+
+        <label class="section-label">ZOOM: <span id="bgImgZoomVal">100</span>%</label>
+        <input type="range" id="bgImgZoomInput" min="50" max="300" value="100" oninput="setBgImageZoom(this.value)">
+
+        <label class="section-label">MOVE X: <span id="bgImgXVal">0</span></label>
+        <input type="range" id="bgImgXInput" min="-100" max="100" value="0" oninput="setBgImageX(this.value)">
+
+        <label class="section-label">MOVE Y: <span id="bgImgYVal">0</span></label>
+        <input type="range" id="bgImgYInput" min="-100" max="100" value="0" oninput="setBgImageY(this.value)">
+
+        <button class="crop-tool" onclick="resetBgPosition()" style="margin-top:14px;width:100%;justify-content:center;">RESET BG POSITION</button>
+      </div>
+      <button class="crop-tool" onclick="clearBgImage()" style="margin-top:8px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
+      <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:8px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
+    </div>
+
+    <div id="subtab-bgimport" class="sub-view">
+      <div style="padding:20px 8px;">
+        <label for="bgUploadInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK FROM GALLERY</label>
+        <div style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo from your gallery to use as the background.</div>
+        <input type="file" id="bgUploadInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;">
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-clean" class="panel">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('cleanpick', this)">PICK &amp; CLEAN</button>
+      <button class="sub-tab" onclick="switchSubTab('unshow2', this)">UNSHOW</button>
+      <button class="sub-tab" onclick="switchSubTab('overlaycolor', this)">COLORS</button>
+      <button class="sub-tab" onclick="switchSubTab('overlaycrop', this)">CROP</button>
+    </div>
+
+    <div id="subtab-cleanpick" class="sub-view active">
+      <div style="padding:20px 8px;">
+        <label for="cleanPickInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK PHOTO FROM GALLERY</label>
+        <input type="file" id="cleanPickInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;" onchange="handleCleanPick(this)">
+        <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — it will load onto the canvas.</div>
+      </div>
+    </div>
+
+    <div id="subtab-unshow2" class="sub-view">
+      <div style="background:#141414;border-radius:12px;padding:16px 14px;">
+        <label class="section-label">OPACITY: <span id="unshowOpacityVal">0</span>%</label>
+        <input type="range" id="unshowOpacityInput" min="0" max="100" value="0" oninput="setUnshowOpacity(this.value)">
+
+        <label class="section-label">CUT TOP: <span id="cutTopVal">0</span>%</label>
+        <input type="range" id="cutTopInput" min="0" max="50" value="0" oninput="setCut('top', this.value)">
+
+        <label class="section-label">CUT BOTTOM: <span id="cutBottomVal">0</span>%</label>
+        <input type="range" id="cutBottomInput" min="0" max="50" value="0" oninput="setCut('bottom', this.value)">
+
+        <label class="section-label">CUT LEFT: <span id="cutLeftVal">0</span>%</label>
+        <input type="range" id="cutLeftInput" min="0" max="50" value="0" oninput="setCut('left', this.value)">
+
+        <label class="section-label">CUT RIGHT: <span id="cutRightVal">0</span>%</label>
+        <input type="range" id="cutRightInput" min="0" max="50" value="0" oninput="setCut('right', this.value)">
+
+        <label class="section-label">SOFT EDGE: <span id="cutFeatherVal">0</span></label>
+        <input type="range" id="cutFeatherInput" min="0" max="50" value="0" oninput="setCutFeather(this.value)">
+
+        <label class="section-label">CORNER ROUND: <span id="cornerRoundVal">0</span>%</label>
+        <input type="range" id="cornerRoundInput" min="0" max="50" value="0" oninput="setCornerRound(this.value)">
+
+        <button class="crop-tool" onclick="resetUnshow()" style="margin-top:14px;width:100%;justify-content:center;">RESET UNSHOW</button>
+      </div>
+    </div>
+
+    <div id="subtab-overlaycolor" class="sub-view">
+      <label class="section-label">COLOR TINT</label>
+      <div class="color-row">
+        <div class="color-circle selected" style="background:linear-gradient(135deg,#2a2a2a 45%,#111 45%,#111 55%,#2a2a2a 55%);display:flex;align-items:center;justify-content:center;" onclick="setOverlayTint(null,this)"><span style="color:#888;font-size:9px;font-weight:700;">OFF</span></div>
+        <div class="color-circle" style="background:#ffffff;" onclick="setOverlayTint('#ffffff',this)"></div>
+        <div class="color-circle" style="background:#000000;" onclick="setOverlayTint('#000000',this)"></div>
+        <div class="color-circle" style="background:#ff2c2c;" onclick="setOverlayTint('#ff2c2c',this)"></div>
+        <div class="color-circle" style="background:#00d4ff;" onclick="setOverlayTint('#00d4ff',this)"></div>
+        <div class="color-circle" style="background:#00ff88;" onclick="setOverlayTint('#00ff88',this)"></div>
+        <div class="color-circle" style="background:#ffd700;" onclick="setOverlayTint('#ffd700',this)"></div>
+        <div class="color-circle" style="background:#ff69b4;" onclick="setOverlayTint('#ff69b4',this)"></div>
+        <div class="color-circle" style="background:#9d4edd;" onclick="setOverlayTint('#9d4edd',this)"></div>
+      </div>
+      <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:10px;">
+        <label class="section-label">TINT AMOUNT: <span id="overlayTintAmtVal">60</span>%</label>
+        <input type="range" id="overlayTintAmt" min="0" max="100" value="60" oninput="setOverlayTintAmt(this.value)">
+        <label class="section-label">CUSTOM COLOR</label>
+        <div class="color-slider-wrap">
+          <div class="color-slider-row">
+            <div class="color-slider-preview" id="overlayColorPreview" style="background:#ffffff;"></div>
+            <div style="flex:1;">
+              <div style="font-size:10px;color:#888;margin-bottom:4px;">Brightness: <span id="ocBrVal">100</span></div>
+              <input type="range" id="overlayColorBrightness" min="5" max="100" value="100" oninput="setOverlayBrightness(this.value)">
+            </div>
+          </div>
+          <div class="color-slider-row">
+            <div style="width:38px;flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div style="font-size:10px;color:#888;margin-bottom:4px;">Hue: <span id="ocHueVal">0°</span></div>
+              <input type="range" id="overlayColorHue" min="0" max="360" value="0" oninput="setOverlayHue(this.value)">
+            </div>
+          </div>
+        </div>
+        <button class="crop-tool" onclick="resetOverlayTint()" style="margin-top:14px;width:100%;justify-content:center;">RESET COLOR</button>
+      </div>
+    </div>
+
+    <div id="subtab-overlaycrop" class="sub-view">
+      <div style="background:#141414;border-radius:12px;padding:16px 14px;">
+        <label class="section-label">CROP SHAPE</label>
+        <div class="h-scroll">
+          <div class="h-card selected" onclick="setOverlayCrop('free', this)">Free</div>
+          <div class="h-card" onclick="setOverlayCrop('1:1', this)">1:1</div>
+          <div class="h-card" onclick="setOverlayCrop('4:5', this)">4:5</div>
+          <div class="h-card" onclick="setOverlayCrop('9:16', this)">9:16</div>
+          <div class="h-card" onclick="setOverlayCrop('16:9', this)">16:9</div>
+          <div class="h-card" onclick="setOverlayCrop('3:4', this)">3:4</div>
+        </div>
+        <label class="section-label">CORNER ROUND: <span id="overlayRoundVal">0</span>%</label>
+        <input type="range" id="overlayRound" min="0" max="50" value="0" oninput="setOverlayRound(this.value)">
+        <label class="section-label">SCALE: <span id="overlayScaleVal">70</span>%</label>
+        <input type="range" id="overlayScaleSlider" min="10" max="200" value="70" oninput="setOverlayScale(this.value)">
+        <label class="section-label">ROTATION: <span id="overlayRotVal">0</span>°</label>
+        <input type="range" id="overlayRotSlider" min="-180" max="180" value="0" oninput="setOverlayRot(this.value)">
+        <button class="crop-tool" onclick="resetOverlayTransform()" style="margin-top:14px;width:100%;justify-content:center;">RESET CROP</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="backupSheet" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:700;display:none;align-items:flex-start;justify-content:center;padding:20px;">
+    <div id="backupSheetCard" style="background:#ffffff;width:100%;max-width:340px;margin-top:0;border-radius:20px;padding:20px 18px 22px;color:#000;transform:translateY(-120%);transition:transform .3s ease;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div style="font-size:18px;font-weight:900;color:#000;letter-spacing:.3px;">Backup &amp; Export</div>
+        <button onclick="closeBackupSheet()" style="background:#f0f0f0;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div style="font-size:11px;color:#888;margin-bottom:20px;line-height:1.6;">Save your project as a <b style="color:#000;">.mx</b> file, share it, or bring one back.</div>
+
+      <button onclick="exportMxProject()" style="width:100%;background:#000;color:#fff;border:none;padding:18px 16px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        EXPORT PROJECT (.mx)
+      </button>
+
+      <button onclick="shareMxProject()" style="width:100%;background:#f4f4f4;color:#000;border:none;padding:18px 16px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        SHARE PROJECT
+      </button>
+
+      <button onclick="importMxProject()" style="width:100%;background:#f4f4f4;color:#000;border:none;padding:18px 16px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        IMPORT PROJECT
+      </button>
+
+      <input type="file" id="mxImportInput" accept=".mx,application/json" style="display:none;">
+
+      <div style="height:1px;background:#eee;margin:22px 0 18px;"></div>
+
+      <button onclick="deleteCurrentProject()" style="width:100%;background:#fff;color:#ff2c2c;border:1.5px solid #ff2c2c;padding:16px;border-radius:14px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
+        🗑 DELETE FROM STUDIO
+      </button>
+    </div>
+  </div>
+
+  <div id="panel-cutbody" class="panel">
+    <div style="padding:14px 8px;">
+      <div id="cutBodyStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Tap START CUT to place a crop box over the canvas. Drag corners to resize, drag inside to move.</div>
+
+      <button class="bgremover-btn" onclick="startCutBody()" style="background:#141414;padding:18px 16px;margin-bottom:10px;">
+        <div class="label">
+          <span class="title" style="color:#00d4ff;font-size:15px;">✂️ START CUT</span>
+        </div>
+      </button>
+
+      <div id="cutBodyActions" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button onclick="applyCutBody()" style="flex:1;background:#00d4ff;color:#000;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✓ APPLY CUT</button>
+          <button onclick="cancelCutBody()" style="flex:1;background:#242424;color:#fff;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✕ CANCEL</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="resetCutBoxFull()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">FULL</button>
+          <button onclick="resetCutBoxCenter()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">CENTER 80%</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="bottom-nav">
     <button class="nav-btn active" data-panel="adjust" onclick="switchPanel('adjust', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Adjust</span></button>
@@ -76,11 +519,6 @@
   </div>
 </div>
 
-<!-- cropScreen, confirmModal, textCardModal, toast, backupSheet -->
-<!-- (paste the HTML blocks from your original file here — I'll give you the exact content) -->
-
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
-<script src="./app.js" defer></script>
 <div id="cropScreen">
   <div class="crop-topbar">
     <button class="crop-icon-btn" onclick="cancelCropMode()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -145,365 +583,7 @@
 
 <div id="toast">Saved</div>
 
-<div id="backupSheet" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:700;display:none;align-items:flex-start;justify-content:center;padding:20px;">
-  <div id="backupSheetCard" style="background:#ffffff;width:100%;max-width:340px;margin-top:0;border-radius:20px;padding:20px 18px 22px;color:#000;transform:translateY(-120%);transition:transform .3s ease;box-shadow:0 20px 60px rgba(0,0,0,.5);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-      <div style="font-size:18px;font-weight:900;color:#000;letter-spacing:.3px;">Backup &amp; Export</div>
-      <button onclick="closeBackupSheet()" style="background:#f0f0f0;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div style="font-size:11px;color:#888;margin-bottom:20px;line-height:1.6;">Save your project as a <b style="color:#000;">.mx</b> file, share it, or bring one back.</div>
-    <button onclick="exportMxProject()" style="width:100%;background:#000;color:#fff;border:none;padding:18px 16px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      EXPORT PROJECT (.mx)
-    </button>
-    <button onclick="shareMxProject()" style="width:100%;background:#f4f4f4;color:#000;border:none;padding:18px 16px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-      SHARE PROJECT
-    </button>
-    <button onclick="importMxProject()" style="width:100%;background:#f4f4f4;color:#000;border:none;padding:18px 16px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      IMPORT PROJECT
-    </button>
-    <input type="file" id="mxImportInput" accept=".mx,application/json" style="display:none;">
-    <div style="height:1px;background:#eee;margin:22px 0 18px;"></div>
-    <button onclick="deleteCurrentProject()" style="width:100%;background:#fff;color:#ff2c2c;border:1.5px solid #ff2c2c;padding:16px;border-radius:14px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
-      🗑 DELETE FROM STUDIO
-    </button>
-  </div>
-</div><div id="panel-adjust" class="panel active">
-  <div class="sub-tabs" id="adjustSubTabs">
-    <button class="sub-tab active" onclick="switchAdjustCat('templates', this)">TEMPLATES</button>
-    <button class="sub-tab" onclick="switchAdjustCat('presets', this)">PRESETS</button>
-    <button class="sub-tab" onclick="switchAdjustCat('sliders', this)">SLIDERS</button>
-    <button class="sub-tab" onclick="switchAdjustCat('cartoon', this)">CARTOON</button>
-  </div>
-  <div id="adjust-templates" class="sub-view active"><div class="template-thumbs" id="templateContainer"></div></div>
-  <div id="adjust-presets" class="sub-view"><div class="filter-thumbs" id="presetThumbsContainer"></div></div>
-  <div id="adjust-sliders" class="sub-view">
-    <div class="adjust-sliders" style="background:#141414;border-radius:12px;padding:16px 14px;">
-      <input type="range" id="brightness" min="0" max="200" value="100">
-      <input type="range" id="contrast" min="50" max="200" value="100">
-      <input type="range" id="saturation" min="0" max="200" value="100">
-      <input type="range" id="noise" min="0" max="100" value="0">
-    </div>
-  </div>
-  <div id="adjust-cartoon" class="sub-view">
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;">
-      <label class="section-label" style="margin-top:0;">CARTOON STYLE</label>
-      <div class="h-scroll">
-        <div class="h-card selected" onclick="setCartoonStyle('none', this)">None</div>
-        <div class="h-card" onclick="setCartoonStyle('anime', this)">Anime</div>
-        <div class="h-card" onclick="setCartoonStyle('comic', this)">Comic</div>
-        <div class="h-card" onclick="setCartoonStyle('sketch', this)">Sketch</div>
-        <div class="h-card" onclick="setCartoonStyle('oil', this)">Oil</div>
-        <div class="h-card" onclick="setCartoonStyle('cell', this)">Cell</div>
-      </div>
-      <label class="section-label">STRENGTH: <span id="cartoonAmtVal">70</span>%</label>
-      <input type="range" id="cartoonAmt" min="0" max="100" value="70" oninput="setCartoonAmount(this.value)">
-      <label class="section-label">LEVELS: <span id="cartoonLevelsVal">6</span></label>
-      <input type="range" id="cartoonLevels" min="2" max="12" value="6" oninput="setCartoonLevels(this.value)">
-      <label class="section-label">EDGE: <span id="cartoonEdgeVal">1.2</span></label>
-      <input type="range" id="cartoonEdge" min="0" max="4" step="0.1" value="1.2" oninput="setCartoonEdge(this.value)">
-    </div>
-    <button class="crop-tool" onclick="resetCartoon()" style="margin-top:14px;width:100%;justify-content:center;">RESET CARTOON</button>
-  </div>
-</div>
-
-<div id="panel-crop" class="panel"></div>
-
-<div id="panel-filters" class="panel"><div class="filter-thumbs" id="filterThumbsContainer" style="margin-top:8px;"></div></div>
-
-<div id="panel-fx" class="panel">
-  <div class="sub-tabs" id="fxTabBar"></div>
-  <div id="fxGrids"></div>
-  <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
-  <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
-  <button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
-</div>
-
-<div id="panel-text" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('layers', this)">TEXT</button>
-    <button class="sub-tab" onclick="switchSubTab('font', this)">FONTS</button>
-    <button class="sub-tab" onclick="switchSubTab('color', this)">COLOR</button>
-    <button class="sub-tab" onclick="switchSubTab('basic', this)">STYLE</button>
-    <button class="sub-tab" onclick="switchSubTab('featured', this)">EFFECTS</button>
-  </div>
-  <div id="subtab-layers" class="sub-view active" style="padding-bottom:70px;">
-    <div id="textLayersList" class="text-layers-list" style="display:none;"></div>
-    <button class="corner-btn" onclick="openTextCard()">+</button>
-  </div>
-  <div id="subtab-font" class="sub-view"><div class="font-grid" id="fontGridContainer"></div></div>
-  <div id="subtab-color" class="sub-view">
-    <label class="section-label">QUICK COLORS</label>
-    <div class="color-row">
-      <div class="color-circle" style="background:#ffffff;" onclick="setActiveTextColor('#ffffff',this)"></div>
-      <div class="color-circle" style="background:#000000;" onclick="setActiveTextColor('#000000',this)"></div>
-      <div class="color-circle" style="background:#ff2c2c;" onclick="setActiveTextColor('#ff2c2c',this)"></div>
-      <div class="color-circle" style="background:#00d4ff;" onclick="setActiveTextColor('#00d4ff',this)"></div>
-      <div class="color-circle" style="background:#ffd700;" onclick="setActiveTextColor('#ffd700',this)"></div>
-      <div class="color-circle" style="background:#00ff88;" onclick="setActiveTextColor('#00ff88',this)"></div>
-      <div class="color-circle" style="background:#ff69b4;" onclick="setActiveTextColor('#ff69b4',this)"></div>
-    </div>
-    <label class="section-label">CUSTOM COLOR</label>
-    <div class="color-slider-wrap">
-      <div class="color-slider-row">
-        <div class="color-slider-preview" id="colorPreview" style="background:#ffffff;"></div>
-        <div style="flex:1;">
-          <div style="font-size:10px;color:#888;margin-bottom:4px;">Brightness: <span id="brVal">100</span></div>
-          <input type="range" id="colorBrightness" min="5" max="100" value="100" oninput="setActiveTextBrightness(this.value)">
-        </div>
-      </div>
-      <div class="color-slider-row">
-        <div style="width:38px;flex-shrink:0;"></div>
-        <div style="flex:1;">
-          <div style="font-size:10px;color:#888;margin-bottom:4px;">Hue: <span id="hueVal">0°</span></div>
-          <input type="range" id="colorHue" min="0" max="360" value="0" oninput="setActiveTextHue(this.value)">
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="subtab-basic" class="sub-view" style="padding-bottom:70px;">
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:4px;">
-      <label class="section-label" style="margin-top:0;">TEXT SIZE</label>
-      <div class="slider-row"><span class="slider-label">Size</span><input type="range" id="fontSize" min="8" max="300" value="36" oninput="setActiveFontSize(this.value)"><span class="slider-val" id="fSizeVal">36</span></div>
-      <label class="section-label">ROTATION</label>
-      <div class="slider-row"><span class="slider-label">Rot</span><input type="range" id="fontRotation" min="-180" max="180" value="0" oninput="setActiveFontRotation(this.value)"><span class="slider-val" id="fRotVal">0°</span></div>
-      <label class="section-label">PERSPECTIVE</label>
-      <div class="slider-row"><span class="slider-label">Persp</span><input type="range" id="textPersp" min="-100" max="100" value="0" oninput="setActiveTextPersp(this.value)"><span class="slider-val" id="perspVal">0</span></div>
-    </div>
-    <button class="crop-tool" onclick="deleteActiveTextLayer()" style="margin-top:14px;width:100%;justify-content:center;background:#ff2c2c;color:#fff;font-weight:800;">DELETE THIS LAYER</button>
-  </div>
-  <div id="subtab-featured" class="sub-view">
-    <label class="section-label">TEXT STYLE</label>
-    <div class="h-scroll">
-      <div class="h-card selected" onclick="setActiveTextStyle('normal', this)">Standard</div>
-      <div class="h-card" onclick="setActiveTextStyle('stroke', this)">Outline</div>
-      <div class="h-card" onclick="setActiveTextStyle('shadow', this)">Shadow</div>
-      <div class="h-card" onclick="setActiveTextStyle('glow', this)">Glow</div>
-    </div>
-    <label class="section-label">MOVE TEXT</label>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px 2px 8px;max-width:240px;margin:0 auto;">
-      <div></div>
-      <button class="arrow-btn" onclick="moveActiveText(0,-5)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-      <div></div>
-      <button class="arrow-btn" onclick="moveActiveText(-5,0)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-      <button class="arrow-btn" onclick="centerActiveTextHoriz()" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></button>
-      <button class="arrow-btn" onclick="moveActiveText(5,0)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
-      <div></div>
-      <button class="arrow-btn" onclick="moveActiveText(0,5)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
-      <div></div>
-    </div>
-  </div>
-</div>
-
-<div id="panel-color" class="panel">
-  <label class="section-label">BACKGROUND COLOR</label>
-  <div class="bgcolor-row" id="bgColorRow"></div>
-  <label class="section-label">FRAME SIZE: <span id="bgColorSizeVal">8</span>%</label>
-  <input type="range" id="bgColorSizeInput" min="1" max="30" value="8" oninput="setBgColorSize(this.value)">
-</div>
-
-<div id="panel-bg" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('subjmain', this)">DETECT</button>
-    <button class="sub-tab" onclick="switchSubTab('subjeffect', this)">EFFECT</button>
-  </div>
-  <div id="subtab-subjmain" class="sub-view active">
-    <div id="subjectStatus" style="font-size:11px;color:#666;line-height:1.6;text-align:center;padding:14px 8px;">Tap DETECT — first run downloads a small AI model.</div>
-    <button class="bgremover-btn" id="detectBtn" onclick="detectSubject()" style="margin-bottom:8px;">
-      <div class="label"><span class="title" style="color:#00d4ff;">DETECT SUBJECT</span></div>
-    </button>
-  </div>
-  <div id="subtab-subjeffect" class="sub-view">
-    <label class="section-label">EFFECT</label>
-    <div class="h-scroll">
-      <div class="h-card selected" onclick="setSubjectMode('none', this)">None</div>
-      <div class="h-card" onclick="setSubjectMode('blur', this)">BG Blur</div>
-      <div class="h-card" onclick="setSubjectMode('stroke', this)">Stroke</div>
-    </div>
-    <label class="section-label">AMOUNT: <span id="subjectAmtVal">12</span></label>
-    <input type="range" id="subjectAmount" min="1" max="25" value="12">
-  </div>
-</div>
-
-<div id="panel-border" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('borderstyle', this)">STYLE</button>
-    <button class="sub-tab" onclick="switchSubTab('bordercolor', this)">COLOR</button>
-  </div>
-  <div id="subtab-borderstyle" class="sub-view active">
-    <label class="section-label">FRAME STYLE</label>
-    <div class="border-thumbs" id="borderContainer"></div>
-    <label class="section-label">FRAME SIZE: <span id="borderSizeVal">5</span>%</label>
-    <input type="range" id="borderSizeInput" min="1" max="20" value="5" oninput="setBorderSize(this.value)">
-  </div>
-  <div id="subtab-bordercolor" class="sub-view">
-    <label class="section-label">FRAME COLOR</label>
-    <div style="display:flex;gap:12px;padding:4px 2px 8px;">
-      <div class="bcolor-circle selected" style="background:#ffffff;" onclick="setBorderColor('#ffffff', this)"></div>
-      <div class="bcolor-circle" style="background:#ff2c2c;" onclick="setBorderColor('#ff2c2c', this)"></div>
-      <div class="bcolor-circle" style="background:#000000;" onclick="setBorderColor('#000000', this)"></div>
-    </div>
-  </div>
-</div>
-
-<div id="panel-bgremover" class="panel">
-  <div class="bgremover-menu">
-    <div id="bgRmvStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Tap REMOVE BACKGROUND to detect the subject.</div>
-    <div class="bgremover-btn" onclick="removeBackgroundCompletely()">
-      <div class="label"><span class="title">REMOVE BACKGROUND</span></div>
-    </div>
-    <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:14px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
-  </div>
-</div>
-
-<div id="panel-bgimage" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
-    <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
-    <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
-  </div>
-  <div id="subtab-bggrid" class="sub-view active"><div class="bg-grid" id="bgImageGrid"></div></div>
-  <div id="subtab-bglayers" class="sub-view">
-    <button class="crop-tool" onclick="clearAllBg()" style="width:100%;justify-content:center;padding:12px;background:#242424;color:#fff;font-weight:800;margin-bottom:14px;">NONE</button>
-    <div class="h-scroll" style="margin-bottom:8px;">
-      <div class="h-card selected" onclick="switchBgDrag('subject', this)">Move Subject</div>
-      <div class="h-card" onclick="switchBgDrag('bg', this)">Move Background</div>
-    </div>
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:10px;">
-      <label class="section-label">FRAME SIZE: <span id="bgImgSizeVal">8</span>%</label>
-      <input type="range" id="bgImgSizeInput" min="0" max="40" value="8" oninput="setBgImageSize(this.value)">
-      <label class="section-label">ZOOM: <span id="bgImgZoomVal">100</span>%</label>
-      <input type="range" id="bgImgZoomInput" min="50" max="300" value="100" oninput="setBgImageZoom(this.value)">
-      <label class="section-label">MOVE X: <span id="bgImgXVal">0</span></label>
-      <input type="range" id="bgImgXInput" min="-100" max="100" value="0" oninput="setBgImageX(this.value)">
-      <label class="section-label">MOVE Y: <span id="bgImgYVal">0</span></label>
-      <input type="range" id="bgImgYInput" min="-100" max="100" value="0" oninput="setBgImageY(this.value)">
-      <button class="crop-tool" onclick="resetBgPosition()" style="margin-top:14px;width:100%;justify-content:center;">RESET BG POSITION</button>
-    </div>
-    <button class="crop-tool" onclick="clearBgImage()" style="margin-top:8px;width:100%;justify-content:center;">REMOVE BACKGROUND</button>
-    <button class="crop-tool" onclick="resetSubjectTransform()" style="margin-top:8px;width:100%;justify-content:center;">RESET SUBJECT POSITION</button>
-  </div>
-  <div id="subtab-bgimport" class="sub-view">
-    <div style="padding:20px 8px;">
-      <label for="bgUploadInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK FROM GALLERY</label>
-      <input type="file" id="bgUploadInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;">
-    </div>
-  </div>
-</div>
-
-<div id="panel-clean" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('cleanpick', this)">PICK & CLEAN</button>
-    <button class="sub-tab" onclick="switchSubTab('unshow2', this)">UNSHOW</button>
-    <button class="sub-tab" onclick="switchSubTab('overlaycolor', this)">COLORS</button>
-    <button class="sub-tab" onclick="switchSubTab('overlaycrop', this)">CROP</button>
-  </div>
-  <div id="subtab-cleanpick" class="sub-view active">
-    <div style="padding:20px 8px;">
-      <label for="cleanPickInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK PHOTO FROM GALLERY</label>
-      <input type="file" id="cleanPickInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;" onchange="handleCleanPick(this)">
-      <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — it will load onto the canvas.</div>
-    </div>
-  </div>
-  <div id="subtab-unshow2" class="sub-view">
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;">
-      <label class="section-label">OPACITY: <span id="unshowOpacityVal">0</span>%</label>
-      <input type="range" id="unshowOpacityInput" min="0" max="100" value="0" oninput="setUnshowOpacity(this.value)">
-      <label class="section-label">CUT TOP: <span id="cutTopVal">0</span>%</label>
-      <input type="range" id="cutTopInput" min="0" max="50" value="0" oninput="setCut('top', this.value)">
-      <label class="section-label">CUT BOTTOM: <span id="cutBottomVal">0</span>%</label>
-      <input type="range" id="cutBottomInput" min="0" max="50" value="0" oninput="setCut('bottom', this.value)">
-      <label class="section-label">CUT LEFT: <span id="cutLeftVal">0</span>%</label>
-      <input type="range" id="cutLeftInput" min="0" max="50" value="0" oninput="setCut('left', this.value)">
-      <label class="section-label">CUT RIGHT: <span id="cutRightVal">0</span>%</label>
-      <input type="range" id="cutRightInput" min="0" max="50" value="0" oninput="setCut('right', this.value)">
-      <label class="section-label">SOFT EDGE: <span id="cutFeatherVal">0</span></label>
-      <input type="range" id="cutFeatherInput" min="0" max="50" value="0" oninput="setCutFeather(this.value)">
-      <label class="section-label">CORNER ROUND: <span id="cornerRoundVal">0</span>%</label>
-      <input type="range" id="cornerRoundInput" min="0" max="50" value="0" oninput="setCornerRound(this.value)">
-      <button class="crop-tool" onclick="resetUnshow()" style="margin-top:14px;width:100%;justify-content:center;">RESET UNSHOW</button>
-    </div>
-  </div>
-  <div id="subtab-overlaycolor" class="sub-view">
-    <label class="section-label">COLOR TINT</label>
-    <div class="color-row">
-      <div class="color-circle selected" style="background:linear-gradient(135deg,#2a2a2a 45%,#111 45%,#111 55%,#2a2a2a 55%);display:flex;align-items:center;justify-content:center;" onclick="setOverlayTint(null,this)"><span style="color:#888;font-size:9px;font-weight:700;">OFF</span></div>
-      <div class="color-circle" style="background:#ffffff;" onclick="setOverlayTint('#ffffff',this)"></div>
-      <div class="color-circle" style="background:#000000;" onclick="setOverlayTint('#000000',this)"></div>
-      <div class="color-circle" style="background:#ff2c2c;" onclick="setOverlayTint('#ff2c2c',this)"></div>
-      <div class="color-circle" style="background:#00d4ff;" onclick="setOverlayTint('#00d4ff',this)"></div>
-      <div class="color-circle" style="background:#00ff88;" onclick="setOverlayTint('#00ff88',this)"></div>
-      <div class="color-circle" style="background:#ffd700;" onclick="setOverlayTint('#ffd700',this)"></div>
-      <div class="color-circle" style="background:#ff69b4;" onclick="setOverlayTint('#ff69b4',this)"></div>
-      <div class="color-circle" style="background:#9d4edd;" onclick="setOverlayTint('#9d4edd',this)"></div>
-    </div>
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:10px;">
-      <label class="section-label">TINT AMOUNT: <span id="overlayTintAmtVal">60</span>%</label>
-      <input type="range" id="overlayTintAmt" min="0" max="100" value="60" oninput="setOverlayTintAmt(this.value)">
-      <label class="section-label">CUSTOM COLOR</label>
-      <div class="color-slider-wrap">
-        <div class="color-slider-row">
-          <div class="color-slider-preview" id="overlayColorPreview" style="background:#ffffff;"></div>
-          <div style="flex:1;">
-            <div style="font-size:10px;color:#888;margin-bottom:4px;">Brightness: <span id="ocBrVal">100</span></div>
-            <input type="range" id="overlayColorBrightness" min="5" max="100" value="100" oninput="setOverlayBrightness(this.value)">
-          </div>
-        </div>
-        <div class="color-slider-row">
-          <div style="width:38px;flex-shrink:0;"></div>
-          <div style="flex:1;">
-            <div style="font-size:10px;color:#888;margin-bottom:4px;">Hue: <span id="ocHueVal">0°</span></div>
-            <input type="range" id="overlayColorHue" min="0" max="360" value="0" oninput="setOverlayHue(this.value)">
-          </div>
-        </div>
-      </div>
-      <button class="crop-tool" onclick="resetOverlayTint()" style="margin-top:14px;width:100%;justify-content:center;">RESET COLOR</button>
-    </div>
-  </div>
-  <div id="subtab-overlaycrop" class="sub-view">
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;">
-      <label class="section-label">CROP SHAPE</label>
-      <div class="h-scroll">
-        <div class="h-card selected" onclick="setOverlayCrop('free', this)">Free</div>
-        <div class="h-card" onclick="setOverlayCrop('1:1', this)">1:1</div>
-        <div class="h-card" onclick="setOverlayCrop('4:5', this)">4:5</div>
-        <div class="h-card" onclick="setOverlayCrop('9:16', this)">9:16</div>
-        <div class="h-card" onclick="setOverlayCrop('16:9', this)">16:9</div>
-        <div class="h-card" onclick="setOverlayCrop('3:4', this)">3:4</div>
-      </div>
-      <label class="section-label">CORNER ROUND: <span id="overlayRoundVal">0</span>%</label>
-      <input type="range" id="overlayRound" min="0" max="50" value="0" oninput="setOverlayRound(this.value)">
-      <label class="section-label">SCALE: <span id="overlayScaleVal">70</span>%</label>
-      <input type="range" id="overlayScaleSlider" min="10" max="200" value="70" oninput="setOverlayScale(this.value)">
-      <label class="section-label">ROTATION: <span id="overlayRotVal">0</span>°</label>
-      <input type="range" id="overlayRotSlider" min="-180" max="180" value="0" oninput="setOverlayRot(this.value)">
-      <button class="crop-tool" onclick="resetOverlayTransform()" style="margin-top:14px;width:100%;justify-content:center;">RESET CROP</button>
-    </div>
-  </div>
-</div>
-
-<div id="panel-cutbody" class="panel">
-  <div style="padding:14px 8px;">
-    <div id="cutBodyStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Tap START CUT to place a crop box over the canvas. Drag corners to resize, drag inside to move.</div>
-    <button class="bgremover-btn" onclick="startCutBody()" style="background:#141414;padding:18px 16px;margin-bottom:10px;">
-      <div class="label"><span class="title" style="color:#00d4ff;font-size:15px;">✂️ START CUT</span></div>
-    </button>
-    <div id="cutBodyActions" style="display:none;">
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button onclick="applyCutBody()" style="flex:1;background:#00d4ff;color:#000;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✓ APPLY CUT</button>
-        <button onclick="cancelCutBody()" style="flex:1;background:#242424;color:#fff;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✕ CANCEL</button>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="resetCutBoxFull()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">FULL</button>
-        <button onclick="resetCutBoxCenter()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">CENTER 80%</button>
-      </div>
-    </div>
-  </div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
+<script src="app.js"></script>
 </body>
 </html>
