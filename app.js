@@ -1,5 +1,5 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+let canvas = document.getElementById('canvas');
+let ctx = canvas.getContext('2d');
 const textMenu = document.getElementById('textFloatingMenu');
 const bInput = document.getElementById('brightness');
 const cInput = document.getElementById('contrast');
@@ -2650,4 +2650,23 @@ window.addEventListener('DOMContentLoaded', () => {
   buildBorders();
   buildBgImageGrid();
   switchPanel('adjust', document.querySelector('.nav-btn[data-panel="adjust"]'));
+  
+// ===== Boot: force panels to render after full load =====
+window.addEventListener('load', function() {
+  if (!canvas) canvas = document.getElementById('canvas');
+  if (canvas && !ctx) ctx = canvas.getContext('2d');
+  if (!canvas) { console.error('canvas missing at boot'); return; }
+  if (!ctx) { console.error('ctx missing at boot'); return; }
+  try {
+    if (typeof renderProjectsList === 'function') renderProjectsList();
+    if (typeof buildTemplates === 'function') buildTemplates();
+    if (typeof buildFilterThumbs === 'function') buildFilterThumbs();
+    if (typeof buildBorders === 'function') buildBorders();
+    if (typeof buildBgImageGrid === 'function') buildBgImageGrid();
+    if (typeof buildFontGrid === 'function') buildFontGrid();
+    if (typeof buildBgColors === 'function') buildBgColors();
+    if (typeof switchPanel === 'function') switchPanel('adjust', document.querySelector('.nav-btn[data-panel="adjust"]'));
+    console.log('✓ Boot OK');
+  } catch(e) { console.error('Boot error:', e); }
+});
 });
