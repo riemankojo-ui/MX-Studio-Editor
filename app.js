@@ -115,7 +115,8 @@ const FILTERS = [
   { name:'Vintage', code:'sepia(80%) contrast(130%)' },
   { name:'Cyber', code:'invert(15%) hue-rotate(180deg)' },
   { name:'Neon', code:'hue-rotate(90deg) saturate(150%)' },
-  { name:'Velvet', code:'hue-rotate(270deg) saturate(140%)' }
+  { name:'Velvet', code:'hue-rotate(270deg) saturate(140%)' },
+  { name:'Cover Art', code:'coverart' }
 ];
 
 const BORDERS = [
@@ -1146,6 +1147,24 @@ function copyActiveText() {
 }
 
 // ---------- Color helpers ----------
+// ---------- Cover Art filter (posterized B&W) ----------
+function applyCoverArtFilter(targetCanvas, levels) {
+  levels = levels || 3;
+  const c = targetCanvas.getContext('2d');
+  const w = targetCanvas.width, h = targetCanvas.height;
+  const imgData = c.getImageData(0, 0, w, h);
+  const d = imgData.data;
+  const step = 255 / (levels - 1);
+  for (let i = 0; i < d.length; i += 4) {
+    const gray = d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114;
+    const v = Math.round(gray / step) * step;
+    d[i]   = v;
+    d[i+1] = v;
+    d[i+2] = v;
+  }
+  c.putImageData(imgData, 0, 0);
+}
+
 function hexToHsl(hex) {
   hex = (hex || '#ffffff').replace('#','');
   if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
@@ -1774,7 +1793,7 @@ function redraw() {
   if (!imgLoaded) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   let filterString = `brightness(${bInput.value}%) contrast(${cInput.value}%) saturate(${sInput.value}%) `;
-  if (currentFilter !== 'none') filterString += currentFilter;
+  if (currentFilter !== 'none' && currentFilter !== 'coverart') filterString += currentFilter;
   const OVER = 6;
   const photoLayer = document.createElement('canvas');
   photoLayer.width = canvas.width; photoLayer.height = canvas.height;
@@ -1856,6 +1875,10 @@ function redraw() {
     }
     plctx.filter = 'none';
   }
+if (currentFilter === 'coverart') {
+  applyCoverArtFilter(photoLayer, 3);
+}
+
   if (unshowOpacity < 100 || cornerRound > 0) {
     const mask = document.createElement('canvas');
     mask.width = canvas.width; mask.height = canvas.height;
