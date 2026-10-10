@@ -490,32 +490,48 @@
 
   <!-- ========== TAB 1: CUT + COPY (icon buttons) ========== -->
   <div id="subtab-cutcrop" class="sub-view active">
-    <div style="padding:14px 8px;text-align:center;">
-      <div id="cutBodyStatus" style="font-size:11px;color:#888;line-height:1.6;padding:10px 8px;">Tap scissors to cut, or copy to duplicate the body.</div>
+  <div style="padding:8px 8px 14px 8px;text-align:center;">
 
-      <!-- Icon buttons row -->
-      <div style="display:flex;justify-content:center;gap:14px;margin-top:10px;">
-        <!-- CUT icon button -->
-        <button onclick="startCutBody()" title="Cut Body" style="width:64px;height:64px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .1s ease;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="6" cy="6" r="3"/>
-            <circle cx="6" cy="18" r="3"/>
-            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-            <line x1="8.12" y1="15.88" x2="12" y2="12"/>
-            <line x1="12" y1="12" x2="20" y2="4"/>
-            <line x1="12" y1="12" x2="20" y2="20"/>
-          </svg>
-        </button>
+    <!-- Icon buttons FIRST (top) -->
+    <div style="display:flex;justify-content:center;gap:14px;margin-bottom:14px;">
+      <!-- CUT button -->
+      <button onclick="startCutBody()" title="Cut Body" style="width:60px;height:60px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="6" r="3"/>
+          <circle cx="6" cy="18" r="3"/>
+          <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+          <line x1="8.12" y1="15.88" x2="12" y2="12"/>
+          <line x1="12" y1="12" x2="20" y2="4"/>
+          <line x1="12" y1="12" x2="20" y2="20"/>
+        </svg>
+      </button>
 
-        <!-- COPY icon button -->
-        <button onclick="addBodyLayer()" title="Copy Body" style="width:64px;height:64px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .1s ease;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2"/>
-            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-          </svg>
-        </button>
+      <!-- COPY button -->
+      <button onclick="addBodyLayer()" title="Copy Body" style="width:60px;height:60px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2"/>
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Status text BELOW buttons -->
+    <div id="cutBodyStatus" style="font-size:11px;color:#888;line-height:1.5;padding:0 8px;">Tap scissors to cut, or copy to duplicate the body.</div>
+
+    <!-- Cut actions (appear when cutting) -->
+    <div id="cutBodyActions" style="display:none;margin-top:14px;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button onclick="applyCutBody()" style="flex:1;background:#00d4ff;color:#000;border:none;padding:14px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;">✓ APPLY</button>
+        <button onclick="cancelCutBody()" style="flex:1;background:#242424;color:#fff;border:none;padding:14px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;">✕ CANCEL</button>
       </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="resetCutBoxFull()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:10px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">FULL</button>
+        <button onclick="resetCutBoxCenter()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:10px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">CENTER</button>
+      </div>
+    </div>
 
+  </div>
+</div>
       <!-- Cut body actions (show only when cut mode is active) -->
       <div id="cutBodyActions" style="display:none;margin-top:16px;">
         <div style="display:flex;gap:8px;margin-bottom:10px;">
