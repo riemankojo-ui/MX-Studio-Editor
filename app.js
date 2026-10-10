@@ -2645,7 +2645,9 @@ window.addEventListener('DOMContentLoaded', () => {
   renderProjectsList();
   buildFontGrid();
   buildBgColors();
-  if ('serviceWorker' in navigator) {
-    // optional: register('./service-worker.js');
-  }
+  buildTemplates();
+  buildFilterThumbs();
+  buildBorders();
+  buildBgImageGrid();
+  switchPanel('adjust', document.querySelector('.nav-btn[data-panel="adjust"]'));
 });
