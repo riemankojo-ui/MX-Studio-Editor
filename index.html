@@ -271,15 +271,15 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
     <canvas id="canvas" width="400" height="400"></canvas>
 <div id="textFloatingMenu">
   <div class="arrow-grid">
+    <button class="arrow-btn" onclick="moveActiveText(0,-5)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+    <button class="arrow-btn" onclick="copyActiveText()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+    <button class="arrow-btn" onclick="moveActiveText(5,0)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
     <div></div>
-    <button class="arrow-btn" onclick="moveActiveText(0,-5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-    <div></div>
-    <button class="arrow-btn" onclick="moveActiveText(-5,0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
     <button class="arrow-btn" onclick="centerActiveTextHoriz()"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></button>
-    <button class="arrow-btn" onclick="moveActiveText(5,0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
     <div></div>
-    <button class="arrow-btn" onclick="moveActiveText(0,5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
-    <div></div>
+    <button class="arrow-btn" onclick="moveActiveText(-5,0)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <button class="arrow-btn" onclick="stretchActiveText()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+    <button class="arrow-btn" onclick="moveActiveText(0,5)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
   </div>
   <div class="menu-actions">
     <button class="menu-action-btn center-btn" onclick="editActiveText()">Edit</button>
@@ -810,6 +810,8 @@ let currentFxAmount = 70;
 let textLayers = [];
 let activeLayerId = null;
 let isDraggingText = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
 let undoStack = [], redoStack = [];
 let touches = new Map();
 let gesture = null;
@@ -2280,6 +2282,8 @@ if (activeLayerId !== null) {
   }
   if (clickedLayer) {
     activeLayerId = clickedLayer.id;
+dragOffsetX = pos.x - clickedLayer.x;
+dragOffsetY = pos.y - clickedLayer.y;
     syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
     isDraggingText = true;
     showFloatingMenu(clickedLayer.x, clickedLayer.y);
@@ -2405,7 +2409,7 @@ if (gesture && gesture.type === 'handle') {
 
   if (isDraggingText) {
     const l = textLayers.find(x => x.id === activeLayerId);
-    if (l) { l.x = pos.x; l.y = pos.y; showFloatingMenu(l.x, l.y); redraw(); }
+    if (l) { l.x = pos.x - dragOffsetX; l.y = pos.y - dragOffsetY; showFloatingMenu(l.x, l.y); redraw(); }
   }
 }
 
@@ -2464,12 +2468,41 @@ function showFloatingMenu(x, y) {
   textMenu.style.display = 'block';
 }
 
+function copyActiveText() {
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l) return;
+  const newLayer = JSON.parse(JSON.stringify(l));
+  newLayer.id = Date.now();
+  newLayer.x = l.x + 20;
+  newLayer.y = l.y + 20;
+  textLayers.push(newLayer);
+  activeLayerId = newLayer.id;
+  if (typeof showFloatingMenu === 'function') showFloatingMenu(newLayer.x, newLayer.y);
+  if (typeof updateTextLayersUI === 'function') updateTextLayersUI();
+  redraw(); saveState();
+}
+
+function stretchActiveText() {
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l) return;
+  l.stretchX = Math.min(3, (l.stretchX || 1) + 0.15);
+  redraw(); saveState();
+}
+
 function moveActiveText(dx, dy) {
   const l = textLayers.find(x => x.id === activeLayerId);
   if (l) { l.x += dx; l.y += dy; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
 }
 
-function centerActiveTextHoriz() {
+function centerActiveTextHoriz() {function stretchActiveText() {
+  const l = textLayers.find(x => x.id === activeLayerId);
+  if (!l) return;
+  l.size = Math.min(400, Math.round(l.size * 1.15));
+  redraw();
+  saveState();
+  if (typeof syncActiveInputs === 'function') syncActiveInputs();
+}
+
   const l = textLayers.find(x => x.id === activeLayerId);
   if (l) { l.x = canvas.width / 2; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
 }
