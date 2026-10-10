@@ -2468,26 +2468,6 @@ function showFloatingMenu(x, y) {
   textMenu.style.display = 'block';
 }
 
-function copyActiveText() {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  const newLayer = JSON.parse(JSON.stringify(l));
-  newLayer.id = Date.now();
-  newLayer.x = l.x + 20;
-  newLayer.y = l.y + 20;
-  textLayers.push(newLayer);
-  activeLayerId = newLayer.id;
-  if (typeof showFloatingMenu === 'function') showFloatingMenu(newLayer.x, newLayer.y);
-  if (typeof updateTextLayersUI === 'function') updateTextLayersUI();
-  redraw(); saveState();
-}
-
-function stretchActiveText() {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  l.stretchX = Math.min(3, (l.stretchX || 1) + 0.15);
-  redraw(); saveState();
-}
 
 function moveActiveText(dx, dy) {
   const l = textLayers.find(x => x.id === activeLayerId);
@@ -2542,7 +2522,7 @@ function confirmTextCard() {
     if (l) l.text = val;
   } else {
     const id = Date.now();
-    const newLayer = { id, text: val, x: canvas.width/2, y: canvas.height/2, font:"Impact", size: Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
+    const newLayer = { id, text: val, x: canvas.width/2, y: canvas.height/2, font:"Impact", size: Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0, stretchX:1, stretchY:1 };
     textLayers.push(newLayer);
     activeLayerId = id;
     showFloatingMenu(newLayer.x, newLayer.y);
@@ -3438,6 +3418,8 @@ if (cutTop > 0 || cutBottom > 0 || cutLeft > 0 || cutRight > 0 || cutFeather > 0
       ctx.fillStyle = layer.color;
       const persp = layer.persp || 0;
       if (persp === 0) {
+const _sx = layer.stretchX || 1;
+if (_sx !== 1) ctx.scale(_sx, 1);
         ctx.fillText(layer.text, 0, 0);
       } else {
         const mm = ctx.measureText(layer.text);
