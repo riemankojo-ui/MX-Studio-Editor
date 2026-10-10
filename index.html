@@ -481,29 +481,107 @@
     </div>
   </div>
 
-  <div id="panel-cutbody" class="panel">
-    <div style="padding:14px 8px;">
-      <div id="cutBodyStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Tap START CUT to place a crop box over the canvas. Drag corners to resize, drag inside to move.</div>
+<div id="panel-cutbody" class="panel">
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchSubTab('cutcrop', this)">CUT</button>
+    <button class="sub-tab" onclick="switchSubTab('cutlayers', this)">LAYERS</button>
+    <button class="sub-tab" onclick="switchSubTab('cuteffects', this)">EFFECTS</button>
+  </div>
 
-      <button class="bgremover-btn" onclick="startCutBody()" style="background:#141414;padding:18px 16px;margin-bottom:10px;">
-        <div class="label">
-          <span class="title" style="color:#00d4ff;font-size:15px;">✂️ START CUT</span>
-        </div>
-      </button>
+  <!-- ========== TAB 1: CUT + COPY (icon buttons) ========== -->
+  <div id="subtab-cutcrop" class="sub-view active">
+    <div style="padding:14px 8px;text-align:center;">
+      <div id="cutBodyStatus" style="font-size:11px;color:#888;line-height:1.6;padding:10px 8px;">Tap scissors to cut, or copy to duplicate the body.</div>
 
-      <div id="cutBodyActions" style="display:none;">
+      <!-- Icon buttons row -->
+      <div style="display:flex;justify-content:center;gap:14px;margin-top:10px;">
+        <!-- CUT icon button -->
+        <button onclick="startCutBody()" title="Cut Body" style="width:64px;height:64px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .1s ease;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="6" r="3"/>
+            <circle cx="6" cy="18" r="3"/>
+            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+            <line x1="8.12" y1="15.88" x2="12" y2="12"/>
+            <line x1="12" y1="12" x2="20" y2="4"/>
+            <line x1="12" y1="12" x2="20" y2="20"/>
+          </svg>
+        </button>
+
+        <!-- COPY icon button -->
+        <button onclick="addBodyLayer()" title="Copy Body" style="width:64px;height:64px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .1s ease;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Cut body actions (show only when cut mode is active) -->
+      <div id="cutBodyActions" style="display:none;margin-top:16px;">
         <div style="display:flex;gap:8px;margin-bottom:10px;">
-          <button onclick="applyCutBody()" style="flex:1;background:#00d4ff;color:#000;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✓ APPLY CUT</button>
+          <button onclick="applyCutBody()" style="flex:1;background:#00d4ff;color:#000;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✓ APPLY</button>
           <button onclick="cancelCutBody()" style="flex:1;background:#242424;color:#fff;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✕ CANCEL</button>
         </div>
         <div style="display:flex;gap:8px;">
           <button onclick="resetCutBoxFull()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">FULL</button>
-          <button onclick="resetCutBoxCenter()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">CENTER 80%</button>
+          <button onclick="resetCutBoxCenter()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">CENTER</button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ========== TAB 2: LAYERS ========== -->
+  <div id="subtab-cutlayers" class="sub-view">
+    <div id="bodyLayersList" class="text-layers-list" style="max-height:130px;"></div>
+
+    <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:10px;">
+      <label class="section-label">MOVE X: <span id="bodyLayerXVal">0</span></label>
+      <input type="range" id="bodyLayerXInput" min="-100" max="100" value="0" oninput="setBodyLayerX(this.value)">
+
+      <label class="section-label">MOVE Y: <span id="bodyLayerYVal">0</span></label>
+      <input type="range" id="bodyLayerYInput" min="-100" max="100" value="0" oninput="setBodyLayerY(this.value)">
+
+      <label class="section-label">SCALE: <span id="bodyLayerScaleVal">100</span>%</label>
+      <input type="range" id="bodyLayerScaleInput" min="20" max="200" value="100" oninput="setBodyLayerScale(this.value)">
+
+      <label class="section-label">ROTATION: <span id="bodyLayerRotVal">0</span>°</label>
+      <input type="range" id="bodyLayerRotInput" min="-180" max="180" value="0" oninput="setBodyLayerRot(this.value)">
+
+      <label class="section-label">OPACITY: <span id="bodyLayerOpacityVal">100</span>%</label>
+      <input type="range" id="bodyLayerOpacityInput" min="0" max="100" value="100" oninput="setBodyLayerOpacity(this.value)">
+
+      <button onclick="deleteBodyLayer()" style="margin-top:14px;width:100%;background:#ff2c2c;color:#fff;border:none;padding:12px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;">DELETE THIS LAYER</button>
+    </div>
+  </div>
+
+  <!-- ========== TAB 3: EFFECTS ========== -->
+  <div id="subtab-cuteffects" class="sub-view">
+    <div style="background:#141414;border-radius:12px;padding:16px 14px;">
+      <label class="section-label" style="margin-top:0;">LAYER EFFECT</label>
+      <div class="h-scroll">
+        <div class="h-card selected" onclick="setBodyLayerEffect('none', this)">None</div>
+        <div class="h-card" onclick="setBodyLayerEffect('shadow', this)">Shadow</div>
+        <div class="h-card" onclick="setBodyLayerEffect('glow', this)">Glow</div>
+        <div class="h-card" onclick="setBodyLayerEffect('outline', this)">Outline</div>
+        <div class="h-card" onclick="setBodyLayerEffect('blur', this)">Blur</div>
+      </div>
+
+      <label class="section-label">AMOUNT: <span id="bodyLayerEffectAmtVal">10</span></label>
+      <input type="range" id="bodyLayerEffectAmt" min="1" max="40" value="10" oninput="setBodyLayerEffectAmt(this.value)">
+
+      <label class="section-label">EFFECT COLOR</label>
+      <div class="color-row">
+        <div class="color-circle" style="background:#ffffff;" onclick="setBodyLayerEffectColor('#ffffff', this)"></div>
+        <div class="color-circle" style="background:#000000;" onclick="setBodyLayerEffectColor('#000000', this)"></div>
+        <div class="color-circle" style="background:#00d4ff;" onclick="setBodyLayerEffectColor('#00d4ff', this)"></div>
+        <div class="color-circle" style="background:#ff2c2c;" onclick="setBodyLayerEffectColor('#ff2c2c', this)"></div>
+        <div class="color-circle" style="background:#ffd700;" onclick="setBodyLayerEffectColor('#ffd700', this)"></div>
+        <div class="color-circle" style="background:#00ff88;" onclick="setBodyLayerEffectColor('#00ff88', this)"></div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#555;text-align:center;margin-top:16px;line-height:1.6;">Select a layer in the LAYERS tab, then pick an effect here.</div>
+  </div>
+</div>
   <div class="bottom-nav">
     <button class="nav-btn active" data-panel="adjust" onclick="switchPanel('adjust', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Adjust</span></button>
     <button class="nav-btn" data-panel="crop" onclick="switchPanel('crop', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/></svg><span>Crop</span></button>
