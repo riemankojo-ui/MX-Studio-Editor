@@ -1040,6 +1040,7 @@ function openTextCard(mode, layerId) {
   } else {
     title.textContent = 'Add Text';
     inp.value = '';
+inp.setAttribute('autocomplete', 'new-password');
   }
   modal.classList.add('active');
   setTimeout(() => { inp.focus(); inp.select(); }, 100);
@@ -2895,7 +2896,6 @@ function shareMxProject() {
   }
 }
 
-function exportMxProject() {
   if (!imgLoaded) { showToast('Load a photo first'); return; }
   const data = buildMxData();
   const json = JSON.stringify(data);
