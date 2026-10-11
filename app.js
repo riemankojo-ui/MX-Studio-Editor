@@ -3269,9 +3269,9 @@ function exportMxProject() {
     const inp = document.getElementById('exportNameInput');
     if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
 
-    inp.value = (currentProjectName || '').replace(/\.mx$/i, '').trim() || 'My Project';
-    modal.style.display = 'flex';
-
+    inp.value = '';
+inp.setAttribute('autocomplete', 'new-password');
+inp.setAttribute('name', 'mx-export-name-x');
     // Focus the input after popup renders
     setTimeout(function() { inp.focus(); inp.select(); }, 150);
   }, 400);
