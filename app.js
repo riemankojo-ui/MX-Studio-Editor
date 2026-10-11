@@ -2896,25 +2896,7 @@ function shareMxProject() {
   }
 }
 
-  if (!imgLoaded) { showToast('Load a photo first'); return; }
-  const data = buildMxData();
-  const json = JSON.stringify(data);
-  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
-  const blob = new Blob([json], { type: 'application/octet-stream' });
-  const file = new File([blob], filename, { type: 'application/octet-stream' });
-
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: filename })
-      .then(() => { closeBackupSheet(); showToast('Exported'); })
-      .catch(err => {
-        if (err && err.name === 'AbortError') return;
-        fallbackDownload(blob, filename, 'Exported ' + filename);
-      });
-  } else {
-    fallbackDownload(blob, filename, 'Exported ' + filename);
-  }
-}
-
+  
 function fallbackDownload(blob, filename, msg) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
