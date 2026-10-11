@@ -3269,7 +3269,8 @@ function exportMxProject() {
     const inp = document.getElementById('exportNameInput');
     if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
 
-    inp.value = '';
+    inp.value = (currentProjectName || '').replace(/\.mx$/i, '').trim() || 'My Project';
+    modal.style.display = 'flex';
 
     // Focus the input after popup renders
     setTimeout(function() { inp.focus(); inp.select(); }, 150);
