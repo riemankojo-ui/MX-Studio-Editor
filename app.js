@@ -3258,17 +3258,23 @@ function saveImage() {
 // ---------- New Export with naming popup ----------
 function exportMxProject() {
   if (!imgLoaded) { showToast('Load a photo first'); return; }
-  // 1) Close backup sheet first
+
+  // Step 1: Close the backup sheet FIRST
   closeBackupSheet();
-  // 2) Wait for the slide-up animation, then open naming popup
-  setTimeout(() => {
+
+  // Step 2: Wait 400ms for the slide-up animation to finish
+  setTimeout(function() {
+    // Step 3: NOW show the naming popup
     const modal = document.getElementById('exportNameModal');
     const inp = document.getElementById('exportNameInput');
     if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
+
     inp.value = (currentProjectName || '').replace(/\.mx$/i, '').trim() || 'My Project';
     modal.style.display = 'flex';
-    setTimeout(() => { inp.focus(); inp.select(); }, 150);
-  }, 350);
+
+    // Focus the input after popup renders
+    setTimeout(function() { inp.focus(); inp.select(); }, 150);
+  }, 400);
 }
 function closeExportNameCard() {
   const m = document.getElementById('exportNameModal');
