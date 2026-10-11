@@ -2896,7 +2896,25 @@ function shareMxProject() {
   }
 }
 
-  
+  if (!imgLoaded) { showToast('Load a photo first'); return; }
+  const data = buildMxData();
+  const json = JSON.stringify(data);
+  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
+  const blob = new Blob([json], { type: 'application/octet-stream' });
+  const file = new File([blob], filename, { type: 'application/octet-stream' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename })
+      .then(() => { closeBackupSheet(); showToast('Exported'); })
+      .catch(err => {
+        if (err && err.name === 'AbortError') return;
+        fallbackDownload(blob, filename, 'Exported ' + filename);
+      });
+  } else {
+    fallbackDownload(blob, filename, 'Exported ' + filename);
+  }
+}
+
 function fallbackDownload(blob, filename, msg) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -3251,9 +3269,9 @@ function exportMxProject() {
     const inp = document.getElementById('exportNameInput');
     if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
 
-    inp.value = '';
-inp.setAttribute('autocomplete', 'new-password');
-inp.setAttribute('name', 'mx-export-name-x');
+    inp.value = (currentProjectName || '').replace(/\.mx$/i, '').trim() || 'My Project';
+    modal.style.display = 'flex';
+
     // Focus the input after popup renders
     setTimeout(function() { inp.focus(); inp.select(); }, 150);
   }, 400);
@@ -3305,60 +3323,3 @@ function doMxExport(cleanName) {
 window.exportMxProject = exportMxProject;
 window.closeExportNameCard = closeExportNameCard;
 window.confirmExportName = confirmExportName;
-// ============================================================
-//  RESTORED FUNCTIONS (in case they got deleted)
-// ============================================================
-
-function deleteCurrentProject() {
-  if (!currentProjectId) { showToast('Nothing to delete'); return; }
-  localStorage.removeItem('music_' + currentProjectId);
-  currentProjectId = null;
-  currentProjectName = '';
-  closeBackupSheet();
-  showToast('Deleted from Studio');
-  setTimeout(function() { goHome(); }, 800);
-}
-
-function shareMxProject() {
-  if (!imgLoaded) { showToast('Load a photo first'); return; }
-  const data = buildMxData();
-  const json = JSON.stringify(data);
-  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
-  const blob = new Blob([json], { type: 'application/octet-stream' });
-  const file = new File([blob], filename, { type: 'application/octet-stream' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: filename })
-      .then(function() { closeBackupSheet(); showToast('Shared'); })
-      .catch(function(err) { if (err && err.name === 'AbortError') return; showToast('Share failed'); });
-  } else {
-    showToast('Share not supported');
-  }
-}
-
-function handleMxImport(e) {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    try {
-      const data = JSON.parse(ev.target.result);
-      applyMxData(data);
-    } catch (err) {
-      showToast('Invalid .mx file');
-    }
-  };
-  reader.readAsText(file);
-}
-
-function importMxProject() {
-  const inp = document.getElementById('mxImportInput');
-  if (!inp) { showToast('Import input missing'); return; }
-  inp.click();
-}
-
-// Expose them all to inline handlers
-window.deleteCurrentProject = deleteCurrentProject;
-window.shareMxProject = shareMxProject;
-window.handleMxImport = handleMxImport;
-window.importMxProject = importMxProject;
