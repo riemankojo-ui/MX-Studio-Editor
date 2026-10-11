@@ -2937,10 +2937,16 @@ function renderProjectsList() {
   items.sort((a, b) => b.timestamp - a.timestamp);
 
   let html = `<div class="home-top-bar"><button class="home-new-btn" onclick="document.getElementById('homeImageUpload').click()"><div class="plus-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>New Project</span></button></div>`;
-  html += `<button onclick="importMxProject()" style="width:100%;background:transparent;color:#fff;border:1.5px dashed #555;padding:18px 16px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;margin-bottom:16px;">
+  html += `<div style="display:flex;gap:8px;margin-bottom:16px;">
+  <button onclick="importMxProject()" style="flex:1;background:transparent;color:#fff;border:1.5px dashed #555;padding:16px 12px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    IMPORT .mx PROJECT
-  </button>`;
+    Import
+  </button>
+  <button onclick="openBgPickerHome()" style="flex:1;background:transparent;color:#fff;border:1.5px dashed #555;padding:16px 12px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    BG
+  </button>
+</div>`;
   if (items.length === 0) {
     html += `<div class="home-empty"><div class="home-empty-icon"> </div><div class="home-empty-title">START YOUR FIRST COVER</div><div class="home-empty-sub">Upload a photo and make something real.</div></div>`;
   } else {
@@ -3212,6 +3218,74 @@ window.saveProjectToHome = saveProjectToHome;
 window.saveImage = saveImage;
 window.removeBackgroundCompletely = window.removeBackgroundCompletely;
 window.detectSubject = window.detectSubject;
+// ---------- BG Picker from Home ----------
+function openBgPickerHome() {
+  const modal = document.getElementById('bgPickerHomeModal');
+  const grid = document.getElementById('bgPickerHomeGrid');
+  if (!modal || !grid) { showToast('BG picker missing'); return; }
+  if (!BG_CONFIG.files.length) {
+    grid.innerHTML = '<div style="color:#666;font-size:12px;padding:20px;">Loading backgrounds...</div>';
+    if (typeof probeBackgrounds === 'function') {
+      probeBackgrounds().then(() => { openBgPickerHome(); });
+    }
+    return;
+  }
+  let html = '';
+  BG_CONFIG.files.forEach(f => {
+    if (f.fname === 'background10.jpg') return;
+    const label = BG_LABELS[f.fname] || f.fname.replace('.jpg','').replace('background','');
+    html += `<div class="bg-item" onclick="pickBgForNewProject('${f.fname}')">
+      <div class="bg-item-img"><img src="${EFFECTS_BASE + f.fname}"></div>
+      <span class="bg-item-label">${label}</span>
+    </div>`;
+  });
+  grid.innerHTML = html;
+  modal.style.display = 'flex';
+}
+function closeBgPickerHome() {
+  const m = document.getElementById('bgPickerHomeModal');
+  if (m) m.style.display = 'none';
+}
+function pickBgForNewProject(fname) {
+  const im = bgImages[fname];
+  if (!im) { showToast('Background not loaded'); return; }
+  closeBgPickerHome();
+  resetStudioState();
+  canvas.width = 1080;
+  canvas.height = 1080;
+  const blank = document.createElement('canvas');
+  blank.width = 1080;
+  blank.height = 1080;
+  const bctx = blank.getContext('2d');
+  bctx.fillStyle = '#ffffff';
+  bctx.fillRect(0, 0, 1080, 1080);
+  const blankImg = new Image();
+  blankImg.onload = function() {
+    img = blankImg;
+    imgLoaded = true;
+    originalImageSrc = blank.toDataURL('image/png');
+    currentBgImage = im;
+    currentBgColor = null;
+    currentProjectId = null;
+    currentProjectName = 'BG ' + (BG_LABELS[fname] || 'Project');
+    document.getElementById('view-home').classList.remove('active');
+    document.getElementById('view-studio').classList.add('active');
+    document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-adjust').classList.add('active');
+    const adjustBtn = document.querySelector('.nav-btn[data-panel="adjust"]');
+    if (adjustBtn) adjustBtn.classList.add('active');
+    buildFilterThumbs(); buildTemplates(); buildBorders();
+    redraw();
+    saveState();
+    showToast('Background ready — add text or photo');
+  };
+  blankImg.src = blank.toDataURL();
+}
+window.openBgPickerHome = openBgPickerHome;
+window.closeBgPickerHome = closeBgPickerHome;
+window.pickBgForNewProject = pickBgForNewProject;
 // ---------- Save image (added) ----------
 function saveImage() {
   if (!imgLoaded) return;

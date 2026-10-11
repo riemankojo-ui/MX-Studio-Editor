@@ -700,6 +700,13 @@
     </div>
   </div>
 </div>
+<div id="bgPickerHomeModal" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:800;display:none;flex-direction:column;padding:20px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;">PICK A BACKGROUND</div>
+    <button onclick="closeBgPickerHome()" style="background:#242424;border:none;width:36px;height:36px;border-radius:50%;color:#fff;font-size:18px;font-weight:900;cursor:pointer;">✕</button>
+  </div>
+  <div class="bg-grid" id="bgPickerHomeGrid" style="flex:1;overflow-y:auto;flex-wrap:wrap;justify-content:flex-start;"></div>
+</div>
 <div id="textCardModal">
   <div class="text-card">
     <div class="text-card-title" id="textCardTitle">Add Text</div>
