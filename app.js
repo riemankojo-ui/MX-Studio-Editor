@@ -3276,7 +3276,7 @@ function buildBgPickerColors() {
   if (!grid) return;
   let html = '';
   SOLID_COLORS.forEach(col => {
-    html += `<div onclick="pickColorForNewProject('${col}')" style="aspect-ratio:1/1;background:${col};border-radius:12px;border:2px solid #333;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);"></div>`;
+    html += `<div onclick="pickColorForNewProject('${col}')" style="aspect-ratio:1/1;background:${col};cursor:pointer;border-radius:0;"></div>`;
   });
   grid.innerHTML = html;
 }
