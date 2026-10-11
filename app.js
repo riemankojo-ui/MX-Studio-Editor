@@ -3255,3 +3255,60 @@ function saveImage() {
     fallbackDownload(blob, filename, 'Saved');
   }, 'image/png');
 }
+// ---------- New Export with naming popup ----------
+function exportMxProject() {
+  if (!imgLoaded) { showToast('Load a photo first'); return; }
+  const modal = document.getElementById('exportNameModal');
+  const inp = document.getElementById('exportNameInput');
+  if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
+  inp.value = (currentProjectName || '').replace(/\.mx$/i, '').trim() || 'My Project';
+  modal.style.display = 'flex';
+  setTimeout(() => { inp.focus(); inp.select(); }, 100);
+}
+function closeExportNameCard() {
+  const m = document.getElementById('exportNameModal');
+  if (m) m.style.display = 'none';
+}
+function confirmExportName() {
+  const inp = document.getElementById('exportNameInput');
+  let raw = (inp.value || '').trim();
+  if (!raw) raw = 'My Project';
+  let clean = raw
+    .replace(/\.mx$/i, '')
+    .replace(/[^a-zA-Z0-9 _\-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40);
+  if (!clean) clean = 'My-Project';
+  closeExportNameCard();
+  doMxExport(clean);
+}
+function doMxExport(cleanName) {
+  const data = buildMxData();
+  const json = JSON.stringify(data);
+  const d = new Date();
+  const stamp = d.getFullYear()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0')
+    + '-'
+    + String(d.getHours()).padStart(2,'0')
+    + String(d.getMinutes()).padStart(2,'0')
+    + String(d.getSeconds()).padStart(2,'0');
+  const filename = cleanName + '-' + stamp + '.mx';
+  const blob = new Blob([json], { type: 'application/octet-stream' });
+  const file = new File([blob], filename, { type: 'application/octet-stream' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename })
+      .then(() => { closeBackupSheet(); showToast('Exported'); })
+      .catch(err => {
+        if (err && err.name === 'AbortError') return;
+        fallbackDownload(blob, filename, 'Exported ' + filename);
+      });
+  } else {
+    fallbackDownload(blob, filename, 'Exported ' + filename);
+  }
+}
+window.exportMxProject = exportMxProject;
+window.closeExportNameCard = closeExportNameCard;
+window.confirmExportName = confirmExportName;
