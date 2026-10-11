@@ -1040,6 +1040,7 @@ function openTextCard(mode, layerId) {
   } else {
     title.textContent = 'Add Text';
     inp.value = '';
+inp.setAttribute('autocomplete', 'new-password');
   }
   modal.classList.add('active');
   setTimeout(() => { inp.focus(); inp.select(); }, 100);
@@ -2565,7 +2566,8 @@ function saveProjectToHome() {
   playCount(() => { goHome(); });
 }
 
-function saveImage() {
+
+    function saveImage() {
   if (!imgLoaded) return;
   const projName = (currentProjectName || 'Mx-Studio').trim().replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
   const d = new Date();
@@ -2577,30 +2579,23 @@ function saveImage() {
     + String(d.getMinutes()).padStart(2,'0')
     + String(d.getSeconds()).padStart(2,'0');
   const filename = projName + '-' + stamp + '.png';
+
   canvas.toBlob(async function(blob) {
     if (!blob) { showToast('Save failed'); return; }
     const file = new File([blob], filename, { type: 'image/png' });
+
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: filename });
         showToast('Saved');
         return;
-      } catch(err) {
+      } catch (err) {
         if (err && err.name === 'AbortError') return;
       }
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
-    showToast('Saved');
+    fallbackDownload(blob, filename, 'Saved');
   }, 'image/png');
 }
-
 function loadProject(key) {
   resetStudioState();
   const p = JSON.parse(localStorage.getItem(key));
@@ -2690,6 +2685,8 @@ function goHome() {
   document.getElementById('view-studio').classList.remove('active');
   document.getElementById('view-home').classList.add('active');
   textMenu.style.display = 'none';
+  const bn = document.querySelector('.bottom-nav');
+  if (bn) bn.style.display = 'none';
   resetStudioState();
   renderProjectsList();
 }
@@ -2901,32 +2898,15 @@ function shareMxProject() {
   }
 }
 
-function exportMxProject() {
-  if (!imgLoaded) { showToast('Load a photo first'); return; }
-  const data = buildMxData();
-  const json = JSON.stringify(data);
-  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
-  const blob = new Blob([json], { type: 'application/octet-stream' });
+  
+function fallbackDownload(blob, filename, msg) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
+  a.href = url; a.download = filename; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
   closeBackupSheet();
-  showToast('Exported ' + filename);
-}
-
-function deleteCurrentProject() {
-  if (!currentProjectId) { showToast('Nothing to delete'); return; }
-  localStorage.removeItem('music_' + currentProjectId);
-  currentProjectId = null;
-  currentProjectName = '';
-  closeBackupSheet();
-  showToast('Deleted from Studio');
-  setTimeout(() => { goHome(); }, 800);
+  showToast(msg || 'Saved');
 }
 
 // ---------- Home list ----------
@@ -3229,3 +3209,253 @@ window.saveProjectToHome = saveProjectToHome;
 window.saveImage = saveImage;
 window.removeBackgroundCompletely = window.removeBackgroundCompletely;
 window.detectSubject = window.detectSubject;
+// ---------- Save image (added) ----------
+function saveImage() {
+  if (!imgLoaded) return;
+  const projName = (currentProjectName || 'Mx-Studio').trim().replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
+  const d = new Date();
+  const stamp = d.getFullYear()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0')
+    + '-'
+    + String(d.getHours()).padStart(2,'0')
+    + String(d.getMinutes()).padStart(2,'0')
+    + String(d.getSeconds()).padStart(2,'0');
+  const filename = projName + '-' + stamp + '.png';
+
+  canvas.toBlob(async function(blob) {
+    if (!blob) { showToast('Save failed'); return; }
+    const file = new File([blob], filename, { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: filename });
+        showToast('Saved');
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+    fallbackDownload(blob, filename, 'Saved');
+  }, 'image/png');
+}
+// ---------- New Export with naming popup ----------
+function exportMxProject() {
+  if (!imgLoaded) { showToast('Load a photo first'); return; }
+
+  // Step 1: Close the backup sheet FIRST
+  closeBackupSheet();
+
+  // Step 2: Wait 400ms for the slide-up animation to finish
+  setTimeout(function() {
+    // Step 3: NOW show the naming popup
+    const modal = document.getElementById('exportNameModal');
+    const inp = document.getElementById('exportNameInput');
+    if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
+
+    inp.value = '';
+inp.setAttribute('autocomplete', 'new-password');
+inp.setAttribute('name', 'mx-export-name-x');
+    // Focus the input after popup renders
+    setTimeout(function() { inp.focus(); inp.select(); }, 150);
+  }, 400);
+}
+function closeExportNameCard() {
+  const m = document.getElementById('exportNameModal');
+  if (m) m.style.display = 'none';
+}
+function confirmExportName() {
+  const inp = document.getElementById('exportNameInput');
+  let raw = (inp.value || '').trim();
+  if (!raw) raw = 'My Project';
+  let clean = raw
+    .replace(/\.mx$/i, '')
+    .replace(/[^a-zA-Z0-9 _\-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40);
+  if (!clean) clean = 'My-Project';
+  closeExportNameCard();
+  doMxExport(clean);
+}
+function doMxExport(cleanName) {
+  const data = buildMxData();
+  const json = JSON.stringify(data);
+  const d = new Date();
+  const stamp = d.getFullYear()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0')
+    + '-'
+    + String(d.getHours()).padStart(2,'0')
+    + String(d.getMinutes()).padStart(2,'0')
+    + String(d.getSeconds()).padStart(2,'0');
+  const filename = cleanName + '-' + stamp + '.mx';
+  const blob = new Blob([json], { type: 'application/octet-stream' });
+  const file = new File([blob], filename, { type: 'application/octet-stream' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename })
+      .then(() => { closeBackupSheet(); showToast('Exported'); })
+      .catch(err => {
+        if (err && err.name === 'AbortError') return;
+        fallbackDownload(blob, filename, 'Exported ' + filename);
+      });
+  } else {
+    fallbackDownload(blob, filename, 'Exported ' + filename);
+  }
+}
+window.exportMxProject = exportMxProject;
+window.closeExportNameCard = closeExportNameCard;
+window.confirmExportName = confirmExportName;
+// ============================================================
+//  RESTORED FUNCTIONS (in case they got deleted)
+// ============================================================
+
+function deleteCurrentProject() {
+  if (!currentProjectId) { showToast('Nothing to delete'); return; }
+  localStorage.removeItem('music_' + currentProjectId);
+  currentProjectId = null;
+  currentProjectName = '';
+  closeBackupSheet();
+  showToast('Deleted from Studio');
+  setTimeout(function() { goHome(); }, 800);
+}
+
+function shareMxProject() {
+  if (!imgLoaded) { showToast('Load a photo first'); return; }
+  const data = buildMxData();
+  const json = JSON.stringify(data);
+  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
+  const blob = new Blob([json], { type: 'application/octet-stream' });
+  const file = new File([blob], filename, { type: 'application/octet-stream' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename })
+      .then(function() { closeBackupSheet(); showToast('Shared'); })
+      .catch(function(err) { if (err && err.name === 'AbortError') return; showToast('Share failed'); });
+  } else {
+    showToast('Share not supported');
+  }
+}
+
+function handleMxImport(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      applyMxData(data);
+    } catch (err) {
+      showToast('Invalid .mx file');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function importMxProject() {
+  const inp = document.getElementById('mxImportInput');
+  if (!inp) { showToast('Import input missing'); return; }
+  inp.click();
+}
+
+// Expose them all to inline handlers
+window.deleteCurrentProject = deleteCurrentProject;
+window.shareMxProject = shareMxProject;
+window.handleMxImport = handleMxImport;
+window.importMxProject = importMxProject;
+// ---------- Export naming popup ----------
+function exportMxProject() {
+  if (!imgLoaded) { showToast('Load a photo first'); return; }
+  closeBackupSheet();
+  setTimeout(function() {
+    const modal = document.getElementById('exportNameModal');
+    const inp = document.getElementById('exportNameInput');
+    if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
+    inp.value = '';
+    inp.setAttribute('autocomplete', 'new-password');
+    inp.setAttribute('name', 'mx-export-name-x');
+    modal.style.display = 'flex';
+    setTimeout(function() { inp.focus(); inp.select(); }, 150);
+  }, 400);
+}
+
+function closeExportNameCard() {
+  const m = document.getElementById('exportNameModal');
+  if (m) m.style.display = 'none';
+}
+
+function confirmExportName() {
+  const inp = document.getElementById('exportNameInput');
+  let raw = (inp.value || '').trim();
+  if (!raw) raw = 'My Project';
+  let clean = raw
+    .replace(/\.mx$/i, '')
+    .replace(/[^a-zA-Z0-9 _\-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40);
+  if (!clean) clean = 'My-Project';
+  closeExportNameCard();
+  doMxExport(clean);
+}
+
+function doMxExport(cleanName) {
+  const data = buildMxData();
+  const json = JSON.stringify(data);
+  const d = new Date();
+  const stamp = d.getFullYear()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0')
+    + '-'
+    + String(d.getHours()).padStart(2,'0')
+    + String(d.getMinutes()).padStart(2,'0')
+    + String(d.getSeconds()).padStart(2,'0');
+  const filename = cleanName + '-' + stamp + '.mx';
+  const blob = new Blob([json], { type: 'application/octet-stream' });
+  const file = new File([blob], filename, { type: 'application/octet-stream' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename })
+      .then(function() { closeBackupSheet(); showToast('Exported'); })
+      .catch(function(err) {
+        if (err && err.name === 'AbortError') return;
+        fallbackDownload(blob, filename, 'Exported ' + filename);
+      });
+  } else {
+    fallbackDownload(blob, filename, 'Exported ' + filename);
+  }
+}
+
+function saveImage() {
+  if (!imgLoaded) return;
+  const projName = (currentProjectName || 'Mx-Studio').trim().replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
+  const d = new Date();
+  const stamp = d.getFullYear()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0')
+    + '-'
+    + String(d.getHours()).padStart(2,'0')
+    + String(d.getMinutes()).padStart(2,'0')
+    + String(d.getSeconds()).padStart(2,'0');
+  const filename = projName + '-' + stamp + '.png';
+  canvas.toBlob(function(blob) {
+    if (!blob) { showToast('Save failed'); return; }
+    const file = new File([blob], filename, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: filename })
+        .then(function() { showToast('Saved'); })
+        .catch(function(err) {
+          if (err && err.name === 'AbortError') return;
+          fallbackDownload(blob, filename, 'Saved');
+        });
+    } else {
+      fallbackDownload(blob, filename, 'Saved');
+    }
+  }, 'image/png');
+}
+
+window.exportMxProject = exportMxProject;
+window.closeExportNameCard = closeExportNameCard;
+window.confirmExportName = confirmExportName;
+window.saveImage = saveImage;
