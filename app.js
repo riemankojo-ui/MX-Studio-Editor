@@ -3219,17 +3219,41 @@ window.saveImage = saveImage;
 window.removeBackgroundCompletely = window.removeBackgroundCompletely;
 window.detectSubject = window.detectSubject;
 // ---------- BG Picker from Home ----------
+// ---------- BG Picker from Home ----------
+const SOLID_COLORS = [
+  '#ffffff', '#f5f5f5', '#e0e0e0', '#c0c0c0', '#808080', '#404040',
+  '#1a1a1a', '#0a0a0a', '#000000',
+  '#ff0000', '#dc143c', '#8b0000', '#ff2c2c', '#ff69b4', '#ffb6c1',
+  '#ff1493', '#c71585', '#ff7f7f',
+  '#ffa500', '#ff8c00', '#ff6347', '#ffd700', '#ffff00', '#ffdead',
+  '#f4a460', '#ffc04c', '#ffcc99',
+  '#00ff00', '#008000', '#006400', '#00ff88', '#98fb98', '#7cfc00',
+  '#adff2f', '#228b22', '#556b2f',
+  '#00d4ff', '#1e90ff', '#0000ff', '#00008b', '#87ceeb', '#00bfff',
+  '#00ced1', '#40e0d0', '#4682b4',
+  '#800080', '#9d4edd', '#ff00ff', '#da70d6', '#8a2be2', '#9400d3',
+  '#ba55d3', '#dda0dd',
+  '#8b4513', '#a0522d', '#cd853f', '#d2b48c', '#deb887',
+  '#2f4f4f', '#708090', '#36454f', '#1c1c1c', '#2a2a2a', '#333333'
+];
+
 function openBgPickerHome() {
   const modal = document.getElementById('bgPickerHomeModal');
-  const grid = document.getElementById('bgPickerHomeGrid');
-  if (!modal || !grid) { showToast('BG picker missing'); return; }
-  if (!BG_CONFIG.files.length) {
-    grid.innerHTML = '<div style="color:#666;font-size:12px;padding:20px;">Loading backgrounds...</div>';
-    if (typeof probeBackgrounds === 'function') {
-      probeBackgrounds().then(() => { openBgPickerHome(); });
-    }
+  if (!modal) { showToast('BG picker missing'); return; }
+  if (!BG_CONFIG.files.length && typeof probeBackgrounds === 'function') {
+    const grid = document.getElementById('bgPickerHomeGrid');
+    if (grid) grid.innerHTML = '<div style="color:#666;font-size:12px;padding:20px;">Loading backgrounds...</div>';
+    probeBackgrounds().then(() => { openBgPickerHome(); });
     return;
   }
+  buildBgPickerImages();
+  buildBgPickerColors();
+  modal.style.display = 'flex';
+}
+
+function buildBgPickerImages() {
+  const grid = document.getElementById('bgPickerHomeGrid');
+  if (!grid) return;
   let html = '';
   BG_CONFIG.files.forEach(f => {
     if (f.fname === 'background10.jpg') return;
@@ -3240,12 +3264,69 @@ function openBgPickerHome() {
     </div>`;
   });
   grid.innerHTML = html;
-  modal.style.display = 'flex';
 }
+
+function buildBgPickerColors() {
+  const grid = document.getElementById('bgPickerColorsGrid');
+  if (!grid) return;
+  let html = '';
+  SOLID_COLORS.forEach(col => {
+    html += `<div onclick="pickColorForNewProject('${col}')" style="aspect-ratio:1/1;background:${col};border-radius:12px;border:2px solid #333;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);"></div>`;
+  });
+  grid.innerHTML = html;
+}
+
+function switchBgPickerTab(name, el) {
+  const modal = document.getElementById('bgPickerHomeModal');
+  if (!modal) return;
+  modal.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+  modal.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  const view = document.getElementById(name === 'images' ? 'bgPickerViewImages' : 'bgPickerViewColors');
+  if (view) view.classList.add('active');
+  if (el) el.classList.add('active');
+}
+
 function closeBgPickerHome() {
   const m = document.getElementById('bgPickerHomeModal');
   if (m) m.style.display = 'none';
 }
+
+function pickColorForNewProject(color) {
+  closeBgPickerHome();
+  resetStudioState();
+  canvas.width = 1080;
+  canvas.height = 1080;
+  const blank = document.createElement('canvas');
+  blank.width = 1080;
+  blank.height = 1080;
+  const bctx = blank.getContext('2d');
+  bctx.fillStyle = color;
+  bctx.fillRect(0, 0, 1080, 1080);
+  const blankImg = new Image();
+  blankImg.onload = function() {
+    img = blankImg;
+    imgLoaded = true;
+    originalImageSrc = blank.toDataURL('image/png');
+    currentBgImage = null;
+    currentBgColor = null;
+    currentProjectId = null;
+    currentProjectName = 'Solid ' + color.toUpperCase();
+    document.getElementById('view-home').classList.remove('active');
+    document.getElementById('view-studio').classList.add('active');
+    document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-adjust').classList.add('active');
+    const adjustBtn = document.querySelector('.nav-btn[data-panel="adjust"]');
+    if (adjustBtn) adjustBtn.classList.add('active');
+    buildFilterThumbs(); buildTemplates(); buildBorders();
+    redraw();
+    saveState();
+    showToast('Color ready — add text');
+  };
+  blankImg.src = blank.toDataURL();
+}
+
 function pickBgForNewProject(fname) {
   const im = bgImages[fname];
   if (!im) { showToast('Background not loaded'); return; }
@@ -3283,9 +3364,12 @@ function pickBgForNewProject(fname) {
   };
   blankImg.src = blank.toDataURL();
 }
+
 window.openBgPickerHome = openBgPickerHome;
 window.closeBgPickerHome = closeBgPickerHome;
+window.switchBgPickerTab = switchBgPickerTab;
 window.pickBgForNewProject = pickBgForNewProject;
+window.pickColorForNewProject = pickColorForNewProject;
 // ---------- Save image (added) ----------
 function saveImage() {
   if (!imgLoaded) return;
