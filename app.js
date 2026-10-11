@@ -2250,7 +2250,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   if (name === 'border') buildBorders();
   if (name === 'adjust') { buildTemplates(); buildPresetThumbs(); }
   if (name === 'color') buildBgColors();
-  if (name === 'bgimage') buildBgImageGrid();
+  if (name === 'bgimage') { buildBgImageGrid(); buildBgColorsTab(); }
   if (name === 'fx') { buildFxTabs(); buildFxGrids(); }
   syncActiveInputs();
 }
@@ -2264,6 +2264,7 @@ function switchSubTab(name, el) {
   el.classList.add('active');
   if (name === 'basic' || name === 'layers') syncActiveInputs();
   if (name === 'font') buildFontGrid();
+  if (name === 'bgcolors') buildBgColorsTab();
 }
 
 // ---------- Crop screen ----------
@@ -3392,6 +3393,32 @@ window.closeBgPickerHome = closeBgPickerHome;
 window.switchBgPickerTab = switchBgPickerTab;
 window.pickBgForNewProject = pickBgForNewProject;
 window.pickColorForNewProject = pickColorForNewProject;
+// ---------- BG Colors tab ----------
+function buildBgColorsTab() {
+  const grid = document.getElementById('bgColorsTabGrid');
+  if (!grid) return;
+  if (typeof SOLID_COLORS === 'undefined') { grid.innerHTML = ''; return; }
+  let html = '';
+  SOLID_COLORS.forEach(col => {
+    const isSel = (currentBgColor === col);
+    html += `<div onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:56px;height:56px;background:${col};border-radius:10px;border:2px solid ${isSel ? '#fff' : '#333'};cursor:pointer;"></div>`;
+  });
+  grid.innerHTML = html;
+}
+
+function applyBgColorFromTab(color, el) {
+  currentBgColor = color;
+  currentBgImage = null;
+  document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
+  document.querySelectorAll('#bgColorsTabGrid > div').forEach(x => x.style.border = '2px solid #333');
+  if (el) el.style.border = '2px solid #fff';
+  redraw();
+  saveState();
+  showToast('Color applied');
+}
+
+window.buildBgColorsTab = buildBgColorsTab;
+window.applyBgColorFromTab = applyBgColorFromTab;
 // ---------- Save image (added) ----------
 function saveImage() {
   if (!imgLoaded) return;
