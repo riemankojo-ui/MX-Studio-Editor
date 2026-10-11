@@ -2876,6 +2876,7 @@ function applyMxData(data) {
       document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
       var sv = document.getElementById('view-studio');
       if (sv) sv.classList.add('active');
+document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');      
       redraw();
     }, 400);
   };
