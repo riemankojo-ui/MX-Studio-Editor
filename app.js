@@ -3058,6 +3058,7 @@ function importOnePhoto(file) {
 });
 
 // ---------- Boot ----------
+document.querySelector('.bottom-nav').style.setProperty('display', 'none', 'important');
 document.addEventListener('DOMContentLoaded', function() {
   const el = document.getElementById('splashScreen');
   if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
