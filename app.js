@@ -3258,12 +3258,17 @@ function saveImage() {
 // ---------- New Export with naming popup ----------
 function exportMxProject() {
   if (!imgLoaded) { showToast('Load a photo first'); return; }
-  const modal = document.getElementById('exportNameModal');
-  const inp = document.getElementById('exportNameInput');
-  if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
-  inp.value = (currentProjectName || '').replace(/\.mx$/i, '').trim() || 'My Project';
-  modal.style.display = 'flex';
-  setTimeout(() => { inp.focus(); inp.select(); }, 100);
+  // 1) Close backup sheet first
+  closeBackupSheet();
+  // 2) Wait for the slide-up animation, then open naming popup
+  setTimeout(() => {
+    const modal = document.getElementById('exportNameModal');
+    const inp = document.getElementById('exportNameInput');
+    if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
+    inp.value = (currentProjectName || '').replace(/\.mx$/i, '').trim() || 'My Project';
+    modal.style.display = 'flex';
+    setTimeout(() => { inp.focus(); inp.select(); }, 150);
+  }, 350);
 }
 function closeExportNameCard() {
   const m = document.getElementById('exportNameModal');
