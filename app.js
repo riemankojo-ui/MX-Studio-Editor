@@ -2565,7 +2565,8 @@ function saveProjectToHome() {
   playCount(() => { goHome(); });
 }
 
-function saveImage() {
+
+    function saveImage() {
   if (!imgLoaded) return;
   const projName = (currentProjectName || 'Mx-Studio').trim().replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
   const d = new Date();
@@ -2577,30 +2578,23 @@ function saveImage() {
     + String(d.getMinutes()).padStart(2,'0')
     + String(d.getSeconds()).padStart(2,'0');
   const filename = projName + '-' + stamp + '.png';
+
   canvas.toBlob(async function(blob) {
     if (!blob) { showToast('Save failed'); return; }
     const file = new File([blob], filename, { type: 'image/png' });
+
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: filename });
         showToast('Saved');
         return;
-      } catch(err) {
+      } catch (err) {
         if (err && err.name === 'AbortError') return;
       }
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
-    showToast('Saved');
+    fallbackDownload(blob, filename, 'Saved');
   }, 'image/png');
 }
-
 function loadProject(key) {
   resetStudioState();
   const p = JSON.parse(localStorage.getItem(key));
@@ -2907,26 +2901,28 @@ function exportMxProject() {
   const json = JSON.stringify(data);
   const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
   const blob = new Blob([json], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
-  closeBackupSheet();
-  showToast('Exported ' + filename);
+  const file = new File([blob], filename, { type: 'application/octet-stream' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename })
+      .then(() => { closeBackupSheet(); showToast('Exported'); })
+      .catch(err => {
+        if (err && err.name === 'AbortError') return;
+        fallbackDownload(blob, filename, 'Exported ' + filename);
+      });
+  } else {
+    fallbackDownload(blob, filename, 'Exported ' + filename);
+  }
 }
 
-function deleteCurrentProject() {
-  if (!currentProjectId) { showToast('Nothing to delete'); return; }
-  localStorage.removeItem('music_' + currentProjectId);
-  currentProjectId = null;
-  currentProjectName = '';
+function fallbackDownload(blob, filename, msg) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
   closeBackupSheet();
-  showToast('Deleted from Studio');
-  setTimeout(() => { goHome(); }, 800);
+  showToast(msg || 'Saved');
 }
 
 // ---------- Home list ----------
@@ -3229,3 +3225,33 @@ window.saveProjectToHome = saveProjectToHome;
 window.saveImage = saveImage;
 window.removeBackgroundCompletely = window.removeBackgroundCompletely;
 window.detectSubject = window.detectSubject;
+// ---------- Save image (added) ----------
+function saveImage() {
+  if (!imgLoaded) return;
+  const projName = (currentProjectName || 'Mx-Studio').trim().replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
+  const d = new Date();
+  const stamp = d.getFullYear()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0')
+    + '-'
+    + String(d.getHours()).padStart(2,'0')
+    + String(d.getMinutes()).padStart(2,'0')
+    + String(d.getSeconds()).padStart(2,'0');
+  const filename = projName + '-' + stamp + '.png';
+
+  canvas.toBlob(async function(blob) {
+    if (!blob) { showToast('Save failed'); return; }
+    const file = new File([blob], filename, { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: filename });
+        showToast('Saved');
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+    fallbackDownload(blob, filename, 'Saved');
+  }, 'image/png');
+}
