@@ -2228,6 +2228,7 @@ function applyCutBody() {
 
 // ---------- Panel switching ----------
 function switchPanel(name, btn) {
+document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
   if (name === 'fx') gestureTarget = 'fx';
   else if (name === 'bgremover') gestureTarget = 'subject';
   else if (name === 'bgimage') gestureTarget = bgDragMode;
@@ -2597,6 +2598,7 @@ function saveProjectToHome() {
   }, 'image/png');
 }
 function loadProject(key) {
+document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
   resetStudioState();
   const p = JSON.parse(localStorage.getItem(key));
   currentProjectId = key.replace('music_', '');
