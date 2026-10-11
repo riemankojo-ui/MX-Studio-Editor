@@ -297,18 +297,18 @@
   </div>
 
   <div id="panel-bgimage" class="panel">
-    <div class="sub-tabs">
-      <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
-      <button class="sub-tab" onclick="switchSubTab('bgcolors', this)">COLORS</button>
-      <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
-      <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
-    </div>
+  <div class="sub-tabs">
+  <button class="sub-tab active" onclick="switchSubTab('bgcolors', this)">COLORS</button>
+  <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
+  <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
+</div>
 
-    <div id="subtab-bggrid" class="sub-view active">
-      <div class="bg-grid" id="bgImageGrid"></div>
-    </div>
-    <div id="subtab-bgcolors" class="sub-view">
-  <div class="h-scroll" id="bgColorsTabGrid" style="flex-wrap:nowrap;overflow-x:auto;gap:10px;padding:8px 4px;"></div>
+  <div id="subtab-bggrid" class="sub-view" style="display:none;">
+  <div class="bg-grid" id="bgImageGrid"></div>
+</div>
+
+<div id="subtab-bgcolors" class="sub-view active">
+  <div id="bgColorsTabGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px;"></div>
 </div>
 
     <div id="subtab-bglayers" class="sub-view">
