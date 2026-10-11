@@ -706,18 +706,18 @@
     <button onclick="closeBgPickerHome()" style="background:#242424;border:none;width:36px;height:36px;border-radius:50%;color:#fff;font-size:18px;font-weight:900;cursor:pointer;">✕</button>
   </div>
 
-  <div class="sub-tabs" style="display:flex;gap:16px;border-bottom:1px solid #1a1a1a;padding-bottom:8px;margin-bottom:12px;">
-    <button class="sub-tab active" id="bgPickTabImages" onclick="switchBgPickerTab('images', this)">IMAGES</button>
-    <button class="sub-tab" id="bgPickTabColors" onclick="switchBgPickerTab('colors', this)">COLORS</button>
-  </div>
+<div class="sub-tabs" style="display:flex;gap:16px;border-bottom:1px solid #1a1a1a;padding-bottom:8px;margin-bottom:12px;">
+  <button class="sub-tab active" id="bgPickTabColors" onclick="switchBgPickerTab('colors', this)">COLORS</button>
+  <button class="sub-tab" id="bgPickTabImages" onclick="switchBgPickerTab('images', this)">IMAGES</button>
+</div>
 
-  <div id="bgPickerViewImages" class="sub-view active" style="flex:1;overflow-y:auto;">
-    <div class="bg-grid" id="bgPickerHomeGrid"></div>
-  </div>
+ <div id="bgPickerViewColors" class="sub-view active" style="flex:1;overflow-y:auto;">
+  <div id="bgPickerColorsGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px;"></div>
+</div>
 
-  <div id="bgPickerViewColors" class="sub-view" style="flex:1;overflow-y:auto;">
-    <div id="bgPickerColorsGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px;"></div>
-  </div>
+<div id="bgPickerViewImages" class="sub-view" style="flex:1;overflow-y:auto;">
+  <div id="bgPickerHomeGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px;"></div>
+</div>
 </div>
 <div id="textCardModal">
   <div class="text-card">

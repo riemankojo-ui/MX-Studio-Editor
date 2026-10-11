@@ -3240,17 +3240,22 @@ const SOLID_COLORS = [
 function openBgPickerHome() {
   const modal = document.getElementById('bgPickerHomeModal');
   if (!modal) { showToast('BG picker missing'); return; }
+
+  // Build colors FIRST — instant, no waiting
+  buildBgPickerColors();
+
+  // Show modal RIGHT AWAY
+  modal.style.display = 'flex';
+
+  // Load images in the background (no blocking)
   if (!BG_CONFIG.files.length && typeof probeBackgrounds === 'function') {
     const grid = document.getElementById('bgPickerHomeGrid');
-    if (grid) grid.innerHTML = '<div style="color:#666;font-size:12px;padding:20px;">Loading backgrounds...</div>';
-    probeBackgrounds().then(() => { openBgPickerHome(); });
-    return;
+    if (grid) grid.innerHTML = '<div style="color:#666;font-size:12px;padding:20px;grid-column:1/-1;">Loading images...</div>';
+    probeBackgrounds().then(() => { buildBgPickerImages(); }).catch(() => {});
+  } else {
+    buildBgPickerImages();
   }
-  buildBgPickerImages();
-  buildBgPickerColors();
-  modal.style.display = 'flex';
 }
-
 function buildBgPickerImages() {
   const grid = document.getElementById('bgPickerHomeGrid');
   if (!grid) return;
