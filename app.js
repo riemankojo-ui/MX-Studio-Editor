@@ -1040,7 +1040,6 @@ function openTextCard(mode, layerId) {
   } else {
     title.textContent = 'Add Text';
     inp.value = '';
-inp.setAttribute('autocomplete', 'new-password');
   }
   modal.classList.add('active');
   setTimeout(() => { inp.focus(); inp.select(); }, 100);
@@ -2896,6 +2895,7 @@ function shareMxProject() {
   }
 }
 
+function exportMxProject() {
   if (!imgLoaded) { showToast('Load a photo first'); return; }
   const data = buildMxData();
   const json = JSON.stringify(data);
@@ -3258,23 +3258,17 @@ function saveImage() {
 // ---------- New Export with naming popup ----------
 function exportMxProject() {
   if (!imgLoaded) { showToast('Load a photo first'); return; }
-
-  // Step 1: Close the backup sheet FIRST
+  // 1) Close backup sheet first
   closeBackupSheet();
-
-  // Step 2: Wait 400ms for the slide-up animation to finish
-  setTimeout(function() {
-    // Step 3: NOW show the naming popup
+  // 2) Wait for the slide-up animation, then open naming popup
+  setTimeout(() => {
     const modal = document.getElementById('exportNameModal');
     const inp = document.getElementById('exportNameInput');
     if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
-
     inp.value = (currentProjectName || '').replace(/\.mx$/i, '').trim() || 'My Project';
     modal.style.display = 'flex';
-
-    // Focus the input after popup renders
-    setTimeout(function() { inp.focus(); inp.select(); }, 150);
-  }, 400);
+    setTimeout(() => { inp.focus(); inp.select(); }, 150);
+  }, 350);
 }
 function closeExportNameCard() {
   const m = document.getElementById('exportNameModal');
