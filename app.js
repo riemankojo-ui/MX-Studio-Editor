@@ -2756,6 +2756,7 @@ function buildMxData() {
   return {
     version: 1,
     app: 'MxStudio',
+    projectId: currentProjectId || null,
     savedAt: new Date().toISOString(),
     name: currentProjectName || 'Untitled',
     photo: originalImageSrc,
@@ -2816,17 +2817,21 @@ function applyMxData(data) {
     canvas.height = data.canvasH || newImg.height;
 currentProjectName = data.name || 'Imported';
 
-// Update existing project if name matches, else create new
-let existingKey = null;
-Object.keys(localStorage).forEach(k => {
-  if (k.startsWith('music_proj_')) {
-    try {
-      const p = JSON.parse(localStorage.getItem(k));
-      if (p.name === currentProjectName) existingKey = k;
-    } catch(e) {}
-  }
-});
-currentProjectId = existingKey ? existingKey.replace('music_', '') : 'proj_' + Date.now();
+// Try projectId first (most reliable), fallback to name
+if (data.projectId && localStorage.getItem('music_' + data.projectId)) {
+  currentProjectId = data.projectId;
+} else {
+  let existingKey = null;
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith('music_proj_')) {
+      try {
+        const p = JSON.parse(localStorage.getItem(k));
+        if (p.name === currentProjectName) existingKey = k;
+      } catch(e) {}
+    }
+  });
+  currentProjectId = existingKey ? existingKey.replace('music_', '') : 'proj_' + Date.now();
+}
     textLayers = (data.textLayers || []).map(l => ({
       id: l.id || Date.now() + Math.random(),
       text: l.text || '', x: l.x, y: l.y,
