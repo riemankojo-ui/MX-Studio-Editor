@@ -299,6 +299,7 @@
   <div id="panel-bgimage" class="panel">
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="switchSubTab('bggrid', this)">BG IMAGES</button>
+      <button class="sub-tab" onclick="switchSubTab('bgcolors', this)">COLORS</button>
       <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
       <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
     </div>
@@ -306,6 +307,9 @@
     <div id="subtab-bggrid" class="sub-view active">
       <div class="bg-grid" id="bgImageGrid"></div>
     </div>
+    <div id="subtab-bgcolors" class="sub-view">
+  <div class="h-scroll" id="bgColorsTabGrid" style="flex-wrap:nowrap;overflow-x:auto;gap:10px;padding:8px 4px;"></div>
+</div>
 
     <div id="subtab-bglayers" class="sub-view">
       <button class="crop-tool" onclick="clearAllBg()" style="width:100%;justify-content:center;padding:12px;background:#242424;color:#fff;font-weight:800;margin-bottom:14px;">NONE</button>
