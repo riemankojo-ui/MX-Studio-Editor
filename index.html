@@ -486,77 +486,40 @@
   </div>
 
 <div id="panel-person" class="panel">
-  <div id="personStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Pick a photo from your gallery. The background will be removed automatically.</div>
-  <label for="personPhotoInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK PHOTO</label>
-  <input type="file" id="personPhotoInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;" onchange="handlePersonPhoto(this)">
-
-  <div id="personControls" style="display:none;background:#141414;border-radius:12px;padding:16px 14px;margin-top:14px;">
-    <label class="section-label">MOVE X: <span id="personXVal">0</span></label>
-    <input type="range" id="personXInput" min="-100" max="100" value="0" oninput="setPersonX(this.value)">
-
-    <label class="section-label">MOVE Y: <span id="personYVal">0</span></label>
-    <input type="range" id="personYInput" min="-100" max="100" value="0" oninput="setPersonY(this.value)">
-
-    <label class="section-label">SCALE: <span id="personScaleVal">100</span>%</label>
-    <input type="range" id="personScaleInput" min="20" max="300" value="100" oninput="setPersonScale(this.value)">
-
-    <label class="section-label">ROTATION: <span id="personRotVal">0</span>°</label>
-    <input type="range" id="personRotInput" min="-180" max="180" value="0" oninput="setPersonRotation(this.value)">
-
-    <button class="crop-tool" onclick="resetPersonOverlay()" style="margin-top:14px;width:100%;justify-content:center;background:#ff2c2c;color:#fff;font-weight:800;">REMOVE PERSON</button>
-  </div>
-</div>
-<div id="panel-cutbody" class="panel">
   <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('cutcrop', this)">CUT</button>
-    <button class="sub-tab" onclick="switchSubTab('cutlayers', this)">LAYERS</button>
-    <button class="sub-tab" onclick="switchSubTab('cuteffects', this)">EFFECTS</button>
+    <button class="sub-tab active" onclick="switchSubTab('personpick', this)">PICK</button>
+    <button class="sub-tab" onclick="switchSubTab('personadjust', this)">ADJUST</button>
   </div>
 
-  <!-- ========== TAB 1: CUT + COPY (icon buttons) ========== -->
-  <div id="subtab-cutcrop" class="sub-view active">
-  <div style="padding:8px 8px 14px 8px;text-align:center;">
+  <div id="subtab-personpick" class="sub-view active">
+    <div id="personStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Pick a photo from your gallery. The background will be removed automatically.</div>
 
-    <!-- Icon buttons FIRST (top) -->
-    <div style="display:flex;justify-content:center;gap:14px;margin-bottom:14px;">
-      <!-- CUT button -->
-      <button onclick="startCutBody()" title="Cut Body" style="width:60px;height:60px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="6" cy="6" r="3"/>
-          <circle cx="6" cy="18" r="3"/>
-          <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-          <line x1="8.12" y1="15.88" x2="12" y2="12"/>
-          <line x1="12" y1="12" x2="20" y2="4"/>
-          <line x1="12" y1="12" x2="20" y2="20"/>
-        </svg>
-      </button>
+    <label for="personPhotoInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK PHOTO</label>
+    <input type="file" id="personPhotoInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;" onchange="handlePersonPhoto(this)">
 
-      <!-- COPY button -->
-      <button onclick="addBodyLayer()" title="Copy Body" style="width:60px;height:60px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2"/>
-          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-        </svg>
-      </button>
+    <div id="personControls" style="display:none;margin-top:14px;">
+      <div style="font-size:11px;color:#666;text-align:center;padding:10px;line-height:1.5;">Drag the person on the canvas to move. Pinch to scale. Use ADJUST tab for fine control.</div>
+      <button class="crop-tool" onclick="resetPersonOverlay()" style="margin-top:14px;width:100%;justify-content:center;background:#ff2c2c;color:#fff;font-weight:800;">REMOVE PERSON</button>
     </div>
+  </div>
 
-    <!-- Status text BELOW buttons -->
-    <div id="cutBodyStatus" style="font-size:11px;color:#888;line-height:1.5;padding:0 8px;">Tap scissors to cut, or copy to duplicate the body.</div>
+  <div id="subtab-personadjust" class="sub-view">
+    <div style="background:#141414;border-radius:12px;padding:16px 14px;">
+      <label class="section-label" style="margin-top:0;">MOVE X: <span id="personXVal">0</span></label>
+      <input type="range" id="personXInput" min="-100" max="100" value="0" oninput="setPersonX(this.value)">
 
-    <!-- Cut actions (appear when cutting) -->
-    <div id="cutBodyActions" style="display:none;margin-top:14px;">
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button onclick="applyCutBody()" style="flex:1;background:#00d4ff;color:#000;border:none;padding:14px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;">✓ APPLY</button>
-        <button onclick="cancelCutBody()" style="flex:1;background:#242424;color:#fff;border:none;padding:14px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;">✕ CANCEL</button>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="resetCutBoxFull()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:10px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">FULL</button>
-        <button onclick="resetCutBoxCenter()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:10px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">CENTER</button>
-      </div>
+      <label class="section-label">MOVE Y: <span id="personYVal">0</span></label>
+      <input type="range" id="personYInput" min="-100" max="100" value="0" oninput="setPersonY(this.value)">
+
+      <label class="section-label">SCALE: <span id="personScaleVal">100</span>%</label>
+      <input type="range" id="personScaleInput" min="20" max="300" value="100" oninput="setPersonScale(this.value)">
+
+      <label class="section-label">ROTATION: <span id="personRotVal">0</span>°</label>
+      <input type="range" id="personRotInput" min="-180" max="180" value="0" oninput="setPersonRotation(this.value)">
     </div>
-
   </div>
 </div>
+<!-- Cut body actions (show only when cut mode is active) -->
       <!-- Cut body actions (show only when cut mode is active) -->
       <div id="cutBodyActions" style="display:none;margin-top:16px;">
         <div style="display:flex;gap:8px;margin-bottom:10px;">
