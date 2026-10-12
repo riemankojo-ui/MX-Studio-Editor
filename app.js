@@ -2602,8 +2602,10 @@ function saveProjectToHome() {
       template: currentTemplate, fx: currentFx, fxAmount: currentFxAmount,
       fxX, fxY, fxScale, fxRotation,
       subjectX, subjectY, subjectScale,
-      subjectMode, strokeColor, subjectAmount: subjAmt.value
-    }));
+      subjectAmount: subjAmt.value,
+  personOverlay: personOverlay ? personOverlay.src : null,
+  personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation
+}));
   } catch(e) { alert('Storage full.'); return; }
   undoStack = []; redoStack = []; updateHistoryButtons();
   showToast('Saved');
@@ -2691,6 +2693,15 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   const bgsv = document.getElementById('bgImgSizeVal'); if (bgsv) bgsv.innerText = currentBgImageSize;
   currentTemplate = p.template ?? 'none';
   subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
+if (p.personOverlay) {
+  const pi = new Image();
+  pi.onload = () => { personOverlay = pi; if (imgLoaded) redraw(); };
+  pi.src = p.personOverlay;
+  personOverlayX = p.personOverlayX ?? 0;
+  personOverlayY = p.personOverlayY ?? 0;
+  personOverlayScale = p.personOverlayScale ?? 1;
+  personOverlayRotation = p.personOverlayRotation ?? 0;
+}  
   const sourceImage = p.originalImage || p.image;
   originalImageSrc = sourceImage;
   window.__originalBeforeBgRemove = p.preBgRemoveImage || null;
@@ -2909,6 +2920,15 @@ if (data.projectId && localStorage.getItem('music_' + data.projectId)) {
     subjectScale = data.subjectScale || 1;
     backgroundRemoved = !!data.backgroundRemoved;
     subjectMode = data.subjectMode || 'none';
+    if (data.personOverlay) {
+  const pi = new Image();
+  pi.onload = () => { personOverlay = pi; redraw(); };
+  pi.src = data.personOverlay;
+  personOverlayX = data.personOverlayX ?? 0;
+  personOverlayY = data.personOverlayY ?? 0;
+  personOverlayScale = data.personOverlayScale ?? 1;
+  personOverlayRotation = data.personOverlayRotation ?? 0;
+}
     strokeColor = data.strokeColor || '#ffffff';
     if (data.bgImageFile && bgImages[data.bgImageFile]) {
       currentBgImage = bgImages[data.bgImageFile];
