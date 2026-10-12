@@ -3401,7 +3401,7 @@ function buildBgColorsTab() {
   let html = '';
   SOLID_COLORS.forEach(col => {
     const isSel = (currentBgColor === col);
-    html += `<div onclick="applyBgColorFromTab('${col}', this)" style="width:100%;aspect-ratio:1/1;background:${col};border-radius:10px;border:2px solid ${isSel ? '#fff' : '#333'};cursor:pointer;"></div>`;
+    html += `<div onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:10px;border:2px solid ${isSel ? '#fff' : '#333'};cursor:pointer;"></div>`;
   });
   grid.innerHTML = html;
 }
