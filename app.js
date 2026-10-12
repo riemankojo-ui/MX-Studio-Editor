@@ -65,6 +65,8 @@ let isDraggingSubject = false;
 let subjectDragStart = null;
 let bgDragMode = 'subject';
 let isDraggingBg = false;
+let isDraggingPerson = false;
+let personDragStart = null;
 let bgDragStart = null;
 let unshowOpacity = 100;
 let overlayImg = null;
@@ -1429,6 +1431,15 @@ function startTouch(e) {
     return;
   }
 
+if (gestureTarget === 'person' && personOverlay) {
+  if (touches.size === 1) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    isDraggingPerson = true;
+    personDragStart = { x: pos.x, y: pos.y, px: personOverlayX, py: personOverlayY };
+    return;
+  }
+  return;
+}
   if (gestureTarget === 'subject' && imgLoaded) {
     if (touches.size === 2) {
       const arr = Array.from(touches.values());
@@ -1597,6 +1608,18 @@ function onTouchMove(e) {
     return;
   }
 
+if (gestureTarget === 'person' && personOverlay) {
+  if (isDraggingPerson && personDragStart) {
+    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    const dx = (pos.x - personDragStart.x) / canvas.width * 100;
+    const dy = (pos.y - personDragStart.y) / canvas.height * 100;
+    personOverlayX = Math.max(-100, Math.min(100, personDragStart.px + dx));
+    personOverlayY = Math.max(-100, Math.min(100, personDragStart.py + dy));
+    syncPersonSliders();
+    redraw(); return;
+  }
+  return;
+}
   if (gestureTarget === 'subject' && imgLoaded) {
     if (touches.size === 2 && gesture && gesture.type === 'subject') {
       const arr = Array.from(touches.values());
@@ -2234,6 +2257,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   else if (name === 'bgremover') gestureTarget = 'subject';
   else if (name === 'bgimage') gestureTarget = bgDragMode;
   else if (name === 'clean') gestureTarget = 'overlay';
+  else if (name === 'person') gestureTarget = 'person';
   else gestureTarget = 'text';
   if (name === 'crop') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
