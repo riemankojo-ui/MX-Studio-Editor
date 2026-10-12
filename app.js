@@ -315,7 +315,7 @@ function buildFxTabs() {
   let html = '';
   FX_CATEGORIES.forEach(cat => {
     const sel = (currentFxTab === cat.key) ? 'active' : '';
-    html += `<button class="sub-tab ${sel}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
+    html += `<button class="sub-tab ${sel}" data-fxtab="${cat.key}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
   });
   bar.innerHTML = html;
 }
@@ -324,49 +324,42 @@ function buildFxGrids() {
   const container = document.getElementById('fxScrollContainer');
   if (!container) return;
 
-  // Make container vertical
-  container.style.display = 'block';
-  container.style.overflowX = 'hidden';
-  container.style.overflowY = 'auto';
-  container.style.padding = '0 4px';
+  container.style.display = 'flex';
+  container.style.gap = '8px';
+  container.style.overflowX = 'auto';
+  container.style.overflowY = 'hidden';
+  container.style.padding = '8px 4px';
+  container.style.scrollSnapType = 'x proximity';
 
   let html = '';
-
   FX_CATEGORIES.forEach(cat => {
-    // Category header
-    html += `<div style="font-size:11px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px 0;">${cat.label}</div>`;
-
-    // Horizontal row of cards for this category
-    html += `<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity;">`;
+    // Invisible anchor for scroll tracking
+    html += `<div id="fxAnchor-${cat.key}" style="flex:0 0 auto;width:1px;"></div>`;
 
     // Off card
-    html += `<div class="fx-card ${currentFx === cat.key + ':none' ? 'selected' : ''}" onclick="setFx('${cat.key}:none', this)" style="flex:0 0 auto;scroll-snap-align:start;">
+    html += `<div class="fx-card ${currentFx === cat.key + ':none' ? 'selected' : ''}" onclick="setFx('${cat.key}:none', this)" style="flex:0 0 auto;">
       <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </div>
       <span class="fx-card-label">Off</span>
     </div>`;
 
-    // Files
     if (cat.files && cat.files.length) {
       cat.files.forEach(f => {
         const key = cat.key + ':' + f.fname;
         const sel = (currentFx === key) ? 'selected' : '';
-        html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)" style="flex:0 0 auto;scroll-snap-align:start;">
+        html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)" style="flex:0 0 auto;">
           <div class="fx-card-preview">
             <img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;">
           </div>
           <span class="fx-card-label">${f.base}</span>
         </div>`;
       });
-    } else {
-      html += `<div style="color:#666;font-size:10px;padding:20px 12px;flex:0 0 auto;">No files</div>`;
     }
-
-    html += `</div>`;
   });
 
   container.innerHTML = html;
+  container.addEventListener('scroll', onFxScroll, { passive: true });
 }
 function buildFxGrid(catKey) {
   const cat = FX_CATEGORIES.find(c => c.key === catKey);
