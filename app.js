@@ -2284,7 +2284,14 @@ function applyCutBody() {
 // ---------- Panel switching ----------
 function switchPanel(name, btn) {
 showTextBox = false;
-document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
+const bottomNav = document.querySelector('.bottom-nav');
+if (bottomNav) {
+  bottomNav.style.setProperty('display', 'flex', 'important');
+  if (btn) btn.blur(); 
+  setTimeout(() => {
+    bottomNav.scrollLeft = 0;
+  }, 50);
+}
   if (name === 'fx') gestureTarget = 'fx';
   else if (name === 'bgremover') gestureTarget = 'subject';
   else if (name === 'bgimage') gestureTarget = bgDragMode;

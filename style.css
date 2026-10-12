@@ -215,3 +215,30 @@ canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#1
 .crop-ratio-btn svg { width:22px; height:22px; stroke:#888; fill:none; }
 .crop-ratio-btn.active { color:#00d4ff; }
 .crop-ratio-btn.active svg { stroke:#00d4ff; }
+/* --- FIX FOR EFFECTS CATEGORY TABS --- */
+#fxTabs {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  border-bottom: none; /* Removes the line under the tabs */
+  margin-bottom: 10px;
+}
+#fxTabs::-webkit-scrollbar { display: none; }
+
+#fxTabs .sub-tab {
+  padding: 8px 16px;
+  background: #161616;
+  border-radius: 18px; /* Makes them look like rounded pills */
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  border-bottom: none; /* Removes the white underline */
+  flex-shrink: 0;
+}
+#fxTabs .sub-tab.active {
+  color: #fff;
+  background: #333; /* Highlights the active tab */
+}
