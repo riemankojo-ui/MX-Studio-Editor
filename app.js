@@ -3614,6 +3614,7 @@ function buildBgColorsTab() {
       if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }, 100);
   }
+}  
 function applyBgColorFromTab(color, el) {
   if (color === null) {
     currentBgColor = null;
