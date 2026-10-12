@@ -53,10 +53,18 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .nav-btn.active { color:#ffffff; opacity:1; transform:translateY(-2px); }
 .nav-btn.active svg { stroke:#ffffff; }
 
-.panel.active { display:block; }
+.panel.active { display:block; animation: panelSlideUp 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+@keyframes panelSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .sub-tabs { display:flex; justify-content:flex-start; gap:16px; margin-bottom:8px; border-bottom:1px solid #1a1a1a; padding-bottom:8px; overflow-x:auto; }
-.sub-tabs::-webkit-scrollbar { display:none; }
+.sub-view.active { display:block; animation: subFade 0.14s ease-out; }
+@keyframes subFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .sub-tab { background:none; border:none; color:#666; font-weight:bold; font-size:11px; cursor:pointer; padding:2px 0; white-space:nowrap; flex-shrink:0; }
 .sub-tab.active { color:#fff; border-bottom:2px solid #fff; }
 .sub-view { display:none; }
