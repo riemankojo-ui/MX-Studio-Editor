@@ -485,10 +485,8 @@
     </div>
   </div>
 
-<div id="panel-cutbody" class="panel">
-     <div id="panel-person" class="panel">
+<div id="panel-person" class="panel">
   <div id="personStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Pick a photo from your gallery. The background will be removed automatically.</div>
-
   <label for="personPhotoInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;">+ PICK PHOTO</label>
   <input type="file" id="personPhotoInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;" onchange="handlePersonPhoto(this)">
 
@@ -508,6 +506,7 @@
     <button class="crop-tool" onclick="resetPersonOverlay()" style="margin-top:14px;width:100%;justify-content:center;background:#ff2c2c;color:#fff;font-weight:800;">REMOVE PERSON</button>
   </div>
 </div>
+<div id="panel-cutbody" class="panel">
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="switchSubTab('cutcrop', this)">CUT</button>
     <button class="sub-tab" onclick="switchSubTab('cutlayers', this)">LAYERS</button>
