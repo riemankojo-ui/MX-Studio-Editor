@@ -310,7 +310,7 @@ function buildPresetThumbs() {
   el.innerHTML = html;
 }// ---------- FX system ----------
 function buildFxTabs() {
-  const bar = document.getElementById('fxTabBar');
+  const bar = document.getElementById('fxTabs');
   if (!bar) return;
   let html = '';
   FX_CATEGORIES.forEach(cat => {
@@ -3320,8 +3320,6 @@ window.saveProjectToHome = saveProjectToHome;
 window.saveImage = saveImage;
 window.removeBackgroundCompletely = window.removeBackgroundCompletely;
 window.detectSubject = window.detectSubject;
-function switchFxTab() { return; }
-window.switchFxTab = switchFxTab;
 // ---------- ADD PERSON overlay ----------
 let personOverlay = null;
 let personOverlayX = 0;
@@ -3920,3 +3918,36 @@ window.exportMxProject = exportMxProject;
 window.closeExportNameCard = closeExportNameCard;
 window.confirmExportName = confirmExportName;
 window.saveImage = saveImage;
+
+// ---------- FX tabs + scroll sync ----------
+function switchFxTab(key, el) {
+  currentFxTab = key;
+  const bar = document.getElementById('fxTabs');
+  if (bar) {
+    bar.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+    const target = el || bar.querySelector('[data-fxtab="' + key + '"]');
+    if (target) target.classList.add('active');
+  }
+  const strip = document.getElementById('fxScrollContainer');
+  const anchor = document.getElementById('fxAnchor-' + key);
+  if (strip && anchor) {
+    strip.scrollTo({ left: anchor.offsetLeft, behavior: 'smooth' });
+  }
+}
+
+function onFxScroll() {
+  const strip = document.getElementById('fxScrollContainer');
+  const bar = document.getElementById('fxTabs');
+  if (!strip || !bar) return;
+  const x = strip.scrollLeft;
+  const anchor = x + Math.min(48, strip.clientWidth * 0.15);
+  const anchors = strip.querySelectorAll('[id^="fxAnchor-"]');
+  let activeKey = null;
+  anchors.forEach(a => {
+    if (a.offsetLeft <= anchor) activeKey = a.id.replace('fxAnchor-', '');
+  });
+  if (!activeKey) return;
+  bar.querySelectorAll('.sub-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.fxtab === activeKey);
+  });
+}

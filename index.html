@@ -119,7 +119,8 @@
   </div>
 
 <div id="panel-fx" class="panel">
-  <div id="fxScrollContainer" style="display:flex;gap:8px;overflow-x:auto;padding:8px 4px;scroll-snap-type:x proximity;align-items:flex-start;"></div>
+  <div class="sub-tabs" id="fxTabs"></div>
+  <div id="fxScrollContainer"
   <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
   <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
   <button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
@@ -747,6 +748,6 @@
 <div id="toast">Saved</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>
