@@ -1512,9 +1512,10 @@ if (gestureTarget === 'person' && personOverlay) {
     isDraggingText = true;
     showFloatingMenu(clickedLayer.x, clickedLayer.y);
     redraw();
-  } else {
-    activeLayerId = null; textMenu.style.display = 'none'; updateTextLayersUI(); redraw();
-  }
+} else {
+  textMenu.style.display = 'none';
+  updateTextLayersUI(); redraw();
+}
 }
 
 function onTouchMove(e) {
