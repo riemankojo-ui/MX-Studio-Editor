@@ -3591,30 +3591,30 @@ function buildBgColorsTab() {
 
   let html = '';
 
-  // "None" option first
+  // NONE option
   const noneSel = (!currentBgColor && !currentBgImage);
-  html += `<div onclick="applyBgColorFromTab(null, this)" style="flex:0 0 auto;width:62px;height:62px;background:#111;border-radius:0;border:${noneSel ? '2px' : '1px'} solid ${noneSel ? '#fff' : '#222'};cursor:pointer;display:flex;align-items:center;justify-content:center;">
+  html += `<div id="bgColorNoneBtn" onclick="applyBgColorFromTab(null, this)" style="flex:0 0 auto;width:62px;height:62px;background:#111;border-radius:0;border:${noneSel ? '2px' : '1px'} solid ${noneSel ? '#fff' : '#222'};cursor:pointer;display:flex;align-items:center;justify-content:center;">
     <span style="color:#666;font-size:10px;font-weight:800;letter-spacing:1px;">NONE</span>
   </div>`;
 
   // All colors
-  SOLID_COLORS.forEach(col => {
-const isSel = (currentBgColor && currentBgColor.toLowerCase() === col.toLowerCase());
-    html += `<div onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:0;border:${isSel ? '2px' : '1px'} solid ${isSel ? '#fff' : 'transparent'};cursor:pointer;"></div>`;
+  let selectedIndex = -1;
+  SOLID_COLORS.forEach((col, i) => {
+    const isSel = (currentBgColor && currentBgColor.toLowerCase() === col.toLowerCase());
+    if (isSel) selectedIndex = i;
+    html += `<div id="bgColor_${i}" onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:0;border:${isSel ? '2px' : '1px'} solid ${isSel ? '#fff' : 'transparent'};cursor:pointer;"></div>`;
   });
 
   grid.innerHTML = html;
-}
-function applyBgColorFromTab(color, el) {
-  if (color === null) {
-    // None = clear background
-    currentBgColor = null;
-    currentBgImage = null;
-  } else {
-    currentBgColor = color;
-    currentBgImage = null;
+
+  // Auto-scroll to the selected color
+  if (selectedIndex >= 0) {
+    setTimeout(() => {
+      const el = document.getElementById('bgColor_' + selectedIndex);
+      if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }, 100);
   }
-  document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
+} document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
   document.querySelectorAll('#bgColorsTabGrid > div').forEach(x => {
     x.style.border = '1px solid transparent';
   });
