@@ -310,12 +310,12 @@ function buildPresetThumbs() {
   el.innerHTML = html;
 }// ---------- FX system ----------
 function buildFxTabs() {
-  const bar = document.getElementById('fxTabBar');
+  const bar = document.getElementById('fxTabs');
   if (!bar) return;
   let html = '';
   FX_CATEGORIES.forEach(cat => {
     const sel = (currentFxTab === cat.key) ? 'active' : '';
-    html += `<button class="sub-tab ${sel}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
+    html += `<button class="sub-tab ${sel}" data-fxtab="${cat.key}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
   });
   bar.innerHTML = html;
 }
@@ -323,40 +323,39 @@ function buildFxTabs() {
 function buildFxGrids() {
   const container = document.getElementById('fxScrollContainer');
   if (!container) return;
+
+  // 1. Find the currently selected category
+  const cat = FX_CATEGORIES.find(c => c.key === currentFxTab);
+  if (!cat) return;
+
+  // 2. Build the HTML for just this category
   let html = '';
+  
+  // Add the "Off" card
+  html += `<div class="fx-card ${currentFx === cat.key + ':none' ? 'selected' : ''}" onclick="setFx('${cat.key}:none', this)" style="flex:0 0 auto;">
+    <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <span class="fx-card-label">Off</span>
+  </div>`;
 
-  FX_CATEGORIES.forEach(cat => {
-    // Category divider chip
-    html += `<div style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0 4px;height:88px;">
-      <div style="font-size:10px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;background:#242424;padding:12px 8px;border-radius:10px;white-space:nowrap;writing-mode:vertical-rl;transform:rotate(180deg);">${cat.label}</div>
-    </div>`;
+  // Add the effect cards for this category
+  if (cat.files && cat.files.length) {
+    cat.files.forEach(f => {
+      const key = cat.key + ':' + f.fname;
+      const sel = (currentFx === key) ? 'selected' : '';
+      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)" style="flex:0 0 auto;">
+        <div class="fx-card-preview">
+          <img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <span class="fx-card-label">${f.base}</span>
+      </div>`;
+    });
+  }
 
-    // "Off" card
-    html += `<div class="fx-card ${currentFx === cat.key + ':none' ? 'selected' : ''}" onclick="setFx('${cat.key}:none', this)" style="flex:0 0 auto;">
-      <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </div>
-      <span class="fx-card-label">Off</span>
-    </div>`;
-
-    // Effect cards
-    if (cat.files && cat.files.length) {
-      cat.files.forEach(f => {
-        const key = cat.key + ':' + f.fname;
-        const sel = (currentFx === key) ? 'selected' : '';
-        html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)" style="flex:0 0 auto;">
-          <div class="fx-card-preview">
-            <img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;">
-          </div>
-          <span class="fx-card-label">${f.base}</span>
-        </div>`;
-      });
-    }
-  });
-
+  // 3. Put it in the container
   container.innerHTML = html;
 }
-
 function buildFxGrid(catKey) {
   const cat = FX_CATEGORIES.find(c => c.key === catKey);
   if (!cat) return;
@@ -3316,8 +3315,6 @@ window.saveProjectToHome = saveProjectToHome;
 window.saveImage = saveImage;
 window.removeBackgroundCompletely = window.removeBackgroundCompletely;
 window.detectSubject = window.detectSubject;
-function switchFxTab() { return; }
-window.switchFxTab = switchFxTab;
 // ---------- ADD PERSON overlay ----------
 let personOverlay = null;
 let personOverlayX = 0;
@@ -3916,3 +3913,36 @@ window.exportMxProject = exportMxProject;
 window.closeExportNameCard = closeExportNameCard;
 window.confirmExportName = confirmExportName;
 window.saveImage = saveImage;
+
+// ---------- FX tabs + scroll sync ----------
+function switchFxTab(key, el) {
+  currentFxTab = key;
+  
+  // 1. Update the active tab styling
+  const bar = document.getElementById('fxTabs');
+  if (bar) {
+    bar.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+    const target = el || bar.querySelector('[data-fxtab="' + key + '"]');
+    if (target) target.classList.add('active');
+  }
+  
+  // 2. Rebuild the effects list for this new category
+  buildFxGrids();
+}
+
+function onFxScroll() {
+  const strip = document.getElementById('fxScrollContainer');
+  const bar = document.getElementById('fxTabs');
+  if (!strip || !bar) return;
+  const x = strip.scrollLeft;
+  const anchor = x + Math.min(48, strip.clientWidth * 0.15);
+  const anchors = strip.querySelectorAll('[id^="fxAnchor-"]');
+  let activeKey = null;
+  anchors.forEach(a => {
+    if (a.offsetLeft <= anchor) activeKey = a.id.replace('fxAnchor-', '');
+  });
+  if (!activeKey) return;
+  bar.querySelectorAll('.sub-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.fxtab === activeKey);
+  });
+}
