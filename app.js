@@ -3422,7 +3422,7 @@ window.syncPersonSliders = syncPersonSliders;
 // ---------- BG Picker from Home ----------
 // ---------- BG Picker from Home ----------
 const SOLID_COLORS = [
-  '#ffffff', '#f5f5f5', '#e0e0e0', '#c0c0c0', '#808080', '#404040',
+'#ffa500', '#ff2c2c', '#00d4ff', '#ffd700', '#00ff88', '#9d4edd',
   '#1a1a1a', '#0a0a0a', '#000000',
   '#ff0000', '#dc143c', '#8b0000', '#ff2c2c', '#ff69b4', '#ffb6c1',
   '#ff1493', '#c71585', '#ff7f7f',
@@ -3587,6 +3587,7 @@ window.pickColorForNewProject = pickColorForNewProject;
 function buildBgColorsTab() {
   const grid = document.getElementById('bgColorsTabGrid');
   if (!grid) return;
+  console.log('BG tab opening. currentBgColor =', currentBgColor);
   if (typeof SOLID_COLORS === 'undefined') { grid.innerHTML = ''; return; }
 
   let html = '';
