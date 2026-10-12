@@ -2152,7 +2152,7 @@ if (currentFilter === 'coverart') {
         }
         ctx.restore();
       }
-      if (activeLayerId === layer.id) {
+     if (activeLayerId === layer.id && showTextBox) {
         const m = ctx.measureText(layer.text);
         const bw = m.width + 16, bh = layer.size + 8;
         drawSelectionBox(-bw/2, -bh/2, bw, bh);
@@ -2273,6 +2273,7 @@ function applyCutBody() {
 
 // ---------- Panel switching ----------
 function switchPanel(name, btn) {
+showTextBox = false;
 document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
   if (name === 'fx') gestureTarget = 'fx';
   else if (name === 'bgremover') gestureTarget = 'subject';
@@ -2647,6 +2648,7 @@ function saveProjectToHome() {
   }, 'image/png');
 }
 function loadProject(key) {
+showTextBox = false;
 document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
   resetStudioState();
   const p = JSON.parse(localStorage.getItem(key));
@@ -2742,6 +2744,7 @@ if (p.personOverlay) {
 }
 
 function goHome() {
+showTextBox = false;
   document.getElementById('view-studio').classList.remove('active');
   document.getElementById('view-home').classList.add('active');
   textMenu.style.display = 'none';
