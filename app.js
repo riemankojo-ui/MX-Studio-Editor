@@ -1432,6 +1432,15 @@ function startTouch(e) {
   }
 
 if (gestureTarget === 'person' && personOverlay) {
+  if (touches.size === 2) {
+    const arr = Array.from(touches.values());
+    gesture = {
+      type: 'personPinch',
+      startDist: touchDist(arr[0], arr[1]),
+      startScale: personOverlayScale
+    };
+    return;
+  }
   if (touches.size === 1) {
     const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
     isDraggingPerson = true;
@@ -1609,6 +1618,14 @@ function onTouchMove(e) {
   }
 
 if (gestureTarget === 'person' && personOverlay) {
+if (touches.size === 2 && gesture && gesture.type === 'personPinch') {
+  const arr = Array.from(touches.values());
+  const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
+  personOverlayScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
+  syncPersonSliders();
+  redraw();
+  return;
+}
   if (isDraggingPerson && personDragStart) {
     const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
     const dx = (pos.x - personDragStart.x) / canvas.width * 100;
