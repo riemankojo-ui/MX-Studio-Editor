@@ -895,7 +895,7 @@ function buildBgColors() {
   const noneSel = (!currentBgColor && !currentBgImage) ? 'selected' : '';
   html += `<div class="bgcolor-swatch ${noneSel}" style="background:linear-gradient(135deg,#2a2a2a 45%,#111 45%,#111 55%,#2a2a2a 55%);display:flex;align-items:center;justify-content:center;" onclick="setBgColor(null, this)"><span style="color:#888;font-size:11px;font-weight:700;">NONE</span></div>`;
   BG_COLORS.forEach(col => {
-    const sel = (currentBgColor === col) ? 'selected' : '';
+    const sel = (currentBgColor && currentBgColor.toLowerCase() === col.toLowerCase()) ? 'selected' : '';
     html += `<div class="bgcolor-swatch ${sel}" style="background:${col};" onclick="setBgColor('${col}', this)"></div>`;
   });
   c.innerHTML = html;
@@ -1996,7 +1996,6 @@ if (currentFilter === 'coverart') {
   const fade = parseInt(nInput.value);
   if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${(fade/100)*0.4})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   if (!currentBgColor && !currentBgImage) drawBorder();
-  drawFxLayer();
   if (overlayImg) {
     ctx.save();
     const cw = canvas.width, ch = canvas.height;
@@ -2081,6 +2080,7 @@ if (currentFilter === 'coverart') {
     ctx.restore();
   }
   drawPersonOverlay();
+  drawFxLayer();
   textLayers.forEach(layer => {
     if (layer.text && layer.text.trim() !== '') {
       ctx.save();
@@ -3502,29 +3502,36 @@ function pickColorForNewProject(color) {
   resetStudioState();
   canvas.width = 1080;
   canvas.height = 1080;
+
   const blank = document.createElement('canvas');
   blank.width = 1080;
   blank.height = 1080;
   const bctx = blank.getContext('2d');
-  bctx.fillStyle = color;
+  bctx.fillStyle = '#000000';
   bctx.fillRect(0, 0, 1080, 1080);
+
   const blankImg = new Image();
   blankImg.onload = function() {
     img = blankImg;
     imgLoaded = true;
     originalImageSrc = blank.toDataURL('image/png');
+
     currentBgImage = null;
-    currentBgColor = null;
+    currentBgColor = color;
+    currentBgColorSize = 0;
     currentProjectId = null;
     currentProjectName = 'Solid ' + color.toUpperCase();
+
     document.getElementById('view-home').classList.remove('active');
     document.getElementById('view-studio').classList.add('active');
     document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
+
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('panel-adjust').classList.add('active');
     const adjustBtn = document.querySelector('.nav-btn[data-panel="adjust"]');
     if (adjustBtn) adjustBtn.classList.add('active');
+
     buildFilterThumbs(); buildTemplates(); buildBorders();
     redraw();
     saveState();
@@ -3592,7 +3599,7 @@ function buildBgColorsTab() {
 
   // All colors
   SOLID_COLORS.forEach(col => {
-    const isSel = (currentBgColor === col);
+const isSel = (currentBgColor && currentBgColor.toLowerCase() === col.toLowerCase());
     html += `<div onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:0;border:${isSel ? '2px' : '1px'} solid ${isSel ? '#fff' : 'transparent'};cursor:pointer;"></div>`;
   });
 
