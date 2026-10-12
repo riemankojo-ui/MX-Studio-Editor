@@ -40,6 +40,7 @@ let currentFxAmount = 70;
 let textLayers = [];
 let activeLayerId = null;
 let isDraggingText = false;
+let showTextBox = false;
 let cutBodyActive = false;
 let backgroundRemoved = false;
 let cutBox = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
@@ -1506,6 +1507,7 @@ if (gestureTarget === 'person' && personOverlay) {
   }
   if (clickedLayer) {
     activeLayerId = clickedLayer.id;
+    showTextBox = true;
     dragOffsetX = pos.x - clickedLayer.x;
     dragOffsetY = pos.y - clickedLayer.y;
     syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
@@ -1513,6 +1515,7 @@ if (gestureTarget === 'person' && personOverlay) {
     showFloatingMenu(clickedLayer.x, clickedLayer.y);
     redraw();
 } else {
+showTextBox = false;
   textMenu.style.display = 'none';
   updateTextLayersUI(); redraw();
 }
