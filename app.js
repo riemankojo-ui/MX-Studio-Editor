@@ -3398,24 +3398,41 @@ function buildBgColorsTab() {
   const grid = document.getElementById('bgColorsTabGrid');
   if (!grid) return;
   if (typeof SOLID_COLORS === 'undefined') { grid.innerHTML = ''; return; }
+
   let html = '';
+
+  // "None" option first
+  const noneSel = (!currentBgColor && !currentBgImage);
+  html += `<div onclick="applyBgColorFromTab(null, this)" style="flex:0 0 auto;width:62px;height:62px;background:#111;border-radius:0;border:${noneSel ? '2px' : '1px'} solid ${noneSel ? '#fff' : '#222'};cursor:pointer;display:flex;align-items:center;justify-content:center;">
+    <span style="color:#666;font-size:10px;font-weight:800;letter-spacing:1px;">NONE</span>
+  </div>`;
+
+  // All colors
   SOLID_COLORS.forEach(col => {
     const isSel = (currentBgColor === col);
-    html += `<div onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:10px;border:2px solid ${isSel ? '#fff' : '#333'};cursor:pointer;"></div>`;
+    html += `<div onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:0;border:${isSel ? '2px' : '1px'} solid ${isSel ? '#fff' : 'transparent'};cursor:pointer;"></div>`;
   });
+
   grid.innerHTML = html;
 }
 function applyBgColorFromTab(color, el) {
-  currentBgColor = color;
-  currentBgImage = null;
+  if (color === null) {
+    // None = clear background
+    currentBgColor = null;
+    currentBgImage = null;
+  } else {
+    currentBgColor = color;
+    currentBgImage = null;
+  }
   document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
-  document.querySelectorAll('#bgColorsTabGrid > div').forEach(x => x.style.border = '2px solid #333');
+  document.querySelectorAll('#bgColorsTabGrid > div').forEach(x => {
+    x.style.border = '1px solid transparent';
+  });
   if (el) el.style.border = '2px solid #fff';
   redraw();
   saveState();
-  showToast('Color applied');
+  showToast(color === null ? 'Background removed' : 'Color applied');
 }
-
 window.buildBgColorsTab = buildBgColorsTab;
 window.applyBgColorFromTab = applyBgColorFromTab;
 // ---------- Save image (added) ----------
