@@ -3614,7 +3614,14 @@ function buildBgColorsTab() {
       if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }, 100);
   }
-} document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
+function applyBgColorFromTab(color, el) {
+  if (color === null) {
+    currentBgColor = null;
+    currentBgImage = null;
+  } else {
+    currentBgColor = color;
+    currentBgImage = null;
+  }
   document.querySelectorAll('#bgColorsTabGrid > div').forEach(x => {
     x.style.border = '1px solid transparent';
   });
