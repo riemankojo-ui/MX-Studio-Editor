@@ -1365,6 +1365,7 @@ function startTouch(e) {
   if (e.target && e.target.closest && e.target.closest('#textFloatingMenu')) return;
   if (!imgLoaded) return;
   if (e.preventDefault) e.preventDefault();
+  if (showTextBox) { showTextBox = false; redraw(); }
   if (e.touches) { touches.clear(); for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
   else { touches.clear(); touches.set('mouse', { x:e.clientX, y:e.clientY }); }
 
