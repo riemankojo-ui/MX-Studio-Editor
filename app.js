@@ -3617,6 +3617,7 @@ if (selectedIndex >= 0) {
     }
   }, 150);
 }
+}
 function applyBgColorFromTab(color, el) {
   if (color === null) {
     currentBgColor = null;
