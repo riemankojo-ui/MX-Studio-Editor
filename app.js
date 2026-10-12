@@ -3237,6 +3237,116 @@ window.saveProjectToHome = saveProjectToHome;
 window.saveImage = saveImage;
 window.removeBackgroundCompletely = window.removeBackgroundCompletely;
 window.detectSubject = window.detectSubject;
+// ---------- ADD PERSON overlay ----------
+let personOverlay = null;
+let personOverlayX = 0;
+let personOverlayY = 0;
+let personOverlayScale = 1;
+let personOverlayRotation = 0;
+
+function handlePersonPhoto(input) {
+  const file = (input.files || [])[0];
+  if (!file) return;
+  input.value = '';
+  const status = document.getElementById('personStatus');
+  if (status) status.textContent = 'Loading photo...';
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const newImg = new Image();
+    newImg.onload = () => {
+      if (status) status.textContent = 'Removing background...';
+      removePersonBg(newImg);
+    };
+    newImg.onerror = () => { if (status) status.textContent = 'Failed to load image.'; };
+    newImg.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function removePersonBg(srcImg) {
+  const status = document.getElementById('personStatus');
+  try {
+    const tmp = document.createElement('canvas');
+    tmp.width = srcImg.width;
+    tmp.height = srcImg.height;
+    tmp.getContext('2d').drawImage(srcImg, 0, 0);
+    const dataUrl = tmp.toDataURL('image/jpeg', 0.92);
+
+    const r = await fetch('https://mx-studio-editor.vercel.app/api/remove-bg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl })
+    });
+    if (!r.ok) { if (status) status.textContent = 'Server error: ' + r.status; return; }
+    const json = await r.json();
+    if (!json.image) { if (status) status.textContent = 'No image in response.'; return; }
+
+    const cutout = new Image();
+    cutout.onload = function() {
+      personOverlay = cutout;
+      personOverlayX = 0; personOverlayY = 0;
+      personOverlayScale = 1; personOverlayRotation = 0;
+      const sx = document.getElementById('personXInput'); if (sx) sx.value = 0;
+      const sy = document.getElementById('personYInput'); if (sy) sy.value = 0;
+      const ss = document.getElementById('personScaleInput'); if (ss) ss.value = 100;
+      const sr = document.getElementById('personRotInput'); if (sr) sr.value = 0;
+      const vx = document.getElementById('personXVal'); if (vx) vx.innerText = '0';
+      const vy = document.getElementById('personYVal'); if (vy) vy.innerText = '0';
+      const vs = document.getElementById('personScaleVal'); if (vs) vs.innerText = '100';
+      const vr = document.getElementById('personRotVal'); if (vr) vr.innerText = '0';
+      const ctrl = document.getElementById('personControls');
+      if (ctrl) ctrl.style.display = 'block';
+      if (status) status.textContent = 'Person added ✓ Use sliders to adjust.';
+      redraw(); saveState();
+      showToast('Person added');
+    };
+    cutout.onerror = () => { if (status) status.textContent = 'Failed to load cutout.'; };
+    cutout.src = json.image;
+  } catch (err) {
+    if (status) status.textContent = 'Failed: ' + (err.message || 'unknown');
+  }
+}
+
+function setPersonX(v) { personOverlayX = parseInt(v); const e = document.getElementById('personXVal'); if (e) e.innerText = v; redraw(); saveState(); }
+function setPersonY(v) { personOverlayY = parseInt(v); const e = document.getElementById('personYVal'); if (e) e.innerText = v; redraw(); saveState(); }
+function setPersonScale(v) { personOverlayScale = parseInt(v) / 100; const e = document.getElementById('personScaleVal'); if (e) e.innerText = v; redraw(); saveState(); }
+function setPersonRotation(v) { personOverlayRotation = parseInt(v); const e = document.getElementById('personRotVal'); if (e) e.innerText = v; redraw(); saveState(); }
+
+function resetPersonOverlay() {
+  personOverlay = null;
+  personOverlayX = 0; personOverlayY = 0;
+  personOverlayScale = 1; personOverlayRotation = 0;
+  const ctrl = document.getElementById('personControls'); if (ctrl) ctrl.style.display = 'none';
+  const status = document.getElementById('personStatus');
+  if (status) status.textContent = 'Pick a photo from your gallery. The background will be removed automatically.';
+  redraw(); saveState();
+  showToast('Person removed');
+}
+
+function drawPersonOverlay() {
+  if (!personOverlay) return;
+  const cw = canvas.width, ch = canvas.height;
+  const aspect = personOverlay.naturalWidth / personOverlay.naturalHeight;
+  let baseW, baseH;
+  if (aspect > 1) { baseW = cw * 0.7; baseH = baseW / aspect; }
+  else { baseH = ch * 0.7; baseW = baseH * aspect; }
+  const w = baseW * personOverlayScale;
+  const h = baseH * personOverlayScale;
+  const cx = cw / 2 + (personOverlayX / 100) * cw;
+  const cy = ch / 2 + (personOverlayY / 100) * ch;
+  ctx.save();
+  ctx.translate(cx, cy);
+  if (personOverlayRotation) ctx.rotate(personOverlayRotation * Math.PI / 180);
+  ctx.drawImage(personOverlay, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+window.handlePersonPhoto = handlePersonPhoto;
+window.setPersonX = setPersonX;
+window.setPersonY = setPersonY;
+window.setPersonScale = setPersonScale;
+window.setPersonRotation = setPersonRotation;
+window.resetPersonOverlay = resetPersonOverlay;
 // ---------- BG Picker from Home ----------
 // ---------- BG Picker from Home ----------
 const SOLID_COLORS = [
