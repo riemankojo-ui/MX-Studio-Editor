@@ -519,8 +519,26 @@
     </div>
   </div>
 </div>
-<!-- Cut body actions (show only when cut mode is active) -->
-      <!-- Cut body actions (show only when cut mode is active) -->
+<div id="panel-cutbody" class="panel">
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchSubTab('cutcrop', this)">CUT</button>
+    <button class="sub-tab" onclick="switchSubTab('cutlayers', this)">LAYERS</button>
+    <button class="sub-tab" onclick="switchSubTab('cuteffects', this)">EFFECTS</button>
+  </div>
+
+<div style="color:#ff0000;font-size:20px;padding:20px;text-align:center;background:#330000;">TEST CUTBODY SHOWING</div>
+  <div id="subtab-cutcrop" class="sub-view active">
+    <div style="padding:8px 8px 14px 8px;text-align:center;">
+      <div id="cutBodyStatus" style="font-size:11px;color:#888;line-height:1.5;padding:0 8px;">Tap scissors to cut, or copy to duplicate the body.</div>
+
+      <div style="display:flex;justify-content:center;gap:14px;margin-top:10px;">
+        <button onclick="startCutBody()" style="width:60px;height:60px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="8.12" y1="8.12" x2="12" y2="12"/><line x1="8.12" y1="15.88" x2="12" y2="12"/><line x1="12" y1="12" x2="20" y2="4"/><line x1="12" y1="12" x2="20" y2="20"/></svg>
+        </button>
+        <button onclick="addBodyLayer()" style="width:60px;height:60px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </button>
+      </div>
       <div id="cutBodyActions" style="display:none;margin-top:16px;">
         <div style="display:flex;gap:8px;margin-bottom:10px;">
           <button onclick="applyCutBody()" style="flex:1;background:#00d4ff;color:#000;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✓ APPLY</button>
