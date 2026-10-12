@@ -3316,6 +3316,8 @@ window.saveProjectToHome = saveProjectToHome;
 window.saveImage = saveImage;
 window.removeBackgroundCompletely = window.removeBackgroundCompletely;
 window.detectSubject = window.detectSubject;
+function switchFxTab() { return; }
+window.switchFxTab = switchFxTab;
 // ---------- ADD PERSON overlay ----------
 let personOverlay = null;
 let personOverlayX = 0;
