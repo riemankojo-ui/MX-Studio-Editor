@@ -1685,8 +1685,8 @@ function endTouch(e) {
   if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
   if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }
   if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
+  if (isDraggingPerson) { isDraggingPerson = false; personDragStart = null; saveState(); }
 }
-
 function getSelectionHandles(layer) {
   ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
   const m = ctx.measureText(layer.text);
