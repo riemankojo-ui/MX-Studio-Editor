@@ -3611,25 +3611,32 @@ function buildBgColorsTab() {
 if (selectedIndex >= 0) {
   setTimeout(() => {
     const el = document.getElementById('bgColor_' + selectedIndex);
-    if (el) {
+    if (el && grid.clientWidth > 0) {
       const targetScroll = el.offsetLeft - (grid.clientWidth / 2) + (el.offsetWidth / 2);
-      grid.scrollTo({ left: targetScroll, behavior: 'smooth' });
+      grid.scrollLeft = Math.max(0, targetScroll);
     }
-  }, 150);
+  }, 400);
 }
 }
 function applyBgColorFromTab(color, el) {
+  // Remove old background first (both image and color)
+  currentBgImage = null;
+
   if (color === null) {
     currentBgColor = null;
-    currentBgImage = null;
   } else {
     currentBgColor = color;
-    currentBgImage = null;
   }
+
+  // Remove selection from BG images
+  document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
+
+  // Update color buttons
   document.querySelectorAll('#bgColorsTabGrid > div').forEach(x => {
     x.style.border = '1px solid transparent';
   });
   if (el) el.style.border = '2px solid #fff';
+
   redraw();
   saveState();
 }
