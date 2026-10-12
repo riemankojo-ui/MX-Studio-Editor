@@ -3607,14 +3607,16 @@ function buildBgColorsTab() {
 
   grid.innerHTML = html;
 
-  // Auto-scroll to the selected color
-  if (selectedIndex >= 0) {
-    setTimeout(() => {
-      const el = document.getElementById('bgColor_' + selectedIndex);
-      if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }, 100);
-  }
-}  
+// Auto-scroll to the selected color
+if (selectedIndex >= 0) {
+  setTimeout(() => {
+    const el = document.getElementById('bgColor_' + selectedIndex);
+    if (el) {
+      const targetScroll = el.offsetLeft - (grid.clientWidth / 2) + (el.offsetWidth / 2);
+      grid.scrollTo({ left: targetScroll, behavior: 'smooth' });
+    }
+  }, 150);
+}
 function applyBgColorFromTab(color, el) {
   if (color === null) {
     currentBgColor = null;
