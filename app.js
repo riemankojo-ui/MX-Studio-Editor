@@ -2040,6 +2040,7 @@ if (currentFilter === 'coverart') {
     ctx.drawImage(off, -off.width / 2, -off.height / 2);
     ctx.restore();
   }
+  drawPersonOverlay();
   textLayers.forEach(layer => {
     if (layer.text && layer.text.trim() !== '') {
       ctx.save();
@@ -3431,7 +3432,6 @@ function applyBgColorFromTab(color, el) {
   if (el) el.style.border = '2px solid #fff';
   redraw();
   saveState();
-  showToast(color === null ? 'Background removed' : 'Color applied');
 }
 window.buildBgColorsTab = buildBgColorsTab;
 window.applyBgColorFromTab = applyBgColorFromTab;
