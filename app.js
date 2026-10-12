@@ -321,30 +321,40 @@ function buildFxTabs() {
 }
 
 function buildFxGrids() {
-  const container = document.getElementById('fxGrids');
+  const container = document.getElementById('fxScrollContainer');
   if (!container) return;
   let html = '';
-  FX_CATEGORIES.forEach(cat => {
-    const active = (currentFxTab === cat.key) ? 'active' : '';
-    html += `<div id="fx-tab-${cat.key}" class="sub-view ${active}"><div class="fx-grid" id="fxGrid-${cat.key}"></div></div>`;
-  });
-  container.innerHTML = html;
-  FX_CATEGORIES.forEach(cat => buildFxGrid(cat.key));
-}
 
-function switchFxTab(key, el) {
-  currentFxTab = key;
-  const panel = el.closest('.panel');
-  panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
-  panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('fx-tab-' + key).classList.add('active');
-  el.classList.add('active');
-  const cat = FX_CATEGORIES.find(c => c.key === key);
-  if (cat && cat.fileList && (!cat.files || !cat.files.length)) {
-    const g = document.getElementById('fxGrid-' + key);
-    if (g) g.innerHTML = '<div class="filter-empty">Loading ' + cat.fileList.length + ' effects...</div>';
-    probeCategory(cat).then(() => { buildFxGrid(key); });
-  }
+  FX_CATEGORIES.forEach(cat => {
+    // Category divider chip
+    html += `<div style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0 4px;height:88px;">
+      <div style="font-size:10px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;background:#242424;padding:12px 8px;border-radius:10px;white-space:nowrap;writing-mode:vertical-rl;transform:rotate(180deg);">${cat.label}</div>
+    </div>`;
+
+    // "Off" card
+    html += `<div class="fx-card ${currentFx === cat.key + ':none' ? 'selected' : ''}" onclick="setFx('${cat.key}:none', this)" style="flex:0 0 auto;">
+      <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+      <span class="fx-card-label">Off</span>
+    </div>`;
+
+    // Effect cards
+    if (cat.files && cat.files.length) {
+      cat.files.forEach(f => {
+        const key = cat.key + ':' + f.fname;
+        const sel = (currentFx === key) ? 'selected' : '';
+        html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)" style="flex:0 0 auto;">
+          <div class="fx-card-preview">
+            <img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <span class="fx-card-label">${f.base}</span>
+        </div>`;
+      });
+    }
+  });
+
+  container.innerHTML = html;
 }
 
 function buildFxGrid(catKey) {

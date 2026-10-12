@@ -118,13 +118,12 @@
     <div class="filter-thumbs" id="filterThumbsContainer" style="margin-top:8px;"></div>
   </div>
 
-  <div id="panel-fx" class="panel">
-    <div class="sub-tabs" id="fxTabBar"></div>
-    <div id="fxGrids"></div>
-    <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
-    <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
-    <button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
-  </div>
+<div id="panel-fx" class="panel">
+  <div id="fxScrollContainer" style="display:flex;gap:8px;overflow-x:auto;padding:8px 4px;scroll-snap-type:x proximity;align-items:flex-start;"></div>
+  <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
+  <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
+  <button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
+</div>
 
   <div id="panel-text" class="panel">
     <div class="sub-tabs">
