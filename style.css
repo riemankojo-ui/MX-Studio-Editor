@@ -28,6 +28,7 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .home-empty-title { font-size:18px; letter-spacing:2px; color:#fff; margin-bottom:8px; font-weight:900; }
 .home-empty-sub { font-size:12px; color:#666; line-height:1.6; margin-bottom:22px; }
 
+.canvas-container { position:relative; display:flex; align-items:center; justify-content:center; flex:1 1 auto; max-height:none; min-height:100px; max-width:100%; margin:0; padding:0 4px; overflow:hidden; background:#000; }
 .panel { display:none; background:transparent; padding:8px 4px; text-align:left; font-size:12px; flex:0 0 auto; max-height:45vh; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; position:relative; }
 #textFloatingMenu { display:none; position:absolute; background:rgba(15,15,15,.96); padding:8px; border-radius:10px; z-index:50; transform:translate(-50%,-125%); width:150px; }
 .arrow-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:6px; }
