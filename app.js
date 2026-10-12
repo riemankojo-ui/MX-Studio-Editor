@@ -3371,6 +3371,17 @@ window.setPersonY = setPersonY;
 window.setPersonScale = setPersonScale;
 window.setPersonRotation = setPersonRotation;
 window.resetPersonOverlay = resetPersonOverlay;
+function syncPersonSliders() {
+  const sx = document.getElementById('personXInput'); if (sx) sx.value = Math.round(personOverlayX);
+  const sy = document.getElementById('personYInput'); if (sy) sy.value = Math.round(personOverlayY);
+  const ss = document.getElementById('personScaleInput'); if (ss) ss.value = Math.round(personOverlayScale * 100);
+  const sr = document.getElementById('personRotInput'); if (sr) sr.value = Math.round(personOverlayRotation);
+  const vx = document.getElementById('personXVal'); if (vx) vx.innerText = Math.round(personOverlayX);
+  const vy = document.getElementById('personYVal'); if (vy) vy.innerText = Math.round(personOverlayY);
+  const vs = document.getElementById('personScaleVal'); if (vs) vs.innerText = Math.round(personOverlayScale * 100);
+  const vr = document.getElementById('personRotVal'); if (vr) vr.innerText = Math.round(personOverlayRotation);
+}
+window.syncPersonSliders = syncPersonSliders;
 // ---------- BG Picker from Home ----------
 // ---------- BG Picker from Home ----------
 const SOLID_COLORS = [
