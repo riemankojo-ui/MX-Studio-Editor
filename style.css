@@ -1,5 +1,5 @@
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none; position:fixed; top:0; left:0; margin:0; padding:0; background:#121212; color:#fff; font-family:-apple-system,'Segoe UI',sans-serif; text-align:center; touch-action:manipulation; }
+html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none; position:fixed; top:0; left:0; margin:0; padding:0; background:#0a0a0a; color:#fff; font-family:-apple-system,'Segoe UI',sans-serif; text-align:center; touch-action:manipulation; }
 .view { display:none; }
 .view.active { display:flex; flex-direction:column; height:100vh; padding:8px 8px 88px 8px; overflow:hidden; }
 
@@ -28,7 +28,7 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .home-empty-title { font-size:18px; letter-spacing:2px; color:#fff; margin-bottom:8px; font-weight:900; }
 .home-empty-sub { font-size:12px; color:#666; line-height:1.6; margin-bottom:22px; }
 
-.canvas-container { position:relative; display:flex; align-items:center; justify-content:center; flex:1 1 auto; max-height:none; min-height:100px; max-width:100%; margin:0; padding:0 4px; overflow:hidden; background:#121212: }
+.canvas-container { position:relative; display:flex; align-items:center; justify-content:center; flex:1 1 auto; max-height:70vh; min-height:100px; max-width:100%; margin:0; padding:0 4px; overflow:hidden; }
 .panel { display:none; background:transparent; padding:8px 4px; text-align:left; font-size:12px; flex:0 0 auto; max-height:45vh; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; position:relative; }
 #textFloatingMenu { display:none; position:absolute; background:rgba(15,15,15,.96); padding:8px; border-radius:10px; z-index:50; transform:translate(-50%,-125%); width:150px; }
 .arrow-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:6px; }
@@ -53,18 +53,10 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .nav-btn.active { color:#ffffff; opacity:1; transform:translateY(-2px); }
 .nav-btn.active svg { stroke:#ffffff; }
 
-.panel.active { display:block; animation: panelSlideUp 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-@keyframes panelSlideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.panel.active { display:block; }
 
 .sub-tabs { display:flex; justify-content:flex-start; gap:16px; margin-bottom:8px; border-bottom:1px solid #1a1a1a; padding-bottom:8px; overflow-x:auto; }
-.sub-view.active { display:block; animation: subFade 0.14s ease-out; }
-@keyframes subFade {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.sub-tabs::-webkit-scrollbar { display:none; }
 .sub-tab { background:none; border:none; color:#666; font-weight:bold; font-size:11px; cursor:pointer; padding:2px 0; white-space:nowrap; flex-shrink:0; }
 .sub-tab.active { color:#fff; border-bottom:2px solid #fff; }
 .sub-view { display:none; }
@@ -182,7 +174,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .text-card-btn.cancel { background:#242424; color:#fff; }
 .text-card-btn.confirm { background:#fff; color:#000; }
 
-#splashScreen { position:fixed; inset:0; background:#121212; z-index:99999; display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .3s ease; }
+#splashScreen { position:fixed; inset:0; background:#0a0a0a; z-index:99999; display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .3s ease; }
 #splashScreen.fade-out { opacity:0; pointer-events:none; }
 .splash-inner { display:flex; flex-direction:column; align-items:center; gap:20px; padding:20px; width:100%; }
 
@@ -191,7 +183,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .crop-topbar { display:flex; justify-content:space-between; align-items:center; padding:14px 20px 6px; }
 .crop-icon-btn { background:none; border:none; cursor:pointer; padding:8px; display:inline-flex; }
 .crop-canvas-wrap { flex:1; position:relative; display:flex; align-items:center; justify-content:center; padding:10px 16px; min-height:0; }
-canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#121212: cursor:move; touch-action:none; display:block; }
+canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; }
 #cropFrame { position:absolute; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,.55); }
 #cropFrame .grid-line { position:absolute; background:rgba(255,255,255,.4); }
 #cropFrame .grid-line.grid-v { top:0; bottom:0; width:1px; }
@@ -215,30 +207,3 @@ canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#1
 .crop-ratio-btn svg { width:22px; height:22px; stroke:#888; fill:none; }
 .crop-ratio-btn.active { color:#00d4ff; }
 .crop-ratio-btn.active svg { stroke:#00d4ff; }
-/* --- FIX FOR EFFECTS CATEGORY TABS --- */
-#fxTabs {
-  display: flex;
-  gap: 8px;
-  padding-bottom: 8px;
-  overflow-x: auto;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
-  border-bottom: none; /* Removes the line under the tabs */
-  margin-bottom: 10px;
-}
-#fxTabs::-webkit-scrollbar { display: none; }
-
-#fxTabs .sub-tab {
-  padding: 8px 16px;
-  background: #161616;
-  border-radius: 18px; /* Makes them look like rounded pills */
-  font-size: 11px;
-  font-weight: 600;
-  color: #aaa;
-  border-bottom: none; /* Removes the white underline */
-  flex-shrink: 0;
-}
-#fxTabs .sub-tab.active {
-  color: #fff;
-  background: #333; /* Highlights the active tab */
-}

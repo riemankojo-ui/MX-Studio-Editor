@@ -40,7 +40,6 @@ let currentFxAmount = 70;
 let textLayers = [];
 let activeLayerId = null;
 let isDraggingText = false;
-let showTextBox = false;
 let cutBodyActive = false;
 let backgroundRemoved = false;
 let cutBox = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
@@ -310,52 +309,43 @@ function buildPresetThumbs() {
   el.innerHTML = html;
 }// ---------- FX system ----------
 function buildFxTabs() {
-  const bar = document.getElementById('fxTabs');
+  const bar = document.getElementById('fxTabBar');
   if (!bar) return;
   let html = '';
   FX_CATEGORIES.forEach(cat => {
     const sel = (currentFxTab === cat.key) ? 'active' : '';
-    html += `<button class="sub-tab ${sel}" data-fxtab="${cat.key}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
+    html += `<button class="sub-tab ${sel}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
   });
   bar.innerHTML = html;
 }
 
 function buildFxGrids() {
-  const container = document.getElementById('fxScrollContainer');
+  const container = document.getElementById('fxGrids');
   if (!container) return;
-
-  // 1. Find the currently selected category
-  const cat = FX_CATEGORIES.find(c => c.key === currentFxTab);
-  if (!cat) return;
-
-  // 2. Build the HTML for just this category
   let html = '';
-  
-  // Add the "Off" card
-  html += `<div class="fx-card ${currentFx === cat.key + ':none' ? 'selected' : ''}" onclick="setFx('${cat.key}:none', this)" style="flex:0 0 auto;">
-    <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </div>
-    <span class="fx-card-label">Off</span>
-  </div>`;
-
-  // Add the effect cards for this category
-  if (cat.files && cat.files.length) {
-    cat.files.forEach(f => {
-      const key = cat.key + ':' + f.fname;
-      const sel = (currentFx === key) ? 'selected' : '';
-      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)" style="flex:0 0 auto;">
-        <div class="fx-card-preview">
-          <img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;">
-        </div>
-        <span class="fx-card-label">${f.base}</span>
-      </div>`;
-    });
-  }
-
-  // 3. Put it in the container
+  FX_CATEGORIES.forEach(cat => {
+    const active = (currentFxTab === cat.key) ? 'active' : '';
+    html += `<div id="fx-tab-${cat.key}" class="sub-view ${active}"><div class="fx-grid" id="fxGrid-${cat.key}"></div></div>`;
+  });
   container.innerHTML = html;
+  FX_CATEGORIES.forEach(cat => buildFxGrid(cat.key));
 }
+
+function switchFxTab(key, el) {
+  currentFxTab = key;
+  const panel = el.closest('.panel');
+  panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+  panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('fx-tab-' + key).classList.add('active');
+  el.classList.add('active');
+  const cat = FX_CATEGORIES.find(c => c.key === key);
+  if (cat && cat.fileList && (!cat.files || !cat.files.length)) {
+    const g = document.getElementById('fxGrid-' + key);
+    if (g) g.innerHTML = '<div class="filter-empty">Loading ' + cat.fileList.length + ' effects...</div>';
+    probeCategory(cat).then(() => { buildFxGrid(key); });
+  }
+}
+
 function buildFxGrid(catKey) {
   const cat = FX_CATEGORIES.find(c => c.key === catKey);
   if (!cat) return;
@@ -905,7 +895,7 @@ function buildBgColors() {
   const noneSel = (!currentBgColor && !currentBgImage) ? 'selected' : '';
   html += `<div class="bgcolor-swatch ${noneSel}" style="background:linear-gradient(135deg,#2a2a2a 45%,#111 45%,#111 55%,#2a2a2a 55%);display:flex;align-items:center;justify-content:center;" onclick="setBgColor(null, this)"><span style="color:#888;font-size:11px;font-weight:700;">NONE</span></div>`;
   BG_COLORS.forEach(col => {
-    const sel = (currentBgColor && currentBgColor.toLowerCase() === col.toLowerCase()) ? 'selected' : '';
+    const sel = (currentBgColor === col) ? 'selected' : '';
     html += `<div class="bgcolor-swatch ${sel}" style="background:${col};" onclick="setBgColor('${col}', this)"></div>`;
   });
   c.innerHTML = html;
@@ -1374,7 +1364,6 @@ function startTouch(e) {
   if (e.target && e.target.closest && e.target.closest('#textFloatingMenu')) return;
   if (!imgLoaded) return;
   if (e.preventDefault) e.preventDefault();
-  if (showTextBox) { showTextBox = false; redraw(); }
   if (e.touches) { touches.clear(); for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
   else { touches.clear(); touches.set('mouse', { x:e.clientX, y:e.clientY }); }
 
@@ -1517,18 +1506,15 @@ if (gestureTarget === 'person' && personOverlay) {
   }
   if (clickedLayer) {
     activeLayerId = clickedLayer.id;
-    showTextBox = true;
     dragOffsetX = pos.x - clickedLayer.x;
     dragOffsetY = pos.y - clickedLayer.y;
     syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
     isDraggingText = true;
     showFloatingMenu(clickedLayer.x, clickedLayer.y);
     redraw();
-} else {
-showTextBox = false;
-  textMenu.style.display = 'none';
-  updateTextLayersUI(); redraw();
-}
+  } else {
+    activeLayerId = null; textMenu.style.display = 'none'; updateTextLayersUI(); redraw();
+  }
 }
 
 function onTouchMove(e) {
@@ -2010,6 +1996,7 @@ if (currentFilter === 'coverart') {
   const fade = parseInt(nInput.value);
   if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${(fade/100)*0.4})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   if (!currentBgColor && !currentBgImage) drawBorder();
+  drawFxLayer();
   if (overlayImg) {
     ctx.save();
     const cw = canvas.width, ch = canvas.height;
@@ -2094,7 +2081,6 @@ if (currentFilter === 'coverart') {
     ctx.restore();
   }
   drawPersonOverlay();
-  drawFxLayer();
   textLayers.forEach(layer => {
     if (layer.text && layer.text.trim() !== '') {
       ctx.save();
@@ -2162,7 +2148,7 @@ if (currentFilter === 'coverart') {
         }
         ctx.restore();
       }
-     if (activeLayerId === layer.id && showTextBox) {
+      if (activeLayerId === layer.id) {
         const m = ctx.measureText(layer.text);
         const bw = m.width + 16, bh = layer.size + 8;
         drawSelectionBox(-bw/2, -bh/2, bw, bh);
@@ -2283,15 +2269,7 @@ function applyCutBody() {
 
 // ---------- Panel switching ----------
 function switchPanel(name, btn) {
-showTextBox = false;
-const bottomNav = document.querySelector('.bottom-nav');
-if (bottomNav) {
-  bottomNav.style.setProperty('display', 'flex', 'important');
-  if (btn) btn.blur(); 
-  setTimeout(() => {
-    bottomNav.scrollLeft = 0;
-  }, 50);
-}
+document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
   if (name === 'fx') gestureTarget = 'fx';
   else if (name === 'bgremover') gestureTarget = 'subject';
   else if (name === 'bgimage') gestureTarget = bgDragMode;
@@ -2665,7 +2643,6 @@ function saveProjectToHome() {
   }, 'image/png');
 }
 function loadProject(key) {
-showTextBox = false;
 document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
   resetStudioState();
   const p = JSON.parse(localStorage.getItem(key));
@@ -2761,7 +2738,6 @@ if (p.personOverlay) {
 }
 
 function goHome() {
-showTextBox = false;
   document.getElementById('view-studio').classList.remove('active');
   document.getElementById('view-home').classList.add('active');
   textMenu.style.display = 'none';
@@ -3446,23 +3422,20 @@ window.syncPersonSliders = syncPersonSliders;
 // ---------- BG Picker from Home ----------
 // ---------- BG Picker from Home ----------
 const SOLID_COLORS = [
-'#ffa500', '#ff2c2c', '#00d4ff', '#ffd700', '#00ff88', '#9d4edd',
-'#ffffff', '#f5f5f5', '#e0e0e0', '#c0c0c0', '#808080', '#404040',
-'#1a1a1a', '#0a0a0a', '#000000',
-'#ff0000', '#dc143c', '#8b0000',
-'#ff69b4', '#ffb6c1',
-'#ff1493', '#c71585', '#ff7f7f',
-'#ff8c00', '#ff6347',
-'#ffff00', '#ffdead',
-'#f4a460', '#ffc04c', '#ffcc99',
-'#00ff00', '#008000', '#006400',
-'#98fb98', '#7cfc00', '#adff2f', '#228b22', '#556b2f',
-'#1e90ff', '#0000ff', '#00008b',
-'#87ceeb', '#00bfff', '#00ced1', '#40e0d0', '#4682b4',
-'#800080', '#ff00ff',
-'#da70d6', '#8a2be2', '#9400d3', '#ba55d3', '#dda0dd',
-'#8b4513', '#a0522d', '#cd853f', '#d2b48c', '#deb887',
-'#2f4f4f', '#708090', '#36454f', '#1c1c1c', '#2a2a2a', '#333333'
+  '#ffffff', '#f5f5f5', '#e0e0e0', '#c0c0c0', '#808080', '#404040',
+  '#1a1a1a', '#0a0a0a', '#000000',
+  '#ff0000', '#dc143c', '#8b0000', '#ff2c2c', '#ff69b4', '#ffb6c1',
+  '#ff1493', '#c71585', '#ff7f7f',
+  '#ffa500', '#ff8c00', '#ff6347', '#ffd700', '#ffff00', '#ffdead',
+  '#f4a460', '#ffc04c', '#ffcc99',
+  '#00ff00', '#008000', '#006400', '#00ff88', '#98fb98', '#7cfc00',
+  '#adff2f', '#228b22', '#556b2f',
+  '#00d4ff', '#1e90ff', '#0000ff', '#00008b', '#87ceeb', '#00bfff',
+  '#00ced1', '#40e0d0', '#4682b4',
+  '#800080', '#9d4edd', '#ff00ff', '#da70d6', '#8a2be2', '#9400d3',
+  '#ba55d3', '#dda0dd',
+  '#8b4513', '#a0522d', '#cd853f', '#d2b48c', '#deb887',
+  '#2f4f4f', '#708090', '#36454f', '#1c1c1c', '#2a2a2a', '#333333'
 ];
 
 function openBgPickerHome() {
@@ -3529,36 +3502,29 @@ function pickColorForNewProject(color) {
   resetStudioState();
   canvas.width = 1080;
   canvas.height = 1080;
-
   const blank = document.createElement('canvas');
   blank.width = 1080;
   blank.height = 1080;
   const bctx = blank.getContext('2d');
-  bctx.fillStyle = '#000000';
+  bctx.fillStyle = color;
   bctx.fillRect(0, 0, 1080, 1080);
-
   const blankImg = new Image();
   blankImg.onload = function() {
     img = blankImg;
     imgLoaded = true;
     originalImageSrc = blank.toDataURL('image/png');
-
     currentBgImage = null;
-    currentBgColor = color;
-    currentBgColorSize = 0;
+    currentBgColor = null;
     currentProjectId = null;
     currentProjectName = 'Solid ' + color.toUpperCase();
-
     document.getElementById('view-home').classList.remove('active');
     document.getElementById('view-studio').classList.add('active');
     document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
-
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('panel-adjust').classList.add('active');
     const adjustBtn = document.querySelector('.nav-btn[data-panel="adjust"]');
     if (adjustBtn) adjustBtn.classList.add('active');
-
     buildFilterThumbs(); buildTemplates(); buildBorders();
     redraw();
     saveState();
@@ -3614,57 +3580,38 @@ window.pickColorForNewProject = pickColorForNewProject;
 function buildBgColorsTab() {
   const grid = document.getElementById('bgColorsTabGrid');
   if (!grid) return;
-  console.log('BG tab opening. currentBgColor =', currentBgColor);
   if (typeof SOLID_COLORS === 'undefined') { grid.innerHTML = ''; return; }
 
   let html = '';
 
-  // NONE option
+  // "None" option first
   const noneSel = (!currentBgColor && !currentBgImage);
-  html += `<div id="bgColorNoneBtn" onclick="applyBgColorFromTab(null, this)" style="flex:0 0 auto;width:62px;height:62px;background:#111;border-radius:0;border:${noneSel ? '2px' : '1px'} solid ${noneSel ? '#fff' : '#222'};cursor:pointer;display:flex;align-items:center;justify-content:center;">
+  html += `<div onclick="applyBgColorFromTab(null, this)" style="flex:0 0 auto;width:62px;height:62px;background:#111;border-radius:0;border:${noneSel ? '2px' : '1px'} solid ${noneSel ? '#fff' : '#222'};cursor:pointer;display:flex;align-items:center;justify-content:center;">
     <span style="color:#666;font-size:10px;font-weight:800;letter-spacing:1px;">NONE</span>
   </div>`;
 
   // All colors
-  let selectedIndex = -1;
-  SOLID_COLORS.forEach((col, i) => {
-    const isSel = (currentBgColor && currentBgColor.toLowerCase() === col.toLowerCase());
-    if (isSel) selectedIndex = i;
-    html += `<div id="bgColor_${i}" onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:0;border:${isSel ? '2px' : '1px'} solid ${isSel ? '#fff' : 'transparent'};cursor:pointer;"></div>`;
+  SOLID_COLORS.forEach(col => {
+    const isSel = (currentBgColor === col);
+    html += `<div onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:0;border:${isSel ? '2px' : '1px'} solid ${isSel ? '#fff' : 'transparent'};cursor:pointer;"></div>`;
   });
 
   grid.innerHTML = html;
-
-// Auto-scroll to the selected color
-if (selectedIndex >= 0) {
-  setTimeout(() => {
-    const el = document.getElementById('bgColor_' + selectedIndex);
-    if (el && grid.clientWidth > 0) {
-      const targetScroll = el.offsetLeft - (grid.clientWidth / 2) + (el.offsetWidth / 2);
-      grid.scrollLeft = Math.max(0, targetScroll);
-    }
-  }, 400);
-}
 }
 function applyBgColorFromTab(color, el) {
-  // Remove old background first (both image and color)
-  currentBgImage = null;
-
   if (color === null) {
+    // None = clear background
     currentBgColor = null;
+    currentBgImage = null;
   } else {
     currentBgColor = color;
+    currentBgImage = null;
   }
-
-  // Remove selection from BG images
   document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
-
-  // Update color buttons
   document.querySelectorAll('#bgColorsTabGrid > div').forEach(x => {
     x.style.border = '1px solid transparent';
   });
   if (el) el.style.border = '2px solid #fff';
-
   redraw();
   saveState();
 }
@@ -3920,36 +3867,3 @@ window.exportMxProject = exportMxProject;
 window.closeExportNameCard = closeExportNameCard;
 window.confirmExportName = confirmExportName;
 window.saveImage = saveImage;
-
-// ---------- FX tabs + scroll sync ----------
-function switchFxTab(key, el) {
-  currentFxTab = key;
-  
-  // 1. Update the active tab styling
-  const bar = document.getElementById('fxTabs');
-  if (bar) {
-    bar.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-    const target = el || bar.querySelector('[data-fxtab="' + key + '"]');
-    if (target) target.classList.add('active');
-  }
-  
-  // 2. Rebuild the effects list for this new category
-  buildFxGrids();
-}
-
-function onFxScroll() {
-  const strip = document.getElementById('fxScrollContainer');
-  const bar = document.getElementById('fxTabs');
-  if (!strip || !bar) return;
-  const x = strip.scrollLeft;
-  const anchor = x + Math.min(48, strip.clientWidth * 0.15);
-  const anchors = strip.querySelectorAll('[id^="fxAnchor-"]');
-  let activeKey = null;
-  anchors.forEach(a => {
-    if (a.offsetLeft <= anchor) activeKey = a.id.replace('fxAnchor-', '');
-  });
-  if (!activeKey) return;
-  bar.querySelectorAll('.sub-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.fxtab === activeKey);
-  });
-}

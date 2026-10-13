@@ -118,14 +118,13 @@
     <div class="filter-thumbs" id="filterThumbsContainer" style="margin-top:8px;"></div>
   </div>
 
-<div id="panel-fx" class="panel">
-  <div class="sub-tabs" id="fxTabs"></div>
-  <div id="fxScrollContainer" style="display:flex; gap:8px; overflow-x:auto; padding:8px 4px; -webkit-overflow-scrolling:touch;"></div>
-  <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
-  <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
-  <button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
-</div>
-</div>
+  <div id="panel-fx" class="panel">
+    <div class="sub-tabs" id="fxTabBar"></div>
+    <div id="fxGrids"></div>
+    <label class="section-label">INTENSITY: <span id="fxVal">70</span>%</label>
+    <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
+    <button class="crop-tool" onclick="resetFxTransform()" style="margin-top:10px;width:100%;justify-content:center;">RESET EFFECT POSITION</button>
+  </div>
 
   <div id="panel-text" class="panel">
     <div class="sub-tabs">
@@ -451,7 +450,7 @@
   </div>
 
   <div id="backupSheet" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:700;display:none;align-items:flex-start;justify-content:center;padding:20px;">
-<div id="backupSheetCard" style="background:#f7f7f8;width:100%;max-width:340px;margin-top:0;border-radius:0;padding:20px 18px 22px;color:#000;transform:translateY(-120%);transition:transform .3s ease;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+  <div id="backupSheetCard" style="background:#ffffff;width:100%;max-width:340px;margin-top:0;border-radius:0;padding:20px 18px 22px;color:#000;transform:translateY(-120%);transition:transform .3s ease;box-shadow:0 20px 60px rgba(0,0,0,.5);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
         <div style="font-size:18px;font-weight:900;color:#000;letter-spacing:.3px;">Backup &amp; Export</div>
         <button onclick="closeBackupSheet()" style="background:#f0f0f0;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">
@@ -749,6 +748,6 @@
 <div id="toast">Saved</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous" async defer></script>
-<script src="app.js?v=13"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
