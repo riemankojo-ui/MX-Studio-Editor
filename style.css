@@ -1,5 +1,5 @@
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none; position:fixed; top:0; left:0; margin:0; padding:0; background:#0a0a0a; color:#fff; font-family:-apple-system,'Segoe UI',sans-serif; text-align:center; touch-action:manipulation; }
+html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none; position:fixed; top:0; left:0; margin:0; padding:0; background:#121212; color:#fff; font-family:-apple-system,'Segoe UI',sans-serif; text-align:center; touch-action:manipulation; }
 .view { display:none; }
 .view.active { display:flex; flex-direction:column; height:100vh; padding:8px 8px 88px 8px; overflow:hidden; }
 
@@ -183,7 +183,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .crop-topbar { display:flex; justify-content:space-between; align-items:center; padding:14px 20px 6px; }
 .crop-icon-btn { background:none; border:none; cursor:pointer; padding:8px; display:inline-flex; }
 .crop-canvas-wrap { flex:1; position:relative; display:flex; align-items:center; justify-content:center; padding:10px 16px; min-height:0; }
-canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#000; cursor:move; touch-action:none; display:block; }
+canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#121212; cursor:move; touch-action:none; display:block; }
 #cropFrame { position:absolute; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,.55); }
 #cropFrame .grid-line { position:absolute; background:rgba(255,255,255,.4); }
 #cropFrame .grid-line.grid-v { top:0; bottom:0; width:1px; }
@@ -207,3 +207,25 @@ canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#0
 .crop-ratio-btn svg { width:22px; height:22px; stroke:#888; fill:none; }
 .crop-ratio-btn.active { color:#00d4ff; }
 .crop-ratio-btn.active svg { stroke:#00d4ff; }
+
+/* --- Smooth BG Picker Animation --- */
+#bgPickerHomeModal {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+#bgPickerHomeModal.bg-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+#bgPickerHomeModal > div,
+#bgPickerHomeModal .sub-tabs,
+#bgPickerHomeModal .sub-view {
+  transform: translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+#bgPickerHomeModal.bg-open > div,
+#bgPickerHomeModal.bg-open .sub-tabs,
+#bgPickerHomeModal.bg-open .sub-view {
+  transform: translateY(0);
+}

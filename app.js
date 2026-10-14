@@ -3442,12 +3442,14 @@ function openBgPickerHome() {
   const modal = document.getElementById('bgPickerHomeModal');
   if (!modal) { showToast('BG picker missing'); return; }
 
-  // Build colors FIRST — instant, no waiting
   buildBgPickerColors();
 
-  // Show modal RIGHT AWAY
   modal.style.display = 'flex';
-
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      modal.classList.add('bg-open');
+    });
+  });
   // Load images in the background (no blocking)
   if (!BG_CONFIG.files.length && typeof probeBackgrounds === 'function') {
     const grid = document.getElementById('bgPickerHomeGrid');
@@ -3494,7 +3496,11 @@ function switchBgPickerTab(name, el) {
 
 function closeBgPickerHome() {
   const m = document.getElementById('bgPickerHomeModal');
-  if (m) m.style.display = 'none';
+  if (!m) return;
+  m.classList.remove('bg-open');
+  setTimeout(() => {
+    m.style.display = 'none';
+  }, 250);
 }
 
 function pickColorForNewProject(color) {
