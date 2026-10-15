@@ -1336,10 +1336,28 @@ function resetStudioState() {
   currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
   currentFx = 'none'; currentFxAmount = 70;
   subjectMode = 'none'; personMask = null; subjectReady = false;
+  // Reset Person Overlay (fixes bug where it appears on new projects)
+  personOverlay = null; personOverlayX = 0; personOverlayY = 0;
+  personOverlayScale = 1; personOverlayRotation = 0;
+  const personCtrl = document.getElementById('personControls');
+  if (personCtrl) personCtrl.style.display = 'none';
+  const personStatus = document.getElementById('personStatus');
+  if (personStatus) personStatus.textContent = 'Pick a photo from your gallery. The background will be removed automatically.';
+  // Reset other state that was also leaking between projects
+  overlayImg = null; overlayOpacity = 0; overlayX = 0.5; overlayY = 0.5;
+  overlayScale = 0.7; overlayRotation = 0; overlayTint = null;
+  overlayTintAmount = 60; overlayCropRatio = 'free'; overlayRound = 0;
+  unshowOpacity = 100; cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0;
+  cutFeather = 0; cornerRound = 0;
+  cartoonStyle = 'none'; cartoonAmount = 70; cartoonLevels = 6;
+  cartoonEdge = 1.2; cartoonCanvas = null;
+  subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
+  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
+  customBgImage = null;
+  cutBodyActive = false;
   undoStack = []; redoStack = []; updateHistoryButtons();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
-
 // ---------- Gestures ----------
 function getCanvasCoordinates(e, touch) {
   const rect = canvas.getBoundingClientRect();
