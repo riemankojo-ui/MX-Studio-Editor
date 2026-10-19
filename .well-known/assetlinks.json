@@ -2,7 +2,7 @@
       "relation": ["delegate_permission/common.handle_all_urls"],
       "target": {
         "namespace": "android_app",
-        "package_name": "app.vercel.mx_studio_editor.twa",
-        "sha256_cert_fingerprints": ["33:1F:D8:6B:D0:82:A4:59:3B:A2:6D:F9:41:1B:91:FA:A6:5E:55:B9:47:39:53:5A:8A:85:B5:8B:24:ED:0D:DD"]
+        "package_name": "app.vercel.multibundle.twa",
+        "sha256_cert_fingerprints": ["65:39:40:01:F3:EB:61:6B:31:A9:50:7F:06:48:7E:6E:5C:9F:A2:CE:3D:3F:34:46:44:B5:B0:DA:F0:61:13:69"]
       }
     }]

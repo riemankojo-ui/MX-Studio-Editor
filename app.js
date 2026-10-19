@@ -1,3901 +1,961 @@
-// ============================================================
-//  MX STUDIO — app.js
-//  Part 1/4: State, constants, utilities, effects loading
-// ============================================================
+const $=id=>document.getElementById(id);
 
-// ---------- DOM refs ----------
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const textMenu = document.getElementById('textFloatingMenu');
-const bInput = document.getElementById('brightness');
-const cInput = document.getElementById('contrast');
-const sInput = document.getElementById('saturation');
-const nInput = document.getElementById('noise');
-const subjAmt = document.getElementById('subjectAmount');
-const sizeInput = document.getElementById('fontSize');
+document.addEventListener('click',function(e){
+  const el=e.target.closest('[data-tab]');
+  if(!el)return;
+  const name=el.dataset.tab;
+  if(!name)return;
+  ['home','projects','bundle','preview','editor','backups','github','updates'].forEach(function(p){
+    const page=document.getElementById(p+'Page');
+    if(page)page.hidden=(p!==name);
+  });
+  document.querySelectorAll('.bottom span').forEach(function(s){s.classList.toggle('selected',s.dataset.tab===name)});
+  document.querySelectorAll('.drawer-nav a').forEach(function(a){a.classList.toggle('selected',a.dataset.tab===name)});
+  const drawer=document.getElementById('drawer');
+  const bd=document.getElementById('drawerBackdrop');
+  if(drawer)drawer.classList.remove('open');
+  if(bd)bd.classList.remove('open');
+   try{localStorage.setItem('mb_nav',JSON.stringify({tab:name,pid:currentProjectId}))}catch(e){}
+  if(name==='projects'&&typeof showProjectsList==='function')showProjectsList();
+  if(name==='updates'&&typeof setUpdatesTab==='function')setUpdatesTab(window.__updatesMode||'github');
+},true);
 
-// ---------- State variables ----------
-let img = new Image();
-let imgLoaded = false;
-let originalImageSrc = null;
-let preCropImageSrc = null;
-let preCropCanvasW = 0;
-let preCropCanvasH = 0;
-let currentFilter = 'none';
-let currentBorder = 'none';
-let currentBorderColor = '#ffffff';
-let currentBorderSize = 5;
-let currentTemplate = 'none';
-let currentBgColor = null;
-let currentBgColorSize = 8;
-let currentBgImage = null;
-let currentBgImageSize = 8;
-let currentBgImageZoom = 100;
-let currentBgImageX = 0;
-let currentBgImageY = 0;
-let currentProjectId = null;
-let currentProjectName = '';
-let currentFx = 'none';
-let currentFxAmount = 70;
-let textLayers = [];
-let activeLayerId = null;
-let isDraggingText = false;
-let cutBodyActive = false;
-let backgroundRemoved = false;
-let cutBox = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
-let isDraggingCutBox = false;
-let cutBoxDragStart = null;
-let dragOffsetX = 0;
-let dragOffsetY = 0;
-let undoStack = [], redoStack = [];
-let touches = new Map();
-let gesture = null;
-let subjectMode = 'none';
-let strokeColor = '#ffffff';
-let personMask = null;
-let subjectReady = false;
-let selfieSeg = null;
-let counterLocked = false;
-let fxX = 0.5, fxY = 0.5, fxScale = 1, fxRotation = 0;
-let gestureTarget = 'text';
-let isDraggingFx = false;
-let fxDragStart = null;
-let subjectX = 0.5, subjectY = 0.5, subjectScale = 1;
-let isDraggingSubject = false;
-let subjectDragStart = null;
-let bgDragMode = 'subject';
-let isDraggingBg = false;
-let isDraggingPerson = false;
-let personDragStart = null;
-let bgDragStart = null;
-let unshowOpacity = 100;
-let overlayImg = null;
-let overlayX = 0.5, overlayY = 0.5, overlayScale = 1, overlayRotation = 0, overlayOpacity = 0;
-let overlayTint = null;
-let overlayTintAmount = 60;
-let overlayCropRatio = 'free';
-let overlayRound = 0;
-let cartoonStyle = 'none';
-let cartoonAmount = 70;
-let cartoonLevels = 6;
-let cartoonEdge = 1.2;
-let cartoonCanvas = null;
-let isDraggingOverlay = false;
-let overlayDragStart = null;
-let overlayGesture = null;
-let cutTop = 0, cutBottom = 0, cutLeft = 0, cutRight = 0;
-let cutFeather = 0;
-let cornerRound = 0;
-let crop = { x: 0.05, y: 0.05, w: 0.9, h: 0.9 };
-let customBgImage = null;
-let textCardMode = 'add';
-let textCardLayerId = null;
-let pendingDeleteKey = null;
-let cropModeActive = false;
-let cropPrevPanel = 'adjust';
-let cropFrameDrag = null;
+let files=[],urls=[],currentPagePath='',urlCache=new Map();
+let currentProjectId=null;
+let ghToken='';
+try { ghToken = localStorage.getItem('mb_gh_active_token') || ''; } catch(e) {}
+const PROJECT_LIMIT=10;
 
-// ---------- Constants ----------
-const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
+const textExt=new Set(['html','htm','css','js','mjs','json','txt','md','xml','svg','php','py','sql','yaml','yml','toml','csv','webmanifest','ts','jsx','tsx']);
+const ext=p=>(p.split('.').pop()||'').toLowerCase();
+const base=p=>p.split('/').pop();
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const size=n=>n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB';
+const mimeMap={html:'text/html',htm:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',json:'application/json',webmanifest:'application/manifest+json',txt:'text/plain',md:'text/plain',xml:'application/xml',svg:'image/svg+xml',csv:'text/csv',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',avif:'image/avif',bmp:'image/bmp',ico:'image/x-icon',woff:'font/woff',woff2:'font/woff2',ttf:'font/ttf',otf:'font/otf',mp3:'audio/mpeg',wav:'audio/wav',ogg:'audio/ogg',mp4:'video/mp4',webm:'video/webm',pdf:'application/pdf'};
 
-const TEMPLATES = [
-  { name:'None',b:100,c:100,s:100,n:0,f:'none' },
-  { name:'Fresh',b:106,c:104,s:112,n:0,f:'none' },
-  { name:'Euro',b:98,c:108,s:92,n:12,f:'sepia(22%)' },
-  { name:'Portrait',b:108,c:96,s:112,n:6,f:'none' },
-  { name:'Moody',b:90,c:125,s:90,n:8,f:'none' },
-  { name:'Cinematic',b:96,c:118,s:95,n:6,f:'hue-rotate(-6deg) saturate(95%)' },
-  { name:'Summer',b:108,c:108,s:128,n:0,f:'saturate(120%)' },
-  { name:'Mono',b:100,c:118,s:0,n:0,f:'grayscale(100%)' },
-  { name:'Noir',b:92,c:150,s:0,n:14,f:'grayscale(100%) contrast(140%)' },
-  { name:'Golden',b:106,c:106,s:116,n:12,f:'sepia(30%) saturate(120%)' }
-];
+function showToast(msg,type){
+  const root=$('toastRoot');if(!root)return;
+  const t=document.createElement('div');
+  t.className='toast'+(type?' '+type:'');
+  t.textContent=msg;
+  root.appendChild(t);
+  setTimeout(function(){t.style.transition='opacity .2s,transform .2s';t.style.opacity='0';t.style.transform='translateY(-10px)';setTimeout(function(){t.remove()},220)},2400);
+}
+window.showToast=showToast;
 
-const FILTERS = [
-  { name:'Normal', code:'none' },
-  { name:'Mono', code:'grayscale(100%) contrast(140%)' },
-  { name:'Vintage', code:'sepia(80%) contrast(130%)' },
-  { name:'Cyber', code:'invert(15%) hue-rotate(180deg)' },
-  { name:'Neon', code:'hue-rotate(90deg) saturate(150%)' },
-  { name:'Velvet', code:'hue-rotate(270deg) saturate(140%)' },
-  { name:'Cover Art', code:'coverart' }
-];
-
-const BORDERS = [
-  { name:'None', code:'none' },
-  { name:'Frame', code:'white' },
-  { name:'Thick', code:'black' },
-  { name:'Rounded', code:'rounded' },
-  { name:'Polaroid', code:'polaroid' },
-  { name:'Shadow', code:'shadow' }
-];
-
-const BG_LABELS = {
-  'background1.jpg':'Silk','background2.jpg':'Cream','background3.jpg':'Gold',
-  'background4.jpg':'Orange','background5.jpg':'Pink','background6.jpg':'Teal',
-  'background7.jpg':'Red','background8.jpg':'Paper','background9.jpg':'Soft',
-  'background10.jpg':'White','background11.jpg':'Silk 2','background12.jpg':'Beige',
-  'background13.jpg':'Pure','background14.jpg':'Concrete','background15.jpg':'Scratch',
-  'background16.jpg':'Dark','background17.jpg':'Black'
-};
-
-const EFFECTS_BASE = './effects/';
-let FX_CATEGORIES = [];
-let currentFxTab = 'grunge';
-const BG_CONFIG = { prefix:'background', max:20, files:[] };
-const fxImages = {};
-const bgImages = {};
-
-// ---------- Load helpers ----------
-function loadImage(url) {
-  return new Promise(res => {
-    const im = new Image();
-    im.crossOrigin = 'anonymous';
-    im.onload = () => res(im);
-    im.onerror = () => res(null);
-    im.src = url;
+function showModal(opts){
+  return new Promise(function(resolve){
+    const root=$('modalRoot');const icon=$('modalIcon'),title=$('modalTitle'),msg=$('modalMessage'),inp=$('modalInput'),ok=$('modalConfirmBtn'),cancel=$('modalCancelBtn');
+    icon.textContent=opts.icon||'?';title.textContent=opts.title||'';msg.textContent=opts.message||'';
+    if(opts.input){inp.hidden=false;inp.value=opts.inputValue||'';inp.placeholder=opts.inputPlaceholder||''}else inp.hidden=true;
+    ok.textContent=opts.confirmText||'OK';cancel.textContent=opts.cancelText||'Cancel';cancel.hidden=!!opts.hideCancel;
+    root.hidden=false;setTimeout(function(){if(opts.input)inp.focus()},80);
+    function done(val){root.hidden=true;ok.onclick=null;cancel.onclick=null;document.removeEventListener('keydown',onKey);resolve(val)}
+    function onKey(e){if(e.key==='Enter'&&opts.input){e.preventDefault();done(inp.value)}else if(e.key==='Escape')done(null)}
+    ok.onclick=function(){done(opts.input?inp.value:true)};cancel.onclick=function(){done(null)};document.addEventListener('keydown',onKey);
   });
 }
+function showConfirm(message,opts){opts=opts||{};return showModal({icon:opts.icon||'!',title:opts.title||'Confirm',message:message,confirmText:opts.confirmText||'OK',cancelText:opts.cancelText||'Cancel'}).then(function(r){return r!==null})}
+function showPrompt(title,defaultValue,opts){opts=opts||{};return showModal({icon:opts.icon||'?',title:title,message:opts.message||'',input:true,inputValue:defaultValue||'',inputPlaceholder:opts.placeholder||'',confirmText:opts.confirmText||'OK',cancelText:opts.cancelText||'Cancel'})}
+function showInfo(title,message){return showModal({icon:'i',title:title,message:message,hideCancel:true,confirmText:'Got it'})}
+window.showConfirm=showConfirm;window.showPrompt=showPrompt;window.showInfo=showInfo;
 
-async function loadCategoryConfig() {
-  FX_CATEGORIES = [];
-  const isLocal = location.protocol === 'content:' || location.protocol === 'file:';
-  if (!isLocal) {
-    try {
-      const r = await fetch('./effects.json', { cache: 'no-cache' });
-      if (r.ok) {
-        const data = await r.json();
-        let list = null;
-        if (Array.isArray(data.tabs)) list = data.tabs;
-        else if (Array.isArray(data.categories)) list = data.categories;
-        if (list) {
-          FX_CATEGORIES = list.map(t => ({
-            key: t.prefix,
-            label: t.label || t.prefix,
-            prefix: t.prefix,
-            blend: t.blend || 'screen',
-            max: t.max || 60,
-            fileList: Array.isArray(t.files) ? t.files : null,
-            files: []
-          }));
-        }
-      }
-    } catch (e) {}
-  }
-  if (!FX_CATEGORIES.length) {
-    FX_CATEGORIES = [
-      { key:'grunge', label:'Grunge', prefix:'grunge', blend:'screen', max:60, files:[] },
-      { key:'lightleak', label:'Light Leak', prefix:'lightleak', blend:'screen', max:60, files:[] },
-      { key:'fire', label:'Fire', prefix:'fire', blend:'screen', max:60, files:[] },
-      { key:'noise', label:'Noise', prefix:'noise', blend:'overlay', max:60, files:[] },
-      { key:'streetlight', label:'Street Light', prefix:'streetlight', blend:'screen', max:60, files:[] },
-      { key:'af', label:'AF', prefix:'af', blend:'screen', max:60, files:[] },
-      { key:'heart', label:'Heart', prefix:'heart', blend:'normal', max:60, files:[] }
-    ];
-  }
-  if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) currentFxTab = FX_CATEGORIES[0].key;
+const DB_NAME='multibundle',DB_STORE='project';
+let __dbp=null;
+function openDB(){if(!__dbp){__dbp=openDBRaw();__dbp.catch(function(){__dbp=null})}return __dbp}
+function openDBRaw(){return new Promise(function(res,rej){const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=function(){const db=r.result;if(!db.objectStoreNames.contains(DB_STORE))db.createObjectStore(DB_STORE)};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}})}
+let __projCache=null;
+async function dbGetAll(){const uid=__uid();if(__projCache&&__cacheUid===uid)return __projCache;if(__projCache&&__cacheUid!==uid&&__saveTimer)await __flushProjects();const r=await dbGetAllRaw();__projCache=r;__cacheUid=uid;return r}
+function __uid(){let u=null;try{u=window.getCloudUser&&window.getCloudUser()}catch(e){}if(u)return u.uid;return window.__authKnown?null:'local'}
+function __key(uid){return uid==='local'?'projects':'projects_'+uid}
+let __cacheUid=null;
+async function dbGetAllRaw(){
+  const uid=__uid();if(uid===null)return[];
+  try{
+    const db=await openDB();
+    function read(k){return new Promise(function(res){const req=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).get(k);req.onsuccess=function(){res(req.result)};req.onerror=function(){res(null)}})}
+    let d=await read(__key(uid));
+    if(!d&&uid!=='local'&&!localStorage.getItem('mb_legacy_claimed')){
+      const old=await read('projects');
+      if(old&&old.length){d=old;localStorage.setItem('mb_legacy_claimed',uid);const tx=db.transaction(DB_STORE,'readwrite');tx.objectStore(DB_STORE).put(d,__key(uid))}
+    }
+    return d||[];
+  }catch(e){return[]}
 }
+let __saveTimer=null;
+function __flushProjects(){clearTimeout(__saveTimer);__saveTimer=null;if(__projCache)return dbSetAllNow(__projCache,__cacheUid);return Promise.resolve()}
+async function dbSetAll(arr){__projCache=arr;__cacheUid=__uid();clearTimeout(__saveTimer);__saveTimer=setTimeout(__flushProjects,500)}
+window.addEventListener('pagehide',function(){if(__saveTimer)__flushProjects()});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&__saveTimer)__flushProjects()});
+async function dbSetAllNow(arr,uid){
+  if(uid===undefined)uid=__uid();if(uid===null)return;
+  try{const db=await openDB();const tx=db.transaction(DB_STORE,'readwrite');tx.objectStore(DB_STORE).put(arr,__key(uid));await new Promise(function(res){tx.oncomplete=res;tx.onerror=res;tx.onabort=res})}catch(e){console.warn(e)}
+}
+async function dbUpsertProject(p){const all=await dbGetAll();const i=all.findIndex(function(x){return x.id===p.id});if(i>=0)all[i]=p;else all.unshift(p);await dbSetAll(all)}
+async function dbDeleteProject(id){const all=await dbGetAll();await dbSetAll(all.filter(function(x){return x.id!==id}))}
 
-async function probeOne(base) {
-  let im = await loadImage(EFFECTS_BASE + base + '.jpg');
-  if (im) return { fname: base + '.jpg', im };
-  im = await loadImage(EFFECTS_BASE + base + '.jpeg');
-  if (im) return { fname: base + '.jpeg', im };
-  im = await loadImage(EFFECTS_BASE + base + '.png');
-  if (im) return { fname: base + '.png', im };
+function serializeFiles(){return files.map(function(f){return{path:f.path,name:f.name,size:f.size,type:f.type,text:f.text,blob:f.blob}})}
+function deserializeFiles(arr){return arr.map(function(f){return{path:f.path,name:f.name,size:f.size,type:f.type,text:f.text,blob:f.blob}})}
+
+function timeAgo(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return 'just now';const m=Math.floor(s/60);if(m<60)return m+' min ago';const h=Math.floor(m/60);if(h<24)return h+' hr ago';const d=Math.floor(h/24);return d+' day'+(d>1?'s':'')+' ago'}
+function timeAgoLong(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return 'just now';const m=Math.floor(s/60);if(m<60)return m+' min ago';const h=Math.floor(m/60);if(h<24)return h+' hr ago';const d=Math.floor(h/24);if(d<30)return d+' day'+(d>1?'s':'')+' ago';return new Date(ts).toLocaleDateString()}
+
+async function logHistory(entry){
+  if(!currentProjectId)return;
+  const all=await dbGetAll();const p=all.find(function(x){return x.id===currentProjectId});if(!p)return;
+   p.history=p.history||[];p.history.unshift(Object.assign({ts:Date.now()},entry));p.history.forEach(function(h,i){if(i>=20)delete h.text}); if(p.history.length>200)p.history.length=200;await dbSetAll(all);
+}
+window.logHistory=logHistory;
+
+async function markGithubSource(repo,branch){
+  if(!currentProjectId)return;
+  const all=await dbGetAll();const p=all.find(function(x){return x.id===currentProjectId});if(!p)return;
+  p.source='github';p.githubRepo=repo;p.githubBranch=branch;p.lastImport=Date.now();p.githubShas=window.__ghShas||null;await dbSetAll(all);
+}
+window.markGithubSource=markGithubSource;
+
+function detectProjectLogo(files){
+  const candidates=['logo.png','logo.svg','logo.jpg','logo.jpeg','logo.webp','favicon.ico','favicon.png','favicon.svg','icon.png','icon.svg','icon.jpg','assets/logo.png','assets/logo.svg','assets/icon.png','img/logo.png','img/logo.svg','img/icon.png','images/logo.png','images/icon.png','public/logo.png','public/favicon.ico','public/icon.png','static/logo.png','static/icon.png','src/assets/logo.png','src/assets/icon.png'];
+  for(const c of candidates){const match=files.find(function(f){return f.path.toLowerCase()===c.toLowerCase()});if(match)return match.path}
   return null;
 }
 
-async function probeCategory(cat) {
-  if (cat.fileList && Array.isArray(cat.fileList) && cat.fileList.length) {
-    const results = await Promise.all(cat.fileList.map(async fname => {
-      const im = await loadImage(EFFECTS_BASE + fname);
-      return im ? { fname, im } : null;
+function fileBlob(f){const t=mimeMap[ext(f.path)]||f.type||'application/octet-stream';const src=f.blob||new Blob([f.text||'']);return src.type===t?src:new Blob([src],{type:t})}
+function clearUrls(){urls.forEach(function(u){URL.revokeObjectURL(u)});urls=[];urlCache.clear()}
+function resetPreview(){if($('frame')){$('frame').hidden=true;$('frame').srcdoc=''}if($('placeholder'))$('placeholder').hidden=false;if($('previewPath'))$('previewPath').textContent='Your website will appear here';if($('refreshBtn'))$('refreshBtn').disabled=true;if($('previewLoader'))$('previewLoader').classList.remove('show')}
+function findFile(p){p=p.replace(/^\.\//,'').replace(/^\//,'');return files.find(function(f){return f.path===p})||files.find(function(f){return f.path.endsWith('/'+p)})}
+function makeUrl(blob){const u=URL.createObjectURL(blob);urls.push(u);return u}
+function htmlPages(){return files.filter(function(f){return ['html','htm'].includes(ext(f.path))}).sort(function(a,b){return a.path.localeCompare(b.path)})}
+
+function currentProjectName(){return window.__currentProjectName||'No project loaded'}
+function setCurrentProjectName(n){window.__currentProjectName=n||'No project loaded';const dn=$('detailProjectName');if(dn)dn.textContent=window.__currentProjectName}
+
+async function saveCurrentProject(){
+  if(!currentProjectId||!files.length)return;
+  const all=await dbGetAll();const existing=all.find(function(p){return p.id===currentProjectId});
+  await dbUpsertProject(Object.assign({},existing,{id:currentProjectId,name:existing?existing.name:currentProjectName(),files:serializeFiles(),savedAt:Date.now(),createdAt:existing?existing.createdAt:Date.now()}));
+  await renderProjectCards();
+}
+window.saveCurrentProject=saveCurrentProject;
+
+function openDrawer(){const d=$('drawer'),b=$('drawerBackdrop');if(d)d.classList.add('open');if(b)b.classList.add('open')}
+function closeDrawer(){const d=$('drawer'),b=$('drawerBackdrop');if(d)d.classList.remove('open');if(b)b.classList.remove('open')}
+if($('menuBtn'))$('menuBtn').onclick=openDrawer;
+if($('drawerClose'))$('drawerClose').onclick=closeDrawer;
+if($('drawerBackdrop'))$('drawerBackdrop').onclick=closeDrawer;
+if($('drawerNewProject'))$('drawerNewProject').onclick=function(){closeDrawer();if($('folderInput'))$('folderInput').click()};
+if($('drawerImportZip'))$('drawerImportZip').onclick=function(){closeDrawer();if($('zipInput'))$('zipInput').click()};
+if($('drawerGithub'))$('drawerGithub').onclick=function(){closeDrawer();setTimeout(function(){showTab('github')},50)};
+if($('drawerClear'))$('drawerClear').onclick=function(){closeDrawer();if($('clearBtn'))$('clearBtn').click()};
+
+async function renderProjectCards(){
+  const pg=$('projectsPage');if(pg&&pg.hidden){dbGetAll();return}
+  const all=await dbGetAll();const box=$('projectCards');if(!box)return;
+  if($('projectCount'))$('projectCount').textContent=all.length+' / '+PROJECT_LIMIT;
+  if(!all.length){box.innerHTML='<div class="pc-empty">No saved projects yet.<br>Import a folder or ZIP to create one.</div>';return}
+  box.innerHTML=all.map(function(p){
+    const active=(p.id===currentProjectId)?' active':'';
+    let iconHtml;
+    if(p.logo&&p.files){
+      const lf=p.files.find(function(f){return f.path===p.logo});
+      if(lf){try{const b=fileBlob(lf);const u=URL.createObjectURL(b);urls.push(u);iconHtml='<div class="pc-icon pc-logo"><img src="'+u+'" alt=""></div>'}catch(e){iconHtml='<div class="pc-icon">'+esc((p.name||'?').slice(0,2).toUpperCase())+'</div>'}}
+      else{iconHtml='<div class="pc-icon">'+esc((p.name||'?').slice(0,2).toUpperCase())+'</div>'}
+    }else{iconHtml='<div class="pc-icon">'+esc((p.name||'?').slice(0,2).toUpperCase())+'</div>'}
+    return '<div class="project-card'+active+'" data-id="'+esc(p.id)+'">'+
+      '<div class="pc-top">'+iconHtml+
+      '<div class="pc-info"><div class="pc-name">'+esc(p.name||'Untitled')+'</div>'+
+      '<div class="pc-meta">'+p.files.length+' file'+(p.files.length===1?'':'s')+' · '+timeAgo(p.savedAt)+'</div></div></div>'+
+      '<div class="pc-actions">'+
+      '<button class="pc-btn primary" data-act="preview">Preview</button>'+
+      '<button class="pc-btn" data-act="edit" title="Edit code">Edit</button>'+
+      '<button class="pc-btn" data-act="changes" title="Import changes">Sync</button>'+
+      '<button class="pc-btn danger" data-act="delete" title="Delete">×</button>'+
+      '</div></div>';
+  }).join('');
+  box.querySelectorAll('.project-card').forEach(function(card){
+    const id=card.dataset.id;
+    card.querySelectorAll('.pc-btn').forEach(function(btn){
+      btn.onclick=function(e){
+        e.stopPropagation();const act=btn.dataset.act;
+        if(act==='preview')cardPreview(id);else if(act==='edit')cardEdit(id);
+        else if(act==='changes')cardChanges(id);else if(act==='delete')cardDelete(id,card.querySelector('.pc-name').textContent);
+      };
+    });
+    card.onclick=async function(e){
+  if(e.target.closest('.pc-btn')) return;
+  box.querySelectorAll('.project-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  const p = await loadProjectIntoMemory(id);
+  if(!p) return;
+  if(typeof render==='function') render();
+  if(typeof populatePages==='function') populatePages();
+};
+  });
+}
+
+async function loadProjectIntoMemory(id){
+  const all=await dbGetAll();const p=all.find(function(x){return x.id===id});if(!p)return null;
+  currentProjectId=p.id;
+  setCurrentProjectName(p.name);
+  files=deserializeFiles(p.files);
+  try { localStorage.setItem('mb_active_project', p.id); } catch(e) {}
+  return p;
+}
+async function cardPreview(id){
+  const p=await loadProjectIntoMemory(id);if(!p)return;
+  render();
+  await renderProjectCards();
+  showTab('preview');
+  const first=htmlPages()[0];if(first)openPage(first.path)
+}
+async function cardEdit(id){
+  const p=await loadProjectIntoMemory(id);if(!p)return;
+  render();
+  await renderProjectCards();
+  showTab('editor')
+}
+async function cardChanges(id){const p=await loadProjectIntoMemory(id);if(!p)return;if($('changesFolderInput'))$('changesFolderInput').click()}
+async function cardDelete(id,name){
+  const ok=await showConfirm('Delete "'+name+'" permanently? This cannot be undone.',{title:'Delete project',confirmText:'Delete',cancelText:'Keep'});
+  if(!ok)return;await dbDeleteProject(id);
+if(currentProjectId===id){
+  currentProjectId=null;files=[];setCurrentProjectName('No project loaded');
+  try { localStorage.removeItem('mb_active_project'); } catch(e) {}
+}
+  await renderProjectCards();render();showToast('Project deleted');
+}
+
+async function openProjectDetail(id){
+  if($('projectsListView'))$('projectsListView').hidden=true;
+  if($('projectDetailView'))$('projectDetailView').hidden=false;
+  if($('detailStatus'))$('detailStatus').textContent='Opening…';
+  const p=await loadProjectIntoMemory(id);if(!p)return;
+  if($('detailFileCount'))$('detailFileCount').textContent=files.length+' files';
+  if($('detailStatus'))$('detailStatus').textContent='Loaded '+files.length+' files.';
+  const list=$('detailFileList');
+  if(list){
+    list.className='filelist';
+    list.innerHTML=files.slice(0,200).map(function(f){
+      return '<div class="file-row"><div class="file-icon">'+esc(ext(f.path).slice(0,4).toUpperCase()||'FILE')+'</div><div class="file-meta"><div class="file-name">'+esc(base(f.path))+'</div><div class="file-path">'+esc(f.path)+'</div></div><div class="file-size">'+size(f.size||0)+'</div></div>';
+    }).join('');
+  }
+  populatePages();render();
+}
+function showProjectsList(){
+  if($('projectsListView'))$('projectsListView').hidden=false;
+  if($('projectDetailView'))$('projectDetailView').hidden=true;
+  renderProjectCards();
+  loadGithubReposForProjects();
+}
+
+function cleanIncoming(result){return result.filter(function(f){return f.path&&!f.path.split('/').some(function(p){return p.startsWith('.')&&p!=='.well-known'})}).sort(function(a,b){return a.path.localeCompare(b.path)})}
+
+async function processIncoming(result,defaultName){
+  result=cleanIncoming(result);if(!result.length){showToast('No files found','error');return}
+  const name=await showPrompt('Name this project',defaultName||'My project',{message:'Give your project a name. If a project with this name exists, it will be updated.',icon:'+'});
+  if(!name||!name.trim())return;
+  const trimmed=name.trim();const logo=detectProjectLogo(result);
+  const all=await dbGetAll();const existing=all.find(function(p){return p.name===trimmed});
+  if(existing){
+    currentProjectId=existing.id;setCurrentProjectName(trimmed);files=result;
+    await dbUpsertProject(Object.assign({},existing,{files:serializeFiles(),savedAt:Date.now(),logo:logo||existing.logo}));
+    showToast('Updated "'+trimmed+'"','success');
+  }else{
+    if(all.length>=PROJECT_LIMIT){showInfo('Project limit reached','You can only have '+PROJECT_LIMIT+' projects. Delete one to make room.');return}
+    currentProjectId=Date.now().toString();setCurrentProjectName(trimmed);files=result;
+    await dbUpsertProject({id:currentProjectId,name:trimmed,files:serializeFiles(),savedAt:Date.now(),createdAt:Date.now(),history:[],logo:logo});
+    showToast('Created "'+trimmed+'"','success');
+  }
+  await logHistory({type:'import',fileCount:files.length,note:'Imported '+files.length+' files'});
+  await renderProjectCards();populatePages();render();
+}
+
+if($('folderInput'))$('folderInput').addEventListener('change',async function(e){
+  const list=[].slice.call(e.target.files);if(!list.length)return;
+  const name=(list[0].webkitRelativePath||'').split('/')[0]||'Website';
+  const result=await Promise.all(list.map(async function(f){return{path:(f.webkitRelativePath||f.name).split('/').slice(1).join('/')||f.name,name:f.name,size:f.size,type:f.type,blob:f,text:textExt.has(ext(f.name))?await f.text():null}}));
+  await processIncoming(result,name);e.target.value='';
+});
+
+if($('changesFolderInput'))$('changesFolderInput').addEventListener('change',async function(e){
+  const list=[].slice.call(e.target.files);if(!list.length)return;
+  const result=cleanIncoming(await Promise.all(list.map(async function(f){return{path:(f.webkitRelativePath||f.name).split('/').slice(1).join('/')||f.name,name:f.name,size:f.size,type:f.type,blob:f,text:textExt.has(ext(f.name))?await f.text():null}})));
+  const map=new Map();result.forEach(function(f){map.set(f.path,f)});
+  let updated=0,added=0;
+  files.forEach(function(f){if(map.has(f.path)){const nf=map.get(f.path);if(nf.text!=null||nf.blob){f.text=nf.text;f.blob=nf.blob;f.size=nf.size;updated++;map.delete(f.path)}}});
+  map.forEach(function(f){files.push(f);added++});files.sort(function(a,b){return a.path.localeCompare(b.path)});
+  const existing=(await dbGetAll()).find(function(p){return p.id===currentProjectId});
+  const name=existing?existing.name:currentProjectName();const logo=detectProjectLogo(files);
+  setCurrentProjectName(name);
+  await dbUpsertProject(Object.assign({},existing,{id:currentProjectId,name:name,files:serializeFiles(),savedAt:Date.now(),logo:logo||(existing&&existing.logo)}));
+  showToast('Synced: '+updated+' updated, '+added+' new','success');
+  await logHistory({type:'import',note:updated+' updated, '+added+' new'});
+  await renderProjectCards();populatePages();render();e.target.value='';
+});
+
+async function loadZipBlob(blob,fallbackName){
+  const z=await JSZip.loadAsync(blob);
+  let result=await Promise.all(Object.values(z.files).filter(function(x){return !x.dir}).map(async function(x){const b=await x.async('blob');return{path:x.name.replace(/^\/+/,''),name:base(x.name),size:b.size,type:b.type,blob:b,text:textExt.has(ext(x.name))?await b.text():null}}));
+  const roots=Array.from(new Set(result.map(function(x){return x.path.split('/')[0]})));
+  if(roots.length===1&&result.every(function(x){return x.path.indexOf('/')!==-1})){result.forEach(function(x){x.path=x.path.slice(x.path.indexOf('/')+1)})}
+  return {result:result,name:fallbackName};
+}
+
+if($('zipInput'))$('zipInput').addEventListener('change',async function(e){
+  const f=e.target.files[0];if(!f)return;
+  if(!window.JSZip){showToast('ZIP library did not load','error');return}
+  showToast('Reading ZIP…');
+  try{const r=await loadZipBlob(f,f.name.replace(/\.zip$/i,''));await processIncoming(r.result,r.name)}catch(err){showToast('Could not read this ZIP','error')}
+  e.target.value='';
+});
+
+function setGhStatus(t){if($('githubStatus'))$('githubStatus').textContent=t}
+function setGhPublicStatus(t){if($('ghPublicStatus'))$('ghPublicStatus').textContent=t}
+function getToken(){return ghToken}
+
+async function saveToken(t){
+  const uid = window.getCloudUser() ? window.getCloudUser().uid : 'local';
+  ghToken=t;
+  try { localStorage.setItem('mb_gh_active_token', t); } catch(e) {}
+  try{
+    const db=await openDB();
+    const tx=db.transaction(DB_STORE,'readwrite');
+    tx.objectStore(DB_STORE).put(t,'githubToken_'+uid);
+    await new Promise(function(r){tx.oncomplete=r});
+  }catch(e){}
+}
+async function loadToken(){
+  const uid = window.getCloudUser() ? window.getCloudUser().uid : 'local';
+  try{
+    const db=await openDB();
+    const tx=db.transaction(DB_STORE,'readonly');
+    const req=tx.objectStore(DB_STORE).get('githubToken_'+uid);
+    const t=await new Promise(function(r){req.onsuccess=function(){r(req.result)};req.onerror=function(){r(null)}});
+    return t||'';
+  }catch(e){return''}
+}
+async function clearToken(){
+  const uid = window.getCloudUser() ? window.getCloudUser().uid : 'local';
+  try { localStorage.removeItem('mb_gh_active_token'); } catch(e) {}
+  try{
+    const db=await openDB();
+    const tx=db.transaction(DB_STORE,'readwrite');
+    tx.objectStore(DB_STORE).delete('githubToken_'+uid);
+    await new Promise(function(r){tx.oncomplete=r});
+  }catch(e){}
+}
+
+async function ghFetch(url){const t=getToken();const headers={};if(t)headers.Authorization='Bearer '+t;return fetch(url,{headers:headers})}
+
+async function githubLogin(){
+  const t=($('githubToken').value||'').trim();if(!t){setGhStatus('Paste a token first.');return}
+  setGhStatus('Verifying token…');
+  try{
+    const r=await fetch('https://api.github.com/user',{headers:{Authorization:'Bearer '+t}});
+    if(!r.ok){setGhStatus('Token rejected. Check it has "repo" scope.');return}
+    const user=await r.json();await saveToken(t);setGhStatus('Signed in as @'+user.login);await showGithubLoggedIn(user);showToast('Signed in as @'+user.login,'success');
+  }catch(e){setGhStatus('Network error: '+e.message)}
+}
+async function githubLogout(){
+  await clearToken();if($('githubLoggedIn'))$('githubLoggedIn').hidden=true;if($('githubLoggedOut'))$('githubLoggedOut').hidden=false;
+  if($('githubToken'))$('githubToken').value='';setGhStatus('Signed out.');showToast('Signed out');
+}
+async function showGithubLoggedIn(user){
+  if($('githubLoggedOut'))$('githubLoggedOut').hidden=true;if($('githubLoggedIn'))$('githubLoggedIn').hidden=false;
+  if($('ghAvatar'))$('ghAvatar').src=user.avatar_url||'';if($('ghName'))$('ghName').textContent=user.name||user.login;
+  if($('ghLogin'))$('ghLogin').textContent='@'+user.login;await loadRepoList();
+}
+
+let ghRepos=[];
+async function loadRepoList(){
+  const list=$('ghRepoList');if(!list)return;
+  list.innerHTML='<div style="padding:16px;color:var(--muted);font-size:12px;text-align:center">Loading repos…</div>';
+  try{
+    let all=[],page=1;
+    while(page<=3){
+      const r=await ghFetch('https://api.github.com/user/repos?per_page=100&sort=updated&page='+page);
+      if(!r.ok)break;const arr=await r.json();if(!Array.isArray(arr)||!arr.length)break;
+      all=all.concat(arr);if(arr.length<100)break;page++;
+    }
+    ghRepos=all;renderRepoList();
+  }catch(e){list.innerHTML='<div style="padding:16px;color:#ff8a8a;font-size:12px">Could not load repos.</div>'}
+}
+function renderRepoList(){
+  const list=$('ghRepoList');if(!list)return;
+  const q=($('ghRepoSearch').value||'').toLowerCase();const filtered=q?ghRepos.filter(function(r){return r.full_name.toLowerCase().indexOf(q)!==-1}):ghRepos;
+  if(!filtered.length){list.innerHTML='<div style="padding:16px;color:var(--muted);font-size:12px;text-align:center">No repos found.</div>';return}
+  list.innerHTML=filtered.map(function(r){
+    return '<div class="gh-repo" data-full="'+esc(r.full_name)+'" data-branch="'+esc(r.default_branch||'main')+'">'+
+      '<div class="gh-repo-info"><div class="gh-repo-name">'+esc(r.name)+'</div><div class="gh-repo-meta">'+esc(r.owner.login)+' · '+(r.language||'—')+' · '+r.stargazers_count+' stars</div></div>'+
+      (r.private?'<span class="gh-badge private">Private</span>':'<span class="gh-badge">Public</span>')+
+    '</div>';
+  }).join('');
+  list.querySelectorAll('.gh-repo').forEach(function(el){el.onclick=function(){importRepo(el.dataset.full,el.dataset.branch)}});
+}
+
+async function importRepo(fullName,branch,isPublic){
+  const parts=fullName.split('/');const owner=parts[0],repo=parts[1];const bn=branch||'main';
+  const statusFn=isPublic?setGhPublicStatus:setGhStatus;statusFn('Fetching '+fullName+' ('+bn+')…');
+  try{
+    const r=await ghFetch('https://api.github.com/repos/'+owner+'/'+repo+'/git/trees/'+bn+'?recursive=1');
+    if(!r.ok){statusFn('Could not list files.');return}
+    const tree=await r.json();const blobs=(tree.tree||[]).filter(function(x){return x.type==='blob'});window.__ghShas={};blobs.forEach(function(n){window.__ghShas[n.path]=n.sha});
+    if(!blobs.length){statusFn('Repo has no files.');return}
+    statusFn('Downloading '+blobs.length+' files…');let done=0;
+    const result=await Promise.all(blobs.map(async function(node){
+      const path=node.path;const isText=textExt.has(ext(path));
+      try{
+        const cr=await ghFetch('https://api.github.com/repos/'+owner+'/'+repo+'/contents/'+encodeURIComponent(path).replace(/%2F/g,'/')+'?ref='+encodeURIComponent(bn));
+        if(!cr.ok)return null;const data=await cr.json();let blob;
+        if(data.encoding==='base64'&&data.content){
+          const bin=atob(data.content.replace(/\n/g,''));const bytes=new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);blob=new Blob([bytes],{type:'application/octet-stream'});
+        }else if(data.download_url){const dr=await fetch(data.download_url);blob=await dr.blob()}else return null;
+        done++;if(done%10===0)statusFn('Downloading… '+done+'/'+blobs.length);
+        return {path:path,name:base(path),size:blob.size,type:blob.type,blob:blob,text:isText?await blob.text():null};
+      }catch(e){return null}
     }));
-    cat.files = results.filter(Boolean);
-    cat.files.forEach(r => { fxImages[cat.key + ':' + r.fname] = r.im; });
-    return;
-  }
-  const promises = [];
-  for (let i = 1; i <= cat.max; i++) promises.push(probeOne(cat.prefix + i).then(r => r ? { base: cat.prefix + i, ...r } : null));
-  const results = await Promise.all(promises);
-  cat.files = results.filter(r => r !== null);
-  cat.files.forEach(r => { fxImages[cat.key + ':' + r.fname] = r.im; });
+    const clean=result.filter(function(x){return x});
+    await processIncoming(clean,window.__ghPullName||repo);window.__ghPullName=null;await markGithubSource(fullName,bn);
+    statusFn('Imported '+fullName+' — '+clean.length+' files.');showToast('Imported '+repo,'success');
+  }catch(e){statusFn('Import failed: '+e.message)}
 }
 
-async function probeBackgrounds() {
-  const cfg = BG_CONFIG;
-  const promises = [];
-  for (let i = 1; i <= cfg.max; i++) promises.push(probeOne('background' + i));
-  const results = await Promise.all(promises);
-  cfg.files = results.filter(r => r !== null);
-  cfg.files.forEach(r => { bgImages[r.fname] = r.im; });
+if($('githubLoginBtn'))$('githubLoginBtn').onclick=githubLogin;
+if($('githubLogoutBtn'))$('githubLogoutBtn').onclick=githubLogout;
+if($('githubToken'))$('githubToken').addEventListener('keydown',function(e){if(e.key==='Enter')githubLogin()});
+if($('ghRepoSearch'))$('ghRepoSearch').addEventListener('input',renderRepoList);
+
+function handlePublicUrl(){
+  const raw=($('ghPublicUrl').value||'').trim();if(!raw){setGhPublicStatus('Paste a URL.');return}
+  const m=raw.match(/github\.com\/([^\/\s]+)\/([^\/\s#?]+?)(?:\.git)?(?:\/(?:tree|commit)\/([^\/\s#?]+))?\/?(?:[#?].*)?$/i);
+  if(!m){setGhPublicStatus('Invalid URL.');return}
+  importRepo(m[1]+'/'+m[2].replace(/\.git$/,''),m[3]||'main',true);
+}
+if($('ghPublicBtn'))$('ghPublicBtn').onclick=handlePublicUrl;
+if($('ghPublicUrl'))$('ghPublicUrl').addEventListener('keydown',function(e){if(e.key==='Enter')handlePublicUrl()});
+
+(async function(){
+  const t=await loadToken();
+  if(t){ghToken=t;try{const r=await fetch('https://api.github.com/user',{headers:{Authorization:'Bearer '+t}});if(r.ok){const u=await r.json();await showGithubLoggedIn(u)}}catch(e){}}
+})();
+
+if($('backToProjectsBtn'))$('backToProjectsBtn').onclick=showProjectsList;
+if($('detailEditBtn'))$('detailEditBtn').onclick=function(){showTab('editor')};
+if($('detailImportChangesBtn'))$('detailImportChangesBtn').onclick=function(){if(currentProjectId)$('changesFolderInput').click()};
+if($('detailBundleBtn'))$('detailBundleBtn').onclick=function(){showTab('bundle');render()};
+if($('detailDeleteBtn'))$('detailDeleteBtn').onclick=async function(){
+  if(!currentProjectId)return;
+  const p=(await dbGetAll()).find(function(x){return x.id===currentProjectId});
+  await cardDelete(currentProjectId,p?p.name:'this project');showProjectsList();
+};
+
+function render(){
+  const pages=htmlPages();
+  const setT=function(id,v){const el=$(id);if(el)el.textContent=v};
+  const setD=function(id,v){const el=$(id);if(el)el.disabled=v};
+  const name=currentProjectName();
+  setT('homeProjectName',name);setT('homeFileCount',files.length+' files');
+  setT('homeStatus',files.length?files.length+' files loaded. Open Projects to manage, Editor to modify.':'Go to Projects to import a website folder or ZIP.');
+  setT('bundleProjectName',name);setT('bundleFileCount',files.length+' files');
+  setT('bundleStatus',files.length?'Ready to export '+files.length+' files.':'Import a project first.');
+  setD('homeBundleBtn',!files.length);setD('homeOpenPreviewBtn',!pages.length);setD('bundleBtn',!files.length);
+  populatePages();
 }
 
-async function preloadEffects() {
-  await loadCategoryConfig();
-  const smallCats = FX_CATEGORIES.filter(c => c.fileList && c.fileList.length <= 10);
-  const noListCats = FX_CATEGORIES.filter(c => !c.fileList);
-  await Promise.all([...smallCats.map(c => probeCategory(c)), ...noListCats.map(c => probeCategory(c)), probeBackgrounds()]);
-  buildFxTabs();
-  buildFxGrids();
-  buildBgImageGrid();
-  if (imgLoaded) redraw();
+function populatePages(){
+  const sel=$('pageSelect');if(!sel)return;
+  const pages=htmlPages();sel.innerHTML='';
+  if(!pages.length){sel.add(new Option('No HTML pages found',''));sel.disabled=true;if($('openPageBtn'))$('openPageBtn').disabled=true;currentPagePath='';return}
+  pages.forEach(function(f){sel.add(new Option(f.path,f.path))});
+  const start=pages.find(function(f){return f.path===currentPagePath})||pages.find(function(f){return f.path.toLowerCase()==='index.html'})||pages.find(function(f){return base(f.path).toLowerCase()==='index.html'})||pages[0];
+  sel.value=start.path;sel.disabled=false;if($('openPageBtn'))$('openPageBtn').disabled=false;currentPagePath=start.path;
 }
 
-// ---------- Splash / toast ----------
-function playCount(callback) {
-  if (counterLocked) return;
-  counterLocked = true;
-  const el = document.getElementById('splashScreen');
-  const ring = document.getElementById('splashRing');
-  if (!el) { counterLocked = false; if (callback) callback(); return; }
-  el.classList.remove('fade-out');
-  el.style.display = 'flex';
-  const DURATION = 1500;
-  const CIRC = 238.76;
-  const start = performance.now();
-  let cb = false;
-  if (ring) ring.setAttribute('stroke-dashoffset', CIRC);
-  function step(now) {
-    const elapsed = now - start;
-    const pct = Math.min(1, elapsed / DURATION);
-    if (ring) ring.setAttribute('stroke-dashoffset', CIRC * (1 - pct));
-    if (!cb && pct >= 0.4 && callback) { cb = true; try { callback(); } catch(e){} }
-    if (pct < 1) requestAnimationFrame(step);
-    else {
-      if (!cb && callback) { try { callback(); } catch(e){} }
-      setTimeout(() => {
-        el.classList.add('fade-out');
-        setTimeout(() => { el.style.display = 'none'; counterLocked = false; }, 300);
-      }, 100);
-    }
-  }
-  requestAnimationFrame(step);
+function relative(from,ref){
+  if(!ref||/^(data:|blob:|https?:|\/\/|#|mailto:|tel:|javascript:)/i.test(ref))return null;
+  let p=ref.split('#')[0].split('?')[0];try{p=decodeURIComponent(p)}catch(e){}
+  if(p.startsWith('/'))p=p.slice(1);else p=(from.includes('/')?from.slice(0,from.lastIndexOf('/')+1):'')+p;
+  const stack=[];for(const part of p.split('/')){if(part==='..')stack.pop();else if(part&&part!=='.')stack.push(part)}
+  return findFile(stack.join('/'));
 }
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.innerText = msg || 'Saved';
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 1500);
+function assetUrl(from,ref){
+  if(!ref||/^(data:|blob:|https?:|\/\/|#|mailto:|tel:|javascript:)/i.test(ref.trim()))return ref;
+  const f=relative(from,ref);if(!f)return ref;
+  if(urlCache.has(f.path))return urlCache.get(f.path);
+  const u=makeUrl(fileBlob(f));urlCache.set(f.path,u);return u;
 }
-
-// ---------- Adjust panel ----------
-function switchAdjustCat(name, el) {
-  const panel = el.closest('.panel');
-  panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
-  panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-  const sv = panel.querySelector('#adjust-' + name);
-  if (sv) sv.classList.add('active');
-  el.classList.add('active');
-  if (name === 'templates') buildTemplates();
-  if (name === 'presets') buildPresetThumbs();
-}
-
-function buildPresetThumbs() {
-  const el = document.getElementById('presetThumbsContainer');
-  if (!el) return;
-  if (!imgLoaded || !img.src) { el.innerHTML = '<div class="filter-empty">Load a photo</div>'; return; }
-  const src = img.src;
-  let html = '';
-  FILTERS.forEach((f, i) => {
-    const sel = (currentFilter === f.code) ? 'selected' : '';
-    const filterStyle = f.code === 'none' ? 'none' : f.code;
-    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
+function cssRewrite(css,path,depth){
+  depth=depth||0;
+  css=css.replace(/@import\s+(?:url\(\s*(['"]?)(.*?)\1\s*\)|(['"])(.*?)\3)\s*([^;]*);/gi,function(m,q1,u1,q2,u2,media){
+    const f=depth<5?relative(path,u1||u2):null;if(!f||f.text==null)return m;
+    const inner=cssRewrite(f.text,f.path,depth+1);
+    return media.trim()?('@media '+media.trim()+'{'+inner+'}'):inner;
   });
-  el.innerHTML = html;
-}// ---------- FX system ----------
-function buildFxTabs() {
-  const bar = document.getElementById('fxTabBar');
-  if (!bar) return;
-  let html = '';
-  FX_CATEGORIES.forEach(cat => {
-    const sel = (currentFxTab === cat.key) ? 'active' : '';
-    html += `<button class="sub-tab ${sel}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
+  return css.replace(/url\(\s*(['"]?)(.*?)\1\s*\)/gi,function(m,q,u){return 'url("'+assetUrl(path,u)+'")'});
+}
+
+const LINK_INTERCEPTOR='(function(){'+
+  'function intercept(e){'+
+    'var t=e.target;'+
+    'while(t&&t.tagName!=="A")t=t.parentElement;'+
+    'if(!t)return;'+
+    'var href=t.getAttribute("href");'+
+    'if(!href)return;'+
+    'if(href.charAt(0)==="#"||href.indexOf("javascript:")===0||href.indexOf("mailto:")===0||href.indexOf("tel:")===0)return;'+
+    'if(/^(https?:)?\\/\\//i.test(href)||href.indexOf("data:")===0||href.indexOf("blob:")===0){'+
+      't.setAttribute("target","_blank");t.setAttribute("rel","noopener");return;'+
+    '}'+
+    'e.preventDefault();e.stopPropagation();'+
+    'try{parent.postMessage({type:"mb-nav",href:href},"*")}catch(err){}'+
+  '}'+
+  'document.addEventListener("click",intercept,true);'+
+'})();';
+
+function htmlRewrite(html,path){
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  if(!doc.head){const h=doc.createElement('head');doc.documentElement.insertBefore(h,doc.documentElement.firstChild)}
+  const meta=doc.createElement('meta');meta.setAttribute('name','color-scheme');meta.setAttribute('content','dark');doc.head.insertBefore(meta,doc.head.firstChild);
+  const base=doc.createElement('style');base.textContent='html{background:#0d0e12}body{background:#0d0e12;color:#f7f7f8;margin:0}';doc.head.insertBefore(base,doc.head.firstChild);
+  doc.querySelectorAll('link[href]').forEach(function(el){
+    const rel=(el.getAttribute('rel')||'').toLowerCase();if(rel.indexOf('stylesheet')===-1)return;
+    const href=el.getAttribute('href');const f=relative(path,href);
+    if(f&&f.text!=null){const s=doc.createElement('style');s.textContent=cssRewrite(f.text,f.path);el.replaceWith(s)}
+    else el.setAttribute('href',assetUrl(path,href));
   });
-  bar.innerHTML = html;
-}
-
-function buildFxGrids() {
-  const container = document.getElementById('fxGrids');
-  if (!container) return;
-  let html = '';
-  FX_CATEGORIES.forEach(cat => {
-    const active = (currentFxTab === cat.key) ? 'active' : '';
-    html += `<div id="fx-tab-${cat.key}" class="sub-view ${active}"><div class="fx-grid" id="fxGrid-${cat.key}"></div></div>`;
+  doc.querySelectorAll('script[src]').forEach(function(el){
+    const src=el.getAttribute('src');const f=relative(path,src);
+    if(f&&f.text!=null){const s=doc.createElement('script');const t=el.getAttribute('type');if(t)s.setAttribute('type',t);s.textContent=f.text;el.replaceWith(s)}
+    else el.setAttribute('src',assetUrl(path,src));
   });
-  container.innerHTML = html;
-  FX_CATEGORIES.forEach(cat => buildFxGrid(cat.key));
-}
-
-function switchFxTab(key, el) {
-  currentFxTab = key;
-  const panel = el.closest('.panel');
-  panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
-  panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('fx-tab-' + key).classList.add('active');
-  el.classList.add('active');
-  const cat = FX_CATEGORIES.find(c => c.key === key);
-  if (cat && cat.fileList && (!cat.files || !cat.files.length)) {
-    const g = document.getElementById('fxGrid-' + key);
-    if (g) g.innerHTML = '<div class="filter-empty">Loading ' + cat.fileList.length + ' effects...</div>';
-    probeCategory(cat).then(() => { buildFxGrid(key); });
-  }
-}
-
-function buildFxGrid(catKey) {
-  const cat = FX_CATEGORIES.find(c => c.key === catKey);
-  if (!cat) return;
-  const g = document.getElementById('fxGrid-' + catKey);
-  if (!g) return;
-  let html = `<div class="fx-card ${currentFx === catKey + ':none' ? 'selected' : ''}" onclick="setFx('${catKey}:none', this)">
-    <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </div>
-    <span class="fx-card-label">Off</span>
-  </div>`;
-  if (!cat.files || !cat.files.length) html += `<div class="filter-empty">No files</div>`;
-  else {
-    cat.files.forEach(f => {
-      const key = catKey + ':' + f.fname;
-      const sel = (currentFx === key) ? 'selected' : '';
-      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${f.base}</span></div>`;
+  doc.querySelectorAll('style').forEach(function(el){if(el.textContent)el.textContent=cssRewrite(el.textContent,path)});
+  doc.querySelectorAll('[style]').forEach(function(el){
+    const s=el.getAttribute('style');
+    if(s&&s.indexOf('url(')!==-1)el.setAttribute('style',s.replace(/url\(\s*(['"]?)(.*?)\1\s*\)/gi,function(m,q,u){return 'url("'+assetUrl(path,u)+'")'}));
+  });
+  const attrMap={img:['src','srcset'],source:['src','srcset'],video:['src','poster'],audio:['src'],track:['src'],embed:['src'],object:['data']};
+  for(const tag in attrMap){if(!Object.prototype.hasOwnProperty.call(attrMap,tag))continue;
+    doc.querySelectorAll(tag).forEach(function(el){
+      attrMap[tag].forEach(function(a){
+        const v=el.getAttribute(a);if(!v)return;
+        if(a==='srcset'){el.setAttribute(a,v.split(',').map(function(part){const m=part.trim().match(/^(\S+)(\s+.+)?$/);return m?assetUrl(path,m[1])+(m[2]||''):part}).join(', '))}
+        else el.setAttribute(a,assetUrl(path,v));
+      });
     });
   }
-  g.innerHTML = html;
+  const s=doc.createElement('script');s.textContent=LINK_INTERCEPTOR;if(doc.body)doc.body.appendChild(s);else doc.documentElement.appendChild(s);
+  return '<!doctype html>'+doc.documentElement.outerHTML;
+}
+window.htmlRewrite=htmlRewrite;
+
+window.addEventListener('message',function(e){
+  if(!e.data||e.data.type!=='mb-nav')return;
+  const href=e.data.href;if(!href||href==='form-submit')return;
+  const target=relative(currentPagePath,href);
+  if(target){openPage(target.path)}else{showToast('Page not found: '+href,'error')}
+});
+
+function openPage(path){
+  resetPreview();const f=findFile(path);
+  if(!f){if($('previewPath'))$('previewPath').textContent='File not found';return}
+  currentPagePath=f.path;if($('pageSelect'))$('pageSelect').value=f.path;
+  if($('previewPath'))$('previewPath').textContent=f.path;
+  if(f.text==null){if($('placeholder'))$('placeholder').hidden=false;return}
+  const frame=$('frame'),loader=$('previewLoader');if(loader)loader.classList.add('show');if($('placeholder'))$('placeholder').hidden=true;
+  frame.hidden=false;frame.onload=function(){if(loader)loader.classList.remove('show');frame.onload=null};setTimeout(function(){if(loader)loader.classList.remove('show')},2500);
+  frame.srcdoc=htmlRewrite(f.text,f.path);if($('refreshBtn'))$('refreshBtn').disabled=false;
 }
 
-function setFx(key, el) {
-  currentFx = key;
-  document.querySelectorAll('.fx-card').forEach(c => c.classList.remove('selected'));
-  if (el) el.classList.add('selected');
-  redraw(); saveState();
+function exportBundle(){
+  if(!files.length)return;
+  const name=currentProjectName();const tf=files.filter(function(f){return f.text!=null});const bf=files.filter(function(f){return f.text==null});
+  let out='Multi Bundle Export\nProject: '+name+'\nFiles: '+files.length+'\nExported: '+new Date().toISOString()+'\n'+'='.repeat(60)+'\n\n';
+  tf.forEach(function(f){out+='\n'+'='.repeat(60)+'\nFILE: '+f.path+'\n'+'='.repeat(60)+'\n\n'+f.text+'\n'});
+  if(bf.length){out+='\n'+'='.repeat(60)+'\nBINARY FILES (not embedded)\n'+'='.repeat(60)+'\n\n';bf.forEach(function(f){out+='- '+f.path+' ('+size(f.size||0)+')\n'})}
+  const blob=new Blob([out],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=name.replace(/[^\w\-]+/g,'_')+'.txt';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href)},2000);showToast('Bundle downloaded','success');
 }
 
-function setFxAmount(v) {
-  currentFxAmount = parseInt(v);
-  const fv = document.getElementById('fxVal'); if (fv) fv.innerText = v;
-  redraw(); saveState();
-}
-
-function resetFxTransform() {
-  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
-  redraw(); saveState();
-}
-
-function drawFxLayer() {
-  if (!imgLoaded || currentFx === 'none' || currentFxAmount === 0) return;
-  const parts = currentFx.split(':');
-  const catKey = parts[0], fname = parts[1];
-  if (fname === 'none') return;
-  const im = fxImages[catKey + ':' + fname];
-  if (!im) return;
-  const cat = FX_CATEGORIES.find(c => c.key === catKey);
-  const a = currentFxAmount / 100;
-  ctx.save();
-  ctx.globalAlpha = a;
-  ctx.globalCompositeOperation = (cat && cat.blend) ? cat.blend : 'screen';
-  const cw = canvas.width, ch = canvas.height;
-  const baseW = cw * fxScale;
-  const baseH = ch * fxScale;
-  ctx.translate(fxX * cw, fxY * ch);
-  if (fxRotation) ctx.rotate(fxRotation);
-  const sr = im.naturalWidth / im.naturalHeight;
-  const dr = baseW / baseH;
-  let sx = 0, sy = 0, sw = im.naturalWidth, sh = im.naturalHeight;
-  if (sr > dr) { sw = sh * dr; sx = (im.naturalWidth - sw) / 2; }
-  else { sh = sw / dr; sy = (im.naturalHeight - sh) / 2; }
-  ctx.drawImage(im, sx, sy, sw, sh, -baseW/2, -baseH/2, baseW, baseH);
-  ctx.restore();
-}
-
-// ---------- Background image grid ----------
-function buildBgImageGrid() {
-  const g = document.getElementById('bgImageGrid');
-  if (!g) return;
-  let html = '';
-  const noneSel = (!currentBgImage && !currentBgColor) ? 'selected' : '';
-  html += '<div class="bg-item ' + noneSel + '" onclick="clearAllBg()"><div class="bg-item-img" style="display:flex;align-items:center;justify-content:center;background:#1a1a1a;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><span class="bg-item-label">None</span></div>';
-  if (!BG_CONFIG.files.length) { g.innerHTML = html; return; }
-  BG_CONFIG.files.forEach(f => {
-    if (f.fname === 'background10.jpg') return;
-    const sel = (currentBgImage && currentBgImage.src.endsWith(f.fname)) ? 'selected' : '';
-    const label = BG_LABELS[f.fname] || f.fname.replace('.jpg','').replace('background','');
-    html += `<div class="bg-item ${sel}" onclick="setBgImage('${f.fname}', this)"><div class="bg-item-img"><img src="${EFFECTS_BASE + f.fname}"></div><span class="bg-item-label">${label}</span></div>`;
+function showTab(name){
+  ['home','projects','bundle','preview','editor','backups','github','updates'].forEach(function(p){
+    const el=$(p+'Page');if(el)el.hidden=(p!==name);
   });
-  g.innerHTML = html;
+  document.querySelectorAll('.bottom span').forEach(function(s){s.classList.toggle('selected',s.dataset.tab===name)});
+  document.querySelectorAll('.drawer-nav a').forEach(function(a){a.classList.toggle('selected',a.dataset.tab===name)});
+   try{localStorage.setItem('mb_nav',JSON.stringify({tab:name,pid:currentProjectId}))}catch(e){}
+  if(name==='projects')showProjectsList();
+  if(name==='updates'&&typeof setUpdatesTab==='function')setUpdatesTab(window.__updatesMode||'github');
 }
+window.showTab=showTab;
 
-function setBgImage(fname, el) {
-  const im = bgImages[fname];
-  if (!im) return;
-  currentBgImage = im;
-  currentBgColor = null;
-  document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
-  if (el) el.classList.add('selected');
-  document.querySelectorAll('.bgcolor-swatch').forEach(s => s.classList.remove('selected'));
-  redraw(); saveState();
+window.__updatesMode='github';
+let __updatesCurrentProject=null;
+
+function setUpdatesTab(mode){
+  window.__updatesMode=mode;
+  if($('updatesTabGithub'))$('updatesTabGithub').classList.toggle('active',mode==='github');
+  if($('updatesTabLocal'))$('updatesTabLocal').classList.toggle('active',mode==='local');
+  if($('updatesGithubSection'))$('updatesGithubSection').hidden=(mode!=='github');
+  if($('updatesLocalSection'))$('updatesLocalSection').hidden=(mode!=='local');
+  if($('updatesListView'))$('updatesListView').hidden=false;
+  if($('updatesDetailView'))$('updatesDetailView').hidden=true;
+  renderUpdatesList();
 }
+window.setUpdatesTab=setUpdatesTab;
 
-function setBgImageSize(v) { currentBgImageSize = parseInt(v); const e = document.getElementById('bgImgSizeVal'); if (e) e.innerText = v; redraw(); saveState(); }
-function setBgImageZoom(v) { currentBgImageZoom = parseInt(v); const e = document.getElementById('bgImgZoomVal'); if (e) e.innerText = v; redraw(); saveState(); }
-function setBgImageX(v) { currentBgImageX = parseInt(v); const e = document.getElementById('bgImgXVal'); if (e) e.innerText = v; redraw(); saveState(); }
-function setBgImageY(v) { currentBgImageY = parseInt(v); const e = document.getElementById('bgImgYVal'); if (e) e.innerText = v; redraw(); saveState(); }
-
-function resetBgPosition() {
-  currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
-  const z = document.getElementById('bgImgZoomInput'); if (z) z.value = 100;
-  const zv = document.getElementById('bgImgZoomVal'); if (zv) zv.innerText = '100';
-  const x = document.getElementById('bgImgXInput'); if (x) x.value = 0;
-  const xv = document.getElementById('bgImgXVal'); if (xv) xv.innerText = '0';
-  const y = document.getElementById('bgImgYInput'); if (y) y.value = 0;
-  const yv = document.getElementById('bgImgYVal'); if (yv) yv.innerText = '0';
-  redraw(); saveState();
-}
-
-function clearBgImage() {
-  currentBgImage = null;
-  document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
-  redraw(); saveState();
-}
-
-function switchBgDrag(mode, el) {
-  bgDragMode = mode;
-  gestureTarget = mode;
-  if (el && el.parentElement) {
-    el.parentElement.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
+async function renderUpdatesList(){
+  const all=await dbGetAll();
+  if(window.__updatesMode==='github'){
+    const g=all.filter(function(p){return p.source==='github'});if($('updatesGithubCount'))$('updatesGithubCount').textContent=g.length;
+    const box=$('updatesGithubList');if(!box)return;
+    if(!g.length){box.innerHTML='<div class="pc-empty">No GitHub projects yet.<br>Import one from the GitHub tab.</div>';return}
+    box.innerHTML=g.map(function(p){
+      const edits=countDrafts(p);
+      const badge=edits?'<span class="up-badge">'+edits+' draft'+(edits===1?'':'s')+'</span>':'<span class="up-badge clean">Clean</span>';
+      return '<div class="updates-proj" data-id="'+esc(p.id)+'">'+
+        '<div class="up-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div>'+
+        '<div class="up-info"><div class="up-name">'+esc(p.name)+'</div><div class="up-meta">'+esc(p.githubRepo||'')+' · '+esc(p.githubBranch||'main')+'</div></div>'+badge+'</div>';
+    }).join('');
+    box.querySelectorAll('.updates-proj').forEach(function(el){el.onclick=function(){openUpdatesDetail(el.dataset.id,'github')}});
+  }else{
+    if($('updatesLocalCount'))$('updatesLocalCount').textContent=all.length;
+    const box=$('updatesLocalList');if(!box)return;
+    if(!all.length){box.innerHTML='<div class="pc-empty">No projects yet.</div>';return}
+    box.innerHTML=all.map(function(p){
+      const h=p.history||[];
+      return '<div class="updates-proj" data-id="'+esc(p.id)+'">'+
+        '<div class="up-icon">'+(p.source==='github'?'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>':'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>')+'</div>'+
+        '<div class="up-info"><div class="up-name">'+esc(p.name)+'</div><div class="up-meta">'+h.length+' change'+(h.length===1?'':'s')+' · '+(h[0]?timeAgoLong(h[0].ts):'no activity')+'</div></div></div>';
+    }).join('');
+    box.querySelectorAll('.updates-proj').forEach(function(el){el.onclick=function(){openUpdatesDetail(el.dataset.id,'local')}});
   }
 }
+function countDrafts(p){if(!p.history)return 0;const since=p.lastImport||0;return p.history.filter(function(h){return h.type==='edit'&&h.ts>since}).length}
 
-function clearAllBg() {
-  currentBgColor = null;
-  currentBgImage = null;
-  customBgImage = null;
-  currentBgImageZoom = 100;
-  currentBgImageX = 0;
-  currentBgImageY = 0;
-  document.querySelectorAll('.bgcolor-swatch').forEach(s => s.classList.remove('selected'));
-  document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
-  const noneSwatch = document.querySelector('.bgcolor-swatch');
-  if (noneSwatch) noneSwatch.classList.add('selected');
-  redraw(); saveState();
-  showToast('Background cleared');
+async function gitBlobSha(bytes){
+  const pre=new TextEncoder().encode('blob '+bytes.length+'\0');
+  const all=new Uint8Array(pre.length+bytes.length);all.set(pre);all.set(bytes,pre.length);
+  const d=await crypto.subtle.digest('SHA-1',all);
+  return Array.from(new Uint8Array(d)).map(function(x){return x.toString(16).padStart(2,'0')}).join('');
 }
-
-function resetSubjectTransform() {
-  subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
-  redraw(); saveState();
+async function checkGithubUpdates(p){
+  const r=await ghFetch('https://api.github.com/repos/'+p.githubRepo+'/git/trees/'+encodeURIComponent(p.githubBranch||'main')+'?recursive=1');
+  if(!r.ok)throw new Error('GitHub error '+r.status);
+  const tree=await r.json();const remote={};
+  (tree.tree||[]).forEach(function(n){if(n.type==='blob')remote[n.path]=n.sha});
+  let base=p.githubShas;
+  if(!base){
+    base={};
+    for(const f of p.files){
+      let b=null;
+      if(f.text!=null)b=new TextEncoder().encode(f.text);
+      else if(f.blob)b=new Uint8Array(await f.blob.arrayBuffer());
+      if(b)base[f.path]=await gitBlobSha(b);
+    }
+  }
+  const added=[],changed=[],removed=[];
+  Object.keys(remote).forEach(function(k){if(!(k in base))added.push(k);else if(base[k]!==remote[k])changed.push(k)});
+  Object.keys(base).forEach(function(k){if(!(k in remote))removed.push(k)});
+  return {added:added,changed:changed,removed:removed};
 }
-
-// ---------- Unshow / overlay cut ----------
-function setUnshowOpacity(v) {
-  v = parseInt(v);
-  overlayOpacity = v;
-  const e = document.getElementById('unshowOpacityVal'); if (e) e.innerText = v;
-  redraw(); saveState();
-}
-function setCut(edge, v) {
-  v = parseInt(v);
-  if (edge === 'top') { cutTop = v; const e = document.getElementById('cutTopVal'); if (e) e.innerText = v; }
-  else if (edge === 'bottom') { cutBottom = v; const e = document.getElementById('cutBottomVal'); if (e) e.innerText = v; }
-  else if (edge === 'left') { cutLeft = v; const e = document.getElementById('cutLeftVal'); if (e) e.innerText = v; }
-  else if (edge === 'right') { cutRight = v; const e = document.getElementById('cutRightVal'); if (e) e.innerText = v; }
-  redraw(); saveState();
-}
-function setCutFeather(v) {
-  cutFeather = parseInt(v);
-  const e = document.getElementById('cutFeatherVal'); if (e) e.innerText = v;
-  redraw(); saveState();
-}
-function setCornerRound(v) {
-  cornerRound = parseInt(v);
-  const e = document.getElementById('cornerRoundVal'); if (e) e.innerText = v;
-  redraw(); saveState();
-}
-function resetUnshow() {
-  unshowOpacity = 100; cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0; cutFeather = 0; cornerRound = 0;
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-  const label = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-  set('unshowOpacityInput', 100); label('unshowOpacityVal', '100');
-  set('cutTopInput', 0); label('cutTopVal', '0');
-  set('cutBottomInput', 0); label('cutBottomVal', '0');
-  set('cutLeftInput', 0); label('cutLeftVal', '0');
-  set('cutRightInput', 0); label('cutRightVal', '0');
-  set('cutFeatherInput', 0); label('cutFeatherVal', '0');
-  set('cornerRoundInput', 0); label('cornerRoundVal', '0');
-  redraw(); saveState();
+async function renderGhRemote(p,mode){
+  const box=$('ghRemoteBox');if(!box)return;
+  if(mode!=='github'||p.source!=='github'){box.hidden=true;return}
+  box.hidden=false;box.innerHTML='<div class="status">Checking GitHub…</div>';
+  try{
+    const r=await checkGithubUpdates(p);
+    const n=r.added.length+r.changed.length+r.removed.length;
+    if(!n){box.innerHTML='<div class="status">✓ Up to date with GitHub.</div>';return}
+    const names=r.changed.concat(r.added).slice(0,8).map(function(x){return '<div class="upd-path" style="font-size:12px;margin:3px 0">'+esc(x)+'</div>'}).join('');
+    box.innerHTML='<div class="status" style="color:#fff;font-weight:700">'+n+' file'+(n===1?'':'s')+' changed on GitHub</div>'+names+(n>8?'<div class="status">+ '+(n-8)+' more</div>':'')+'<button id="ghPullBtn" class="btn primary" style="margin-top:10px">Pull update</button>';
+    $('ghPullBtn').onclick=function(){window.__ghPullName=p.name;showTab('github');importRepo(p.githubRepo,p.githubBranch)};
+  }catch(e){box.innerHTML='<div class="status">Could not check GitHub: '+esc(e.message)+'</div>'}
 }
 
-function handleCleanPick(input) {
-  const file = (input.files || [])[0];
-  if (!file) return;
-  input.value = '';
-  pickAndClean(file);
+async function openUpdatesDetail(projectId,mode){
+  __updatesCurrentProject=projectId;
+  const all=await dbGetAll();const p=all.find(function(x){return x.id===projectId});if(!p)return;
+  if($('updatesDetailName'))$('updatesDetailName').textContent=p.name;
+  let rows=[];
+  if(mode==='github'){
+    const since=p.lastImport||0;rows=(p.history||[]).filter(function(h){return h.ts>since&&h.type==='edit'});
+    if($('updatesDetailEyebrow'))$('updatesDetailEyebrow').textContent='DRAFTED CHANGES';
+    if($('updatesDetailNote')){$('updatesDetailNote').textContent=rows.length?rows.length+' file'+(rows.length===1?'':'s')+' edited since last GitHub import.':'No local changes since the last GitHub import.';}
+  }else{
+    rows=(p.history||[]).slice(0,20);
+    if($('updatesDetailEyebrow'))$('updatesDetailEyebrow').textContent='FULL HISTORY';
+    if($('updatesDetailNote'))$('updatesDetailNote').textContent=(p.history||[]).length+' total change'+((p.history||[]).length===1?'':'s')+' (showing last 20).';
+  }
+   if($('updatesDetailCount'))$('updatesDetailCount').textContent=rows.length+' change'+(rows.length===1?'':'s');
+  renderGhRemote(p,mode);
+  const list=$('updatesDetailList');
+  if(list){
+    if(!rows.length){list.innerHTML='<div class="pc-empty">Nothing to show here.</div>';}
+    else{
+      list.innerHTML=rows.slice(0,20).map(function(h){
+        const t=h.type||'edit';
+        return '<div class="update-row">'+
+          '<div class="upd-icon '+t+'"></div>'+
+          '<div class="upd-info"><div class="upd-path">'+esc(h.path||h.note||'—')+'</div><div class="upd-note">'+esc(h.note||'')+'</div></div>'+
+         '<div class="upd-time">'+timeAgoLong(h.ts)+'</div>'+(typeof h.text==='string'&&h.path?'<button class="upd-save" data-ts="'+h.ts+'">Save</button>':'')+'</div>';
+      }).join('');
+    }
+  }
+  if(list)list.querySelectorAll('.upd-save').forEach(function(b){b.onclick=function(){saveFileBack(p.id,Number(b.dataset.ts))}});
+  renderSnapshotsSection(p);
+  if($('updatesListView'))$('updatesListView').hidden=true;
+  if($('updatesDetailView'))$('updatesDetailView').hidden=false;
 }
 
-// ---------- Overlay tint ----------
-function setOverlayTint(color, el) {
-  if (color === null) {
-    if (overlayImg && overlayImg._isColorFill) overlayImg = null;
-    overlayTint = null;
-    overlayOpacity = 0;
-    const op = document.getElementById('unshowOpacityInput'); if (op) op.value = 0;
-    const opv = document.getElementById('unshowOpacityVal'); if (opv) opv.innerText = '0';
-  } else {
-    const c = document.createElement('canvas');
-    c.width = 400;
-    c.height = 400;
-    const cx = c.getContext('2d');
-    cx.fillStyle = color;
-    cx.fillRect(0, 0, 400, 400);
-    const im = new Image();
-    im.onload = function() {
-      im._isColorFill = true;
-      overlayImg = im;
-      overlayTint = null;
-      overlayX = 0.5;
-      overlayY = 0.5;
-      overlayScale = 0.7;
-      overlayRotation = 0;
-      overlayOpacity = 100;
-      const op = document.getElementById('unshowOpacityInput'); if (op) op.value = 100;
-      const opv = document.getElementById('unshowOpacityVal'); if (opv) opv.innerText = '100';
-      const s = document.getElementById('overlayScaleSlider'); if (s) s.value = 70;
-      const sv = document.getElementById('overlayScaleVal'); if (sv) sv.innerText = '70';
-      redraw(); saveState();
+async function saveFileBack(projectId,ts){
+  const all=await dbGetAll();const p=all.find(function(x){return x.id===projectId});if(!p)return;
+  const h=(p.history||[]).find(function(x){return x.ts===ts});
+  if(!h||typeof h.text!=='string'||!h.path){showToast('This update has no saved copy','error');return}
+  const ok=await showConfirm('Put this version of '+h.path+' back into the project?',{title:'Save file back',confirmText:'Save',cancelText:'Cancel'});
+  if(!ok)return;
+  const f=p.files.find(function(x){return x.path===h.path});
+  if(f){f.text=h.text;f.blob=null;f.size=h.text.length}
+  else p.files.push({path:h.path,name:h.path.split('/').pop(),size:h.text.length,type:'text/plain',blob:null,text:h.text});
+  p.savedAt=Date.now();
+  p.history.unshift({ts:Date.now(),type:'edit',path:h.path,note:'Saved back from update',text:h.text});
+  await dbSetAll(all);
+  if(currentProjectId===projectId){files=deserializeFiles(p.files)}
+  await renderProjectCards();
+  if(typeof populatePages==='function')populatePages();
+  if(typeof render==='function')render();
+  showToast('Saved '+h.path+' back to project','success');
+  openUpdatesDetail(projectId,window.__updatesMode||'local');
+}
+window.saveFileBack=saveFileBack;
+
+async function restoreSnapshot(projectId,ts){
+  const all=await dbGetAll();const p=all.find(function(x){return x.id===projectId});if(!p||!p.snapshots)return;
+  const snap=p.snapshots.find(function(s){return s.ts===ts});if(!snap)return;
+  p.snapshots.unshift({ts:Date.now(),label:'Before restore',files:p.files.map(function(f){return{path:f.path,name:f.name,size:f.size,type:f.type,text:f.text,blob:f.blob}})});
+  if(p.snapshots.length>20)p.snapshots.length=20;
+  p.files=snap.files.map(function(f){return{path:f.path,name:f.name,size:f.size,type:f.type,text:f.text,blob:f.blob}});
+  p.savedAt=Date.now();await dbSetAll(all);
+  if(currentProjectId===projectId){files=deserializeFiles(p.files);setCurrentProjectName(p.name)}
+  await renderProjectCards();populatePages();render();
+  showToast('Restored from '+new Date(snap.ts).toLocaleString(),'success');
+  openUpdatesDetail(projectId,window.__updatesMode||'local');
+}
+window.restoreSnapshot=restoreSnapshot;
+
+async function deleteSnapshot(projectId,ts){
+  const all=await dbGetAll();const p=all.find(function(x){return x.id===projectId});if(!p||!p.snapshots)return;
+  p.snapshots=p.snapshots.filter(function(s){return s.ts!==ts});await dbSetAll(all);
+  openUpdatesDetail(projectId,window.__updatesMode||'local');
+}
+window.deleteSnapshot=deleteSnapshot;
+
+async function saveSnapshotNow(){
+  if(!__updatesCurrentProject){showToast('Open a project first','error');return}
+  const all=await dbGetAll();const p=all.find(function(x){return x.id===__updatesCurrentProject});if(!p){showToast('Project not found','error');return}
+  let srcFiles;
+  if(p.id===currentProjectId&&files.length)srcFiles=serializeFiles();else srcFiles=p.files;
+  p.snapshots=p.snapshots||[];
+  p.snapshots.unshift({ts:Date.now(),label:'Manual save',files:srcFiles.map(function(f){return{path:f.path,name:f.name,size:f.size,type:f.type,text:f.text,blob:f.blob}})});
+  if(p.snapshots.length>20)p.snapshots.length=20;
+  await dbSetAll(all);showToast('Snapshot saved','success');
+  openUpdatesDetail(p.id,window.__updatesMode||'local');
+}
+window.saveSnapshotNow=saveSnapshotNow;
+
+function renderSnapshotsSection(p){
+  const box=$('updatesSnapshotsList');if(!box)return;
+  const snaps=p.snapshots||[];
+  if(!snaps.length){box.innerHTML='<div class="pc-empty">No snapshots yet.<br>Tap <b>Save</b> above to create one.</div>';return}
+  box.innerHTML=snaps.slice(0,20).map(function(s){
+    return '<div class="snapshot-row">'+
+      '<div class="snap-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>'+
+      '<div class="snap-info"><div class="snap-label">'+esc(s.label||'Snapshot')+'</div><div class="snap-meta">'+new Date(s.ts).toLocaleString()+' · '+s.files.length+' files</div></div>'+
+      '<button class="snap-btn restore" data-ts="'+s.ts+'">Restore</button>'+
+      '<button class="snap-btn del" data-ts="'+s.ts+'">×</button></div>';
+  }).join('');
+  box.querySelectorAll('.snap-btn.restore').forEach(function(b){
+    b.onclick=async function(){
+      const ok=await showConfirm('Restore this snapshot? Current state will be saved as a new snapshot first.',{title:'Restore snapshot',confirmText:'Restore',cancelText:'Cancel'});
+      if(ok)restoreSnapshot(p.id,Number(b.dataset.ts));
     };
-    im.src = c.toDataURL();
-  }
-  const row = document.querySelector('#subtab-overlaycolor .color-row');
-  if (row) row.querySelectorAll('.color-circle').forEach(cc => cc.classList.remove('selected'));
-  if (el) el.classList.add('selected');
-  redraw(); saveState();
-}
-
-function setOverlayTintAmt(v) {
-  overlayTintAmount = parseInt(v);
-  const e = document.getElementById('overlayTintAmtVal'); if (e) e.innerText = v;
-  redraw(); saveState();
-}
-
-function setOverlayBrightness(v) {
-  v = parseInt(v);
-  const e = document.getElementById('ocBrVal'); if (e) e.innerText = v;
-  if (!overlayTint) overlayTint = '#ffffff';
-  const hsl = hexToHsl(overlayTint);
-  overlayTint = hslToHex(hsl.h, hsl.s, v);
-  const prev = document.getElementById('overlayColorPreview');
-  if (prev) prev.style.background = overlayTint;
-  redraw(); saveState();
-}
-
-function setOverlayHue(v) {
-  v = parseInt(v);
-  const e = document.getElementById('ocHueVal'); if (e) e.innerText = v + '°';
-  if (!overlayTint) overlayTint = '#ffffff';
-  const hsl = hexToHsl(overlayTint);
-  overlayTint = hslToHex(v, Math.max(hsl.s, 70), hsl.l);
-  const prev = document.getElementById('overlayColorPreview');
-  if (prev) prev.style.background = overlayTint;
-  redraw(); saveState();
-}
-
-function resetOverlayTint() {
-  overlayTint = null;
-  overlayTintAmount = 60;
-  const row = document.querySelector('#subtab-overlaycolor .color-row');
-  if (row) {
-    row.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
-    const first = row.querySelector('.color-circle');
-    if (first) first.classList.add('selected');
-  }
-  const amt = document.getElementById('overlayTintAmt'); if (amt) amt.value = 60;
-  const amtV = document.getElementById('overlayTintAmtVal'); if (amtV) amtV.innerText = '60';
-  redraw(); saveState();
-}
-
-function setOverlayCrop(ratio, el) {
-  overlayCropRatio = ratio;
-  if (el && el.parentElement) {
-    el.parentElement.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-  }
-  redraw(); saveState();
-}
-
-function setOverlayRound(v) {
-  overlayRound = parseInt(v);
-  const e = document.getElementById('overlayRoundVal'); if (e) e.innerText = v;
-  redraw(); saveState();
-}
-
-function setOverlayScale(v) {
-  v = parseInt(v);
-  overlayScale = v / 100;
-  const e = document.getElementById('overlayScaleVal'); if (e) e.innerText = v;
-  redraw(); saveState();
-}
-
-function setOverlayRot(v) {
-  v = parseInt(v);
-  overlayRotation = v * Math.PI / 180;
-  const e = document.getElementById('overlayRotVal'); if (e) e.innerText = v;
-  redraw(); saveState();
-}
-
-function resetOverlayTransform() {
-  overlayCropRatio = 'free';
-  overlayRound = 0;
-  overlayScale = 0.7;
-  overlayRotation = 0;
-  const s = document.getElementById('overlayScaleSlider'); if (s) s.value = 70;
-  const sv = document.getElementById('overlayScaleVal'); if (sv) sv.innerText = '70';
-  const r = document.getElementById('overlayRotSlider'); if (r) r.value = 0;
-  const rv = document.getElementById('overlayRotVal'); if (rv) rv.innerText = '0';
-  const rd = document.getElementById('overlayRound'); if (rd) rd.value = 0;
-  const rdv = document.getElementById('overlayRoundVal'); if (rdv) rdv.innerText = '0';
-  const cropRow = document.querySelector('#subtab-overlaycrop .h-scroll');
-  if (cropRow) {
-    cropRow.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
-    const first = cropRow.querySelector('.h-card');
-    if (first) first.classList.add('selected');
-  }
-  redraw(); saveState();
-}
-
-// ---------- Cartoon ----------
-function setCartoonStyle(name, el) {
-  cartoonStyle = name;
-  if (el && el.parentElement) {
-    el.parentElement.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-  }
-  cartoonCanvas = null;
-  redraw(); saveState();
-}
-
-function setCartoonAmount(v) {
-  cartoonAmount = parseInt(v);
-  const e = document.getElementById('cartoonAmtVal'); if (e) e.innerText = v;
-  cartoonCanvas = null;
-  redraw(); saveState();
-}
-
-function setCartoonLevels(v) {
-  cartoonLevels = parseInt(v);
-  const e = document.getElementById('cartoonLevelsVal'); if (e) e.innerText = v;
-  cartoonCanvas = null;
-  redraw(); saveState();
-}
-
-function setCartoonEdge(v) {
-  cartoonEdge = parseFloat(v);
-  const e = document.getElementById('cartoonEdgeVal'); if (e) e.innerText = v;
-  cartoonCanvas = null;
-  redraw(); saveState();
-}
-
-function resetCartoon() {
-  cartoonStyle = 'none';
-  cartoonAmount = 70;
-  cartoonLevels = 6;
-  cartoonEdge = 1.2;
-  cartoonCanvas = null;
-  const a = document.getElementById('cartoonAmt'); if (a) a.value = 70;
-  const av = document.getElementById('cartoonAmtVal'); if (av) av.innerText = '70';
-  const l = document.getElementById('cartoonLevels'); if (l) l.value = 6;
-  const lv = document.getElementById('cartoonLevelsVal'); if (lv) lv.innerText = '6';
-  const e = document.getElementById('cartoonEdge'); if (e) e.value = 1.2;
-  const ev = document.getElementById('cartoonEdgeVal'); if (ev) ev.innerText = '1.2';
-  const row = document.querySelector('#adjust-cartoon .h-scroll');
-  if (row) {
-    row.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
-    const first = row.querySelector('.h-card');
-    if (first) first.classList.add('selected');
-  }
-  redraw(); saveState();
-}
-
-function generateCartoon(srcCanvas) {
-  const w = srcCanvas.width, h = srcCanvas.height;
-  const out = document.createElement('canvas');
-  out.width = w; out.height = h;
-  const octx = out.getContext('2d');
-  octx.drawImage(srcCanvas, 0, 0);
-
-  const levels = cartoonLevels;
-  const step = 255 / (levels - 1);
-  const edgeAmt = cartoonEdge;
-  const style = cartoonStyle;
-
-  const src = octx.getImageData(0, 0, w, h);
-  const d = src.data;
-
-  if (style === 'anime' || style === 'cell' || style === 'oil') {
-    const blur = document.createElement('canvas');
-    blur.width = w; blur.height = h;
-    const bctx = blur.getContext('2d');
-    bctx.filter = 'blur(1.2px)';
-    bctx.drawImage(srcCanvas, 0, 0);
-    const bd = bctx.getImageData(0, 0, w, h).data;
-    for (let i = 0; i < d.length; i++) d[i] = bd[i];
-  }
-
-  for (let i = 0; i < d.length; i += 4) {
-    d[i]   = Math.round(d[i]   / step) * step;
-    d[i+1] = Math.round(d[i+1] / step) * step;
-    d[i+2] = Math.round(d[i+2] / step) * step;
-  }
-
-  if (edgeAmt > 0 && style !== 'oil') {
-    const lum = new Uint8ClampedArray(w * h);
-    for (let i = 0, j = 0; i < d.length; i += 4, j++) {
-      lum[j] = (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114);
-    }
-    const edge = new Uint8ClampedArray(w * h);
-    for (let y = 1; y < h - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
-        const i = y * w + x;
-        const gx = -lum[i-w-1] - 2*lum[i-1] - lum[i+w-1] + lum[i-w+1] + 2*lum[i+1] + lum[i+w+1];
-        const gy = -lum[i-w-1] - 2*lum[i-w] - lum[i-w+1] + lum[i+w-1] + 2*lum[i+w] + lum[i+w+1];
-        const mag = Math.sqrt(gx*gx + gy*gy);
-        edge[i] = Math.min(255, mag * edgeAmt);
-      }
-    }
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const i = y * w + x;
-        const p = i * 4;
-        const e = edge[i];
-        if (e > 60) {
-          const k = Math.min(1, (e - 60) / 80);
-          d[p]   = d[p]   * (1 - k);
-          d[p+1] = d[p+1] * (1 - k);
-          d[p+2] = d[p+2] * (1 - k);
-        }
-      }
-    }
-    octx.putImageData(src, 0, 0);
-    return out;
-  }
-
-  octx.putImageData(src, 0, 0);
-
-  if (style === 'sketch') {
-    const g = document.createElement('canvas');
-    g.width = w; g.height = h;
-    const gctx = g.getContext('2d');
-    gctx.filter = 'grayscale(100%) contrast(140%)';
-    gctx.drawImage(srcCanvas, 0, 0);
-    const inv = document.createElement('canvas');
-    inv.width = w; inv.height = h;
-    const ictx = inv.getContext('2d');
-    ictx.filter = 'invert(100%) blur(2px)';
-    ictx.drawImage(g, 0, 0);
-    const sctx = out.getContext('2d');
-    sctx.globalCompositeOperation = 'color-dodge';
-    sctx.drawImage(inv, 0, 0);
-  }
-
-  return out;
-}// ---------- Filters / templates / borders ----------
-function buildFilterThumbs() {
-  const el = document.getElementById('filterThumbsContainer');
-  if (!el) return;
-  if (!imgLoaded || !img.src) { el.innerHTML = '<div class="filter-empty">Load a photo</div>'; return; }
-  const src = img.src;
-  let html = '';
-  FILTERS.forEach((f, i) => {
-    const sel = (currentFilter === f.code) ? 'selected' : '';
-    const filterStyle = f.code === 'none' ? 'none' : f.code;
-    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
   });
-  el.innerHTML = html;
-}
-
-function applyFilterByIndex(i, el) {
-  const f = FILTERS[i]; if (!f) return;
-  currentFilter = f.code; currentTemplate = 'none';
-  el.parentElement.querySelectorAll('.filter-thumb').forEach(t => t.classList.remove('selected'));
-  el.classList.add('selected');
-  saveState(); redraw();
-}
-
-function buildTemplates() {
-  const c = document.getElementById('templateContainer');
-  if (!c) return;
-  if (!imgLoaded || !img.src) { c.innerHTML = '<div class="filter-empty">Load a photo</div>'; return; }
-  const src = img.src;
-  let html = '';
-  TEMPLATES.forEach((t, i) => {
-    const sel = (currentTemplate === t.name) ? 'selected' : '';
-    const filterStyle = `brightness(${t.b}%) contrast(${t.c}%) saturate(${t.s}%) ${t.f !== 'none' ? t.f : ''}`;
-    html += `<div class="template-thumb ${sel}" onclick="applyTemplate(${i}, this)"><div class="template-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div><span class="template-thumb-label">${t.name}</span></div>`;
-  });
-  c.innerHTML = html;
-}
-
-function applyTemplate(i, el) {
-  const t = TEMPLATES[i]; if (!t) return;
-  bInput.value = t.b; cInput.value = t.c; sInput.value = t.s; nInput.value = t.n;
-  currentFilter = t.f; currentTemplate = t.name;
-  el.parentElement.querySelectorAll('.template-thumb').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  buildFilterThumbs(); buildPresetThumbs(); redraw(); saveState();
-}
-
-function buildBorders() {
-  const c = document.getElementById('borderContainer');
-  if (!c) return;
-  let html = '';
-  BORDERS.forEach(b => {
-    const sel = (currentBorder === b.code) ? 'selected' : '';
-    html += `<div class="border-thumb ${sel}" onclick="setBorder('${b.code}', this)"><div class="border-thumb-img">${borderPreviewHTML(b.code)}</div><span class="border-thumb-label">${b.name}</span></div>`;
-  });
-  c.innerHTML = html;
-}
-
-function borderPreviewHTML(code) {
-  const col = currentBorderColor;
-  if (code === 'none') return '<div class="bt-inner"></div>';
-  if (code === 'white') return `<div class="bt-inner"></div><div style="position:absolute;inset:0;border:5px solid ${col};box-sizing:border-box;"></div>`;
-  if (code === 'black') return `<div class="bt-inner"></div><div style="position:absolute;inset:0;border:8px solid ${col};box-sizing:border-box;"></div>`;
-  if (code === 'rounded') return `<div class="bt-inner"></div><div style="position:absolute;inset:3px;border:4px solid ${col};border-radius:10px;box-sizing:border-box;"></div>`;
-  if (code === 'polaroid') return `<div class="bt-inner" style="inset:0 0 14px 0;"></div><div style="position:absolute;inset:0;border:4px solid ${col};border-bottom-width:12px;box-sizing:border-box;"></div>`;
-  if (code === 'shadow') return `<div class="bt-inner"></div><div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 30%,rgba(0,0,0,.85) 100%);"></div>`;
-  return '<div class="bt-inner"></div>';
-}
-
-function setBorder(code, el) {
-  currentBorder = code;
-  el.parentElement.querySelectorAll('.border-thumb').forEach(t => t.classList.remove('selected'));
-  el.classList.add('selected');
-  redraw(); saveState();
-}
-
-function setBorderColor(color, el) {
-  currentBorderColor = color;
-  if (el) {
-    el.parentElement.querySelectorAll('.bcolor-circle').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-  }
-  buildBorders(); redraw(); saveState();
-}
-
-function setBorderSize(v) { currentBorderSize = parseInt(v); const e = document.getElementById('borderSizeVal'); if (e) e.innerText = v; redraw(); saveState(); }
-
-function buildBgColors() {
-  const c = document.getElementById('bgColorRow');
-  if (!c) return;
-  let html = '';
-  const noneSel = (!currentBgColor && !currentBgImage) ? 'selected' : '';
-  html += `<div class="bgcolor-swatch ${noneSel}" style="background:linear-gradient(135deg,#2a2a2a 45%,#111 45%,#111 55%,#2a2a2a 55%);display:flex;align-items:center;justify-content:center;" onclick="setBgColor(null, this)"><span style="color:#888;font-size:11px;font-weight:700;">NONE</span></div>`;
-  BG_COLORS.forEach(col => {
-    const sel = (currentBgColor === col) ? 'selected' : '';
-    html += `<div class="bgcolor-swatch ${sel}" style="background:${col};" onclick="setBgColor('${col}', this)"></div>`;
-  });
-  c.innerHTML = html;
-}
-
-function setBgColor(color, el) {
-  currentBgColor = color;
-  currentBgImage = null;
-  document.querySelectorAll('.bgcolor-swatch').forEach(s => s.classList.remove('selected'));
-  document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
-  if (el) el.classList.add('selected');
-  redraw(); saveState();
-}
-
-function setBgColorSize(v) { currentBgColorSize = parseInt(v); const e = document.getElementById('bgColorSizeVal'); if (e) e.innerText = v; redraw(); saveState(); }
-
-// ---------- Fonts ----------
-function buildFontGrid() {
-  const c = document.getElementById('fontGridContainer');
-  if (!c) return;
-  const fontList = ["Impact","Bebas Neue","Oswald","Montserrat","Anton","Pacifico","Permanent Marker","Russo One","Press Start 2P","Righteous","Orbitron","Bungee","Bungee Inline","Creepster","Monoton","Luckiest Guy","Rye","Satisfy","Yellowtail","Chewy","Alfa Slab One","Cinzel","Audiowide","Black Ops One","Chango","Coiny","Damion","Diplomata SC","Frijole","Gloria Hallelujah","Gugi","Knewave","Lobster","Parisienne","Poppins","Playfair Display","Special Elite","Great Vibes","Merriweather","Dancing Script","Caveat","Cormorant Garamond","Crimson Text","Exo 2","Fjalla One","Indie Flower","Josefin Sans","Lora","Lobster Two","Merienda","Nanum Pen Script","Neucha","Nunito","Oleo Script","Pattaya","Peralta","Rajdhani","Rock Salt","Sacramento","Shadows Into Light","Share Tech Mono","Sigmar One","Spectral","Teko","Titan One","Ubuntu","Unica One","Varela Round","Vollkorn","Yanone Kaffeesatz","Zilla Slab","Abril Fatface","Alegreya","Archivo Black","Barlow Condensed","Bitter","Bree Serif","Cabin","Catamaran","Comfortaa","DM Serif Display","EB Garamond","Fira Sans","Frank Ruhl Libre","Fugaz One","Gothic A1","Heebo","IBM Plex Sans","Inconsolata","Jost","Karla","Kaushan Script","Libre Baskerville","Lilita One","M PLUS Rounded 1c","Manrope","Marcellus","Maven Pro"];
-  const activeFont = (textLayers.find(l => l.id === activeLayerId) || {}).font;
-  let html = '';
-  fontList.forEach(f => {
-    const sel = (f === (activeFont || 'Impact')) ? 'selected' : '';
-    html += `<div class="font-pill ${sel}" style="font-family:'${f}',sans-serif" onclick="setActiveFont('${f}', this)">${f}</div>`;
-  });
-  c.innerHTML = html;
-}
-
-// ---------- Text: state syncing ----------
-function setActiveTextBrightness(v) {
-  v = parseInt(v);
-  const e = document.getElementById('brVal'); if (e) e.innerText = v;
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  const hsl = hexToHsl(l.color || '#ffffff');
-  l.color = hslToHex(hsl.h, hsl.s, v);
-  updateColorPreview(); redraw(); saveState();
-}
-
-function setActiveTextHue(v) {
-  v = parseInt(v);
-  const e = document.getElementById('hueVal'); if (e) e.innerText = v + '°';
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  const hsl = hexToHsl(l.color || '#ffffff');
-  l.color = hslToHex(v, Math.max(hsl.s, 70), hsl.l);
-  updateColorPreview(); redraw(); saveState();
-}
-
-function updateColorPreview() {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  const prev = document.getElementById('colorPreview');
-  if (prev && l) prev.style.background = l.color;
-}
-
-function syncActiveInputs() {
-  if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) {
-    if (sizeInput) sizeInput.value = 36;
-    const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = '36';
-    const fr = document.getElementById('fontRotation'); if (fr) fr.value = 0;
-    const frv = document.getElementById('fRotVal'); if (frv) frv.innerText = '0°';
-    const tp = document.getElementById('textPersp'); if (tp) tp.value = 0;
-    const pv = document.getElementById('perspVal'); if (pv) pv.innerText = '0';
-    return;
-  }
-  if (sizeInput) sizeInput.value = l.size;
-  const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = l.size;
-  const cb = document.getElementById('colorBrightness');
-  if (cb) {
-    const hsl = hexToHsl(l.color || '#ffffff');
-    cb.value = hsl.l; document.getElementById('brVal').innerText = hsl.l;
-    document.getElementById('colorHue').value = hsl.h; document.getElementById('hueVal').innerText = hsl.h + '°';
-    updateColorPreview();
-  }
-  const fr = document.getElementById('fontRotation');
-  if (fr) { const deg = Math.round((l.rotation || 0) * 180 / Math.PI); fr.value = deg; document.getElementById('fRotVal').innerText = deg + '°'; }
-  const tp = document.getElementById('textPersp');
-  if (tp) { tp.value = l.persp || 0; document.getElementById('perspVal').innerText = (l.persp || 0); }
-}
-
-function updateActiveTextContent(v) {
-  let l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) {
-    if (!v) return;
-    const id = Date.now();
-    l = { id, text:v, x:canvas.width/2, y:canvas.height/2, font:"Impact", size:Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
-    textLayers.push(l); activeLayerId = id; showFloatingMenu(l.x, l.y);
-    buildFontGrid();
-  } else { l.text = v; }
-  updateTextLayersUI(); redraw(); saveState();
-}
-
-function setActiveFontSize(v) {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) { const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v; return; }
-  l.size = parseInt(v);
-  const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v;
-  redraw(); saveState();
-}
-
-function setActiveTextPersp(v) {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  const pv = document.getElementById('perspVal');
-  if (pv) pv.innerText = v;
-  if (!l) return;
-  l.persp = parseInt(v);
-  redraw(); saveState();
-}
-
-function setActiveFontRotation(v) {
-  const frv = document.getElementById('fRotVal'); if (frv) frv.innerText = v + '°';
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  l.rotation = parseInt(v) * Math.PI / 180;
-  redraw(); saveState();
-}
-
-function setActiveFont(f, el) { 
-  if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
-  const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.font = f; redraw(); saveState(); 
-}
-function setActiveTextColor(c, el) { 
-  if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
-  const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.color = c; syncActiveInputs(); redraw(); saveState(); 
-}
-function setActiveTextStyle(s, el) { 
-  if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
-  const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.style = s; redraw(); saveState(); 
-}
-
-function updateSelection(el) {
-  if (!el || !el.parentElement) return;
-  el.parentElement.querySelectorAll('.h-card, .font-pill, .color-circle').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-function setSubjectMode(mode, el) { subjectMode = mode; updateSelection(el); redraw(); saveState(); }
-
-// ---------- Text card modal ----------
-function openTextCard(mode, layerId) {
-  textCardMode = mode || 'add';
-  textCardLayerId = layerId || null;
-  const modal = document.getElementById('textCardModal');
-  const title = document.getElementById('textCardTitle');
-  const inp = document.getElementById('textCardInput');
-  if (textCardMode === 'edit' && textCardLayerId) {
-    const l = textLayers.find(x => x.id === textCardLayerId);
-    title.textContent = 'Edit Text';
-    inp.value = l ? (l.text || '') : '';
-    activeLayerId = textCardLayerId; // 👈 ADD THIS LINE
-    activeLayerId = textCardLayerId; // 👈 ADD THIS LINE
-    activeLayerId = textCardLayerId; // 👈 ADD THIS LINE
-    activeLayerId = textCardLayerId; // 👈 ADD THIS LINE
-  } else {
-    title.textContent = 'Add Text';
-    inp.value = '';
-inp.setAttribute('autocomplete', 'new-password');
-  }
-  modal.classList.add('active');
-  setTimeout(() => { inp.focus(); inp.select(); }, 100);
-}
-
-function closeTextCard() {
-  const m = document.getElementById('textCardModal');
-  if (m) m.classList.remove('active');
-  textCardLayerId = null;
-}
-
-function confirmTextCard() {
-  const val = (document.getElementById('textCardInput').value || '').trim();
-  if (!val) { closeTextCard(); return; }
-  if (textCardMode === 'edit' && textCardLayerId) {
-  const l = textLayers.find(x => x.id === textCardLayerId);
-  if (l) {
-    l.text = val;
-    activeLayerId = textCardLayerId; // 👈 Forces the app to remember the text
-  }
-} else {
-    const id = Date.now();
-    const newLayer = { id, text: val, x: canvas.width/2, y: canvas.height/2, font:"Impact", size: Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0, stretchX:1, stretchY:1 };
-    textLayers.push(newLayer);
-    activeLayerId = id;
-    showFloatingMenu(newLayer.x, newLayer.y);
-  }
-  closeTextCard();
-  syncActiveInputs(); updateTextLayersUI(); buildFontGrid(); redraw(); saveState();
-}
-
-function editActiveText() {
-  if (activeLayerId === null) return;
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  openTextCard('edit', activeLayerId);
-}
-
-function deleteActiveTextLayer() {
-  if (textLayers.length === 0) { textMenu.style.display = 'none'; return; }
-  textLayers = textLayers.filter(x => x.id !== activeLayerId);
-  activeLayerId = textLayers.length ? textLayers[0].id : null;
-  textMenu.style.display = 'none';
-  syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
-}
-
-function selectLayer(id) {
-  activeLayerId = id;
-  syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
-  const l = textLayers.find(x => x.id === id);
-  if (l) showFloatingMenu(l.x, l.y);
-  redraw();
-}
-
-function updateTextLayersUI() {
-  const el = document.getElementById('textLayersList');
-  if (!el) return;
-  if (textLayers.length === 0) { el.innerHTML = ''; return; }
-  let html = '';
-  textLayers.forEach(l => {
-    const act = l.id === activeLayerId ? 'active' : '';
-    const label = l.text || '(Empty)';
-    html += `<div class="text-layer-item ${act}" onclick="selectLayer(${l.id})"><span style="font-weight:bold;font-size:11px;">${label}</span><span style="font-size:10px;color:#666;">${l.font}</span></div>`;
-  });
-  el.innerHTML = html;
-}
-
-// ---------- Text move / transform ----------
-function showFloatingMenu(x, y) {
-  const rect = canvas.getBoundingClientRect();
-  const contRect = canvas.parentElement.getBoundingClientRect();
-  const ox = rect.left - contRect.left;
-  const oy = rect.top - contRect.top;
-  const sx = rect.width / canvas.width, sy = rect.height / canvas.height;
-  textMenu.style.left = (ox + x * sx) + 'px';
-  textMenu.style.top = (oy + y * sy - 30) + 'px';
-  textMenu.style.display = 'block';
-}
-
-function moveActiveText(dx, dy) {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (l) { l.x += dx; l.y += dy; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
-}
-
-function centerActiveTextHoriz() {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (l) { l.x = canvas.width / 2; showFloatingMenu(l.x, l.y); syncActiveInputs(); redraw(); saveState(); }
-}
-
-function stretchActiveText() {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  l.size = Math.min(400, Math.round(l.size * 1.15));
-  redraw();
-  saveState();
-  if (typeof syncActiveInputs === 'function') syncActiveInputs();
-}
-
-function copyActiveText() {
-  const l = textLayers.find(x => x.id === activeLayerId);
-  if (!l) return;
-  const id = Date.now();
-  const copy = { ...l, id, x: l.x + 20, y: l.y + 20 };
-  textLayers.push(copy);
-  activeLayerId = id;
-  showFloatingMenu(copy.x, copy.y);
-  updateTextLayersUI(); redraw(); saveState();
-}
-
-// ---------- Color helpers ----------
-// ---------- Cover Art filter (posterized B&W) ----------
-function applyCoverArtFilter(targetCanvas, levels) {
-  levels = levels || 3;
-  const c = targetCanvas.getContext('2d');
-  const w = targetCanvas.width, h = targetCanvas.height;
-  const imgData = c.getImageData(0, 0, w, h);
-  const d = imgData.data;
-  const step = 255 / (levels - 1);
-  for (let i = 0; i < d.length; i += 4) {
-    const gray = d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114;
-    const v = Math.round(gray / step) * step;
-    d[i]   = v;
-    d[i+1] = v;
-    d[i+2] = v;
-  }
-  c.putImageData(imgData, 0, 0);
-}
-
-function hexToHsl(hex) {
-  hex = (hex || '#ffffff').replace('#','');
-  if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
-  const r = parseInt(hex.substr(0,2),16)/255, g = parseInt(hex.substr(2,2),16)/255, b = parseInt(hex.substr(4,2),16)/255;
-  const max = Math.max(r,g,b), min = Math.min(r,g,b);
-  let h = 0, s = 0, l = (max+min)/2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d/(2-max-min) : d/(max+min);
-    if (max === r) h = ((g-b)/d + (g<b?6:0)) / 6;
-    else if (max === g) h = ((b-r)/d + 2) / 6;
-    else h = ((r-g)/d + 4) / 6;
-  }
-  return { h: Math.round(h*360), s: Math.round(s*100), l: Math.round(l*100) };
-}
-
-function hslToHex(h, s, l) {
-  s /= 100; l /= 100;
-  const k = n => (n + h/30) % 12;
-  const a = s * Math.min(l, 1-l);
-  const f = n => l - a * Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n), 1)));
-  const toHex = x => { const v = Math.round(x*255).toString(16); return v.length === 1 ? '0'+v : v; };
-  return '#' + toHex(f(0)) + toHex(f(8)) + toHex(f(4));
-}
-
-// ---------- History ----------
-function captureState() {
-  return {
-    textLayers: JSON.parse(JSON.stringify(textLayers)),
-    currentFilter, currentBorder, currentBorderColor, currentBorderSize, currentTemplate,
-    currentBgColor, currentBgColorSize, currentBgImage, currentBgImageSize,
-    currentBgImageZoom, currentBgImageX, currentBgImageY,
-    currentFx, currentFxAmount, fxX, fxY, fxScale, fxRotation,
-    subjectMode, subjectX, subjectY, subjectScale,
-    personMask, subjectReady,
-    brightness: bInput.value, contrast: cInput.value, saturation: sInput.value, noise: nInput.value,
-    imgRef: img, originalImageSrc,
-    canvasW: canvas.width, canvasH: canvas.height
-  };
-}
-
-function applyState(s) {
-  if (!s) return;
-  textLayers = JSON.parse(JSON.stringify(s.textLayers));
-  activeLayerId = null;
-  currentFilter = s.currentFilter;
-  currentBorder = s.currentBorder;
-  currentBorderColor = s.currentBorderColor;
-  currentBorderSize = s.currentBorderSize;
-  currentTemplate = s.currentTemplate;
-  currentBgColor = s.currentBgColor;
-  currentBgColorSize = s.currentBgColorSize;
-  currentBgImage = s.currentBgImage;
-  currentBgImageSize = s.currentBgImageSize;
-  currentBgImageZoom = s.currentBgImageZoom;
-  currentBgImageX = s.currentBgImageX;
-  currentBgImageY = s.currentBgImageY;
-  currentFx = s.currentFx;
-  currentFxAmount = s.currentFxAmount;
-  fxX = s.fxX; fxY = s.fxY; fxScale = s.fxScale; fxRotation = s.fxRotation;
-  subjectMode = s.subjectMode;
-  subjectX = s.subjectX; subjectY = s.subjectY; subjectScale = s.subjectScale;
-  personMask = s.personMask;
-  subjectReady = s.subjectReady;
-  bInput.value = s.brightness;
-  cInput.value = s.contrast;
-  sInput.value = s.saturation;
-  nInput.value = s.noise;
-  img = s.imgRef;
-  originalImageSrc = s.originalImageSrc;
-  canvas.width = s.canvasW;
-  canvas.height = s.canvasH;
-  const fa = document.getElementById('fxAmount'); if (fa) fa.value = s.currentFxAmount;
-  const fv = document.getElementById('fxVal'); if (fv) fv.innerText = s.currentFxAmount;
-  redraw();
-  updateTextLayersUI();
-}
-
-function saveState() {
-  if (!imgLoaded) return;
-  undoStack.push(captureState());
-  if (undoStack.length > 25) undoStack.shift();
-  redoStack = [];
-  updateHistoryButtons();
-}
-
-function undo() {
-  if (undoStack.length > 1) {
-    redoStack.push(undoStack.pop());
-    applyState(undoStack[undoStack.length - 1]);
-    updateHistoryButtons();
-  }
-}
-
-function redo() {
-  if (redoStack.length) {
-    const nxt = redoStack.pop();
-    undoStack.push(nxt);
-    applyState(nxt);
-    updateHistoryButtons();
-  }
-}
-
-function updateHistoryButtons() {
-  const u = document.getElementById('undoBtn'); const r = document.getElementById('redoBtn');
-  if (u) u.disabled = undoStack.length <= 1;
-  if (r) r.disabled = redoStack.length === 0;
-}// ---------- Canvas setup / reset ----------
-function setupCanvasFromImage(newImg) {
-  img = newImg;
-  const MAX = 1080;
-  let w = newImg.width, h = newImg.height;
-  if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
-  canvas.width = w; canvas.height = h;
-  backgroundRemoved = false;
-  textLayers = [];
-  activeLayerId = null;
-  currentProjectId = null;
-  currentProjectName = '';
-  currentFilter = 'none';
-  currentTemplate = 'none';
-  currentBorder = 'none';
-  currentBorderColor = '#ffffff';
-  currentBorderSize = 5;
-  currentBgColor = null;
-  currentBgColorSize = 8;
-  currentBgImage = null;
-  currentBgImageSize = 8;
-  currentBgImageZoom = 100;
-  currentBgImageX = 0;
-  currentBgImageY = 0;
-  currentFx = 'none';
-  currentFxAmount = 70;
-  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
-  subjectMode = 'none';
-  subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
-  personMask = null;
-  subjectReady = false;
-  overlayImg = null;
-  overlayOpacity = 0;
-  overlayX = 0.5; overlayY = 0.5; overlayScale = 0.7; overlayRotation = 0;
-  overlayTint = null;
-  overlayTintAmount = 60;
-  overlayCropRatio = 'free';
-  overlayRound = 0;
-  cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0;
-  cutFeather = 0;
-  cornerRound = 0;
-  unshowOpacity = 100;
-  customBgImage = null;
-  undoStack = []; redoStack = [];
-  updateHistoryButtons();
-  const bi = document.getElementById('brightness'); if (bi) bi.value = 100;
-  const ci = document.getElementById('contrast'); if (ci) ci.value = 100;
-  const si = document.getElementById('saturation'); if (si) si.value = 100;
-  const ni = document.getElementById('noise'); if (ni) ni.value = 0;
-  const sa = document.getElementById('subjectAmount'); if (sa) sa.value = 12;
-}
-
-function resetStudioState() {
-  img = new Image(); imgLoaded = false; originalImageSrc = null;
-  preCropImageSrc = null; preCropCanvasW = 0; preCropCanvasH = 0;
-  textLayers = []; activeLayerId = null;
-  currentFilter = 'none'; currentBorder = 'none'; currentBorderColor = '#ffffff'; currentBorderSize = 5;
-  currentTemplate = 'none'; currentBgColor = null; currentBgImage = null;
-  currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
-  currentFx = 'none'; currentFxAmount = 70;
-  subjectMode = 'none'; personMask = null; subjectReady = false;
-  
-  // --- THIS REMOVES THE PERSON ON NEW PROJECT ---
-  personOverlay = null; 
-  personOverlayX = 0; personOverlayY = 0;
-  personOverlayScale = 1; personOverlayRotation = 0;
-  const personCtrl = document.getElementById('personControls');
-  if (personCtrl) personCtrl.style.display = 'none';
-  // ----------------------------------------------
-
-  undoStack = []; redoStack = []; updateHistoryButtons();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-// ---------- Gestures ----------
-function getCanvasCoordinates(e, touch) {
-  const rect = canvas.getBoundingClientRect();
-  const cx = touch ? touch.clientX : (e.touches ? e.touches[0].clientX : e.clientX);
-  const cy = touch ? touch.clientY : (e.touches ? e.touches[0].clientY : e.clientY);
-  return { x:(cx-rect.left)*(canvas.width/rect.width), y:(cy-rect.top)*(canvas.height/rect.height) };
-}
-
-function touchDist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
-function touchAngle(a,b) { return Math.atan2(b.y-a.y, b.x-a.x); }
-
-const canvasHost = canvas.parentElement;
-canvasHost.addEventListener('mousedown', startTouch);
-canvasHost.addEventListener('touchstart', startTouch, {passive:false});
-canvasHost.addEventListener('mousemove', onTouchMove);
-canvasHost.addEventListener('touchmove', onTouchMove, {passive:false});
-canvasHost.addEventListener('mouseup', endTouch);
-canvasHost.addEventListener('touchend', endTouch);
-canvasHost.addEventListener('touchcancel', endTouch);
-
-function startTouch(e) {
-  if (e.target && e.target.closest && e.target.closest('#textFloatingMenu')) return;
-  if (!imgLoaded) return;
-  if (e.preventDefault) e.preventDefault();
-  if (e.touches) { touches.clear(); for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
-  else { touches.clear(); touches.set('mouse', { x:e.clientX, y:e.clientY }); }
-
-  const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
-
-  if (gestureTarget === 'fx' && fxActive) {
-    if (touches.size === 2) {
-      const arr = Array.from(touches.values());
-      gesture = { type:'fx', startDist: touchDist(arr[0], arr[1]), startAngle: touchAngle(arr[0], arr[1]), startScale: fxScale, startRot: fxRotation };
-      return;
-    }
-    if (touches.size === 1) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      if (cutBodyActive && touches.size === 1) {
-        const w = canvas.width, h = canvas.height;
-        const bx = cutBox.x * w, by = cutBox.y * h;
-        const bw = cutBox.w * w, bh = cutBox.h * h;
-        const R = 40;
-        let corner = null;
-        if (Math.hypot(pos.x - bx, pos.y - by) < R) corner = 'tl';
-        else if (Math.hypot(pos.x - (bx+bw), pos.y - by) < R) corner = 'tr';
-        else if (Math.hypot(pos.x - bx, pos.y - (by+bh)) < R) corner = 'bl';
-        else if (Math.hypot(pos.x - (bx+bw), pos.y - (by+bh)) < R) corner = 'br';
-        else if (pos.x > bx && pos.x < bx + bw && pos.y > by && pos.y < by + bh) corner = 'move';
-        if (corner) {
-          isDraggingCutBox = true;
-          cutBoxDragStart = { corner: corner, sx: pos.x, sy: pos.y, start: { ...cutBox } };
-          return;
-        }
-      }
-      isDraggingFx = true;
-      fxDragStart = { x: pos.x, y: pos.y, fxX: fxX, fxY: fxY };
-      return;
-    }
-    return;
-  }
-
-  if (gestureTarget === 'bg' && imgLoaded && currentBgImage) {
-    if (touches.size === 2) {
-      const arr = Array.from(touches.values());
-      gesture = { type:'bg', startDist: touchDist(arr[0], arr[1]), startZoom: currentBgImageZoom };
-      return;
-    }
-    if (touches.size === 1) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      isDraggingBg = true;
-      bgDragStart = { x: pos.x, y: pos.y, bgX: currentBgImageX, bgY: currentBgImageY };
-      return;
-    }
-    return;
-  }
-
-  if (gestureTarget === 'overlay' && overlayImg) {
-    if (touches.size === 2) {
-      const arr = Array.from(touches.values());
-      gesture = { type:'overlay', startDist: touchDist(arr[0], arr[1]), startAngle: touchAngle(arr[0], arr[1]), startScale: overlayScale, startRot: overlayRotation };
-      return;
-    }
-    if (touches.size === 1) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      isDraggingOverlay = true;
-      overlayDragStart = { x: pos.x, y: pos.y, ox: overlayX, oy: overlayY };
-      return;
-    }
-    return;
-  }
-
-if (gestureTarget === 'person' && personOverlay) {
-  if (touches.size === 2) {
-    const arr = Array.from(touches.values());
-    gesture = {
-      type: 'personPinch',
-      startDist: touchDist(arr[0], arr[1]),
-      startScale: personOverlayScale
+  box.querySelectorAll('.snap-btn.del').forEach(function(b){
+    b.onclick=async function(){
+      const ok=await showConfirm('Delete this snapshot?',{title:'Delete snapshot',confirmText:'Delete',cancelText:'Keep'});
+      if(ok)deleteSnapshot(p.id,Number(b.dataset.ts));
     };
-    return;
-  }
-  if (touches.size === 1) {
-    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-    isDraggingPerson = true;
-    personDragStart = { x: pos.x, y: pos.y, px: personOverlayX, py: personOverlayY };
-    return;
-  }
-  return;
-}
-  if (gestureTarget === 'subject' && imgLoaded) {
-    if (touches.size === 2) {
-      const arr = Array.from(touches.values());
-      gesture = { type:'subject', startDist: touchDist(arr[0], arr[1]), startScale: subjectScale };
-      return;
-    }
-    if (touches.size === 1) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      isDraggingSubject = true;
-      subjectDragStart = { x: pos.x, y: pos.y, sx: subjectX, sy: subjectY };
-      return;
-    }
-    return;
-  }
-
-  if (touches.size === 2) {
-    const arr = Array.from(touches.values());
-    if (activeLayerId !== null) {
-      const l = textLayers.find(x => x.id === activeLayerId);
-      if (l) { gesture = { type:'text', id:l.id, startDist:touchDist(arr[0],arr[1]), startAngle:touchAngle(arr[0],arr[1]), startSize:l.size||100, startRot:l.rotation||0 }; return; }
-    }
-    return;
-  }
-  if (touches.size !== 1) return;
-  const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-  let clickedLayer = null;
-  if (activeLayerId !== null) {
-    const activeLayer = textLayers.find(x => x.id === activeLayerId);
-    if (activeLayer) {
-      const hit = hitHandle(pos, activeLayer);
-      if (hit) {
-        gesture = {
-          type: 'handle',
-          handle: hit,
-          id: activeLayer.id,
-          startX: pos.x,
-          startY: pos.y,
-          startSize: activeLayer.size,
-          startRot: activeLayer.rotation || 0,
-          centerX: activeLayer.x,
-          centerY: activeLayer.y,
-          startAngle: Math.atan2(pos.y - activeLayer.y, pos.x - activeLayer.x)
-        };
-        return;
-      }
-    }
-  }
-
-  for (let i = textLayers.length - 1; i >= 0; i--) {
-    const layer = textLayers[i];
-    ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
-    const m = ctx.measureText(layer.text);
-    const w = m.width, h = parseInt(layer.size);
-    if (pos.x >= layer.x - w/2 - 20 && pos.x <= layer.x + w/2 + 20 && pos.y >= layer.y - h && pos.y <= layer.y + 15) { clickedLayer = layer; break; }
-  }
-  if (clickedLayer) {
-    activeLayerId = clickedLayer.id;
-    dragOffsetX = pos.x - clickedLayer.x;
-    dragOffsetY = pos.y - clickedLayer.y;
-    syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
-    isDraggingText = true;
-    showFloatingMenu(clickedLayer.x, clickedLayer.y);
-    redraw();
-  } else {
-    activeLayerId = null; textMenu.style.display = 'none'; updateTextLayersUI(); redraw();
-  }
-}
-
-function onTouchMove(e) {
-  if (!imgLoaded) return;
-  if (e.preventDefault) e.preventDefault();
-  if (e.touches) { for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
-  else if (touches.has('mouse')) { touches.set('mouse', { x:e.clientX, y:e.clientY }); }
-
-  const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
-
-  if (gestureTarget === 'fx' && fxActive) {
-    if (touches.size === 2 && gesture && gesture.type === 'fx') {
-      const arr = Array.from(touches.values());
-      const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-      const rotDelta = touchAngle(arr[0], arr[1]) - gesture.startAngle;
-      fxScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
-      fxRotation = gesture.startRot + rotDelta;
-      redraw(); return;
-    }
-    if (isDraggingFx && fxDragStart) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      if (isDraggingCutBox && cutBoxDragStart) {
-        const w = canvas.width, h = canvas.height;
-        const dx = (pos.x - cutBoxDragStart.sx) / w;
-        const dy = (pos.y - cutBoxDragStart.sy) / h;
-        const s = cutBoxDragStart.start;
-        const MIN = 0.08;
-        let nx = s.x, ny = s.y, nw = s.w, nh = s.h;
-        const c = cutBoxDragStart.corner;
-        if (c === 'move') {
-          nx = Math.max(0, Math.min(1 - s.w, s.x + dx));
-          ny = Math.max(0, Math.min(1 - s.h, s.y + dy));
-        } else if (c === 'tl') {
-          nx = Math.max(0, Math.min(s.x + s.w - MIN, s.x + dx));
-          ny = Math.max(0, Math.min(s.y + s.h - MIN, s.y + dy));
-          nw = s.x + s.w - nx;
-          nh = s.y + s.h - ny;
-        } else if (c === 'tr') {
-          ny = Math.max(0, Math.min(s.y + s.h - MIN, s.y + dy));
-          nh = s.y + s.h - ny;
-          nw = Math.max(MIN, Math.min(1 - s.x, s.w + dx));
-        } else if (c === 'bl') {
-          nx = Math.max(0, Math.min(s.x + s.w - MIN, s.x + dx));
-          nw = s.x + s.w - nx;
-          nh = Math.max(MIN, Math.min(1 - s.y, s.h + dy));
-        } else if (c === 'br') {
-          nw = Math.max(MIN, Math.min(1 - s.x, s.w + dx));
-          nh = Math.max(MIN, Math.min(1 - s.y, s.h + dy));
-        }
-        cutBox = { x: nx, y: ny, w: nw, h: nh };
-        redraw();
-        return;
-      }
-      fxX = fxDragStart.fxX + (pos.x - fxDragStart.x) / canvas.width;
-      fxY = fxDragStart.fxY + (pos.y - fxDragStart.y) / canvas.height;
-      redraw(); return;
-    }
-    return;
-  }
-
-  if (gestureTarget === 'overlay' && overlayImg) {
-    if (touches.size === 2 && gesture && gesture.type === 'overlay') {
-      const arr = Array.from(touches.values());
-      const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-      const rotDelta = touchAngle(arr[0], arr[1]) - gesture.startAngle;
-      overlayScale = Math.max(0.1, Math.min(5, gesture.startScale * scale));
-      overlayRotation = gesture.startRot + rotDelta;
-      redraw(); return;
-    }
-    if (isDraggingOverlay && overlayDragStart) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      overlayX = overlayDragStart.ox + (pos.x - overlayDragStart.x) / canvas.width;
-      overlayY = overlayDragStart.oy + (pos.y - overlayDragStart.y) / canvas.height;
-      redraw(); return;
-    }
-    return;
-  }
-
-  if (gestureTarget === 'bg' && imgLoaded && currentBgImage) {
-    if (touches.size === 2 && gesture && gesture.type === 'bg') {
-      const arr = Array.from(touches.values());
-      const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-      currentBgImageZoom = Math.max(50, Math.min(300, Math.round(gesture.startZoom * scale)));
-      const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
-      const zV = document.getElementById('bgImgZoomVal'); if (zV) zV.innerText = currentBgImageZoom;
-      redraw(); return;
-    }
-    if (isDraggingBg && bgDragStart) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      const dx = (pos.x - bgDragStart.x) / canvas.width * 200;
-      const dy = (pos.y - bgDragStart.y) / canvas.height * 200;
-      currentBgImageX = Math.max(-100, Math.min(100, Math.round(bgDragStart.bgX + dx)));
-      currentBgImageY = Math.max(-100, Math.min(100, Math.round(bgDragStart.bgY + dy)));
-      const xIn = document.getElementById('bgImgXInput'); if (xIn) xIn.value = currentBgImageX;
-      const xV = document.getElementById('bgImgXVal'); if (xV) xV.innerText = currentBgImageX;
-      const yIn = document.getElementById('bgImgYInput'); if (yIn) yIn.value = currentBgImageY;
-      const yV = document.getElementById('bgImgYVal'); if (yV) yV.innerText = currentBgImageY;
-      redraw(); return;
-    }
-    return;
-  }
-
-if (gestureTarget === 'person' && personOverlay) {
-if (touches.size === 2 && gesture && gesture.type === 'personPinch') {
-  const arr = Array.from(touches.values());
-  const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-  personOverlayScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
-  syncPersonSliders();
-  redraw();
-  return;
-}
-  if (isDraggingPerson && personDragStart) {
-    const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-    const dx = (pos.x - personDragStart.x) / canvas.width * 100;
-    const dy = (pos.y - personDragStart.y) / canvas.height * 100;
-    personOverlayX = Math.max(-100, Math.min(100, personDragStart.px + dx));
-    personOverlayY = Math.max(-100, Math.min(100, personDragStart.py + dy));
-    syncPersonSliders();
-    redraw(); return;
-  }
-  return;
-}
-  if (gestureTarget === 'subject' && imgLoaded) {
-    if (touches.size === 2 && gesture && gesture.type === 'subject') {
-      const arr = Array.from(touches.values());
-      const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-      subjectScale = Math.max(0.2, Math.min(5, gesture.startScale * scale));
-      redraw(); return;
-    }
-    if (isDraggingSubject && subjectDragStart) {
-      const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-      subjectX = subjectDragStart.sx + (pos.x - subjectDragStart.x) / canvas.width;
-      subjectY = subjectDragStart.sy + (pos.y - subjectDragStart.y) / canvas.height;
-      redraw(); return;
-    }
-    return;
-  }
-
-  if (touches.size === 2 && gesture) {
-    const arr = Array.from(touches.values());
-    const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
-    const rotDelta = touchAngle(arr[0], arr[1]) - gesture.startAngle;
-    if (gesture.type === 'text') {
-      const l = textLayers.find(x => x.id === gesture.id);
-      if (l) {
-        l.size = Math.max(8, Math.min(400, Math.round(gesture.startSize * scale)));
-        l.rotation = gesture.startRot + rotDelta;
-      }
-    }
-    redraw(); return;
-  }
-  const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-  if (gesture && gesture.type === 'handle') {
-    const l = textLayers.find(x => x.id === gesture.id);
-    if (l) {
-      if (gesture.handle === 'rot') {
-        const angle = Math.atan2(pos.y - gesture.centerY, pos.x - gesture.centerX);
-        l.rotation = gesture.startRot + (angle - gesture.startAngle);
-      } else {
-        const dist = Math.hypot(pos.x - gesture.centerX, pos.y - gesture.centerY);
-        const startDist = Math.hypot(gesture.startX - gesture.centerX, gesture.startY - gesture.centerY);
-        const ratio = dist / Math.max(startDist, 1);
-        l.size = Math.max(8, Math.min(400, Math.round(gesture.startSize * ratio)));
-        syncActiveInputs();
-      }
-      redraw();
-    }
-    return;
-  }
-
-  if (isDraggingText) {
-    const l = textLayers.find(x => x.id === activeLayerId);
-    if (l) { l.x = pos.x - dragOffsetX; l.y = pos.y - dragOffsetY; showFloatingMenu(l.x, l.y); redraw(); }
-  }
-}
-
-function endTouch(e) {
-  if (e && e.changedTouches) { for (const t of e.changedTouches) touches.delete(t.identifier); } else { touches.delete('mouse'); }
-  if (gesture && gesture.type === 'handle') {
-    gesture = null;
-    saveState();
-  }
-  if (touches.size < 2) gesture = null;
-  if (isDraggingText) { isDraggingText = false; saveState(); syncActiveInputs(); }
-  if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
-  if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }
-  if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
-  if (isDraggingPerson) { isDraggingPerson = false; personDragStart = null; saveState(); }
-}
-function getSelectionHandles(layer) {
-  ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
-  const m = ctx.measureText(layer.text);
-  const bw = m.width + 16;
-  const bh = layer.size + 8;
-  const rot = layer.rotation || 0;
-  const cos = Math.cos(rot), sin = Math.sin(rot);
-  const corners = [
-    { id: 'tl', dx: -bw/2, dy: -bh/2 },
-    { id: 'tr', dx:  bw/2, dy: -bh/2 },
-    { id: 'bl', dx: -bw/2, dy:  bh/2 },
-    { id: 'br', dx:  bw/2, dy:  bh/2 },
-    { id: 'rot', dx: 0, dy: -bh/2 - 38 }
-  ];
-  return corners.map(c => ({
-    id: c.id,
-    x: layer.x + c.dx * cos - c.dy * sin,
-    y: layer.y + c.dx * sin + c.dy * cos
-  }));
-}
-
-function hitHandle(pos, layer) {
-  if (!layer) return null;
-  const handles = getSelectionHandles(layer);
-  for (const h of handles) {
-    if (Math.hypot(pos.x - h.x, pos.y - h.y) < 26) return h.id;
-  }
-  return null;
-}
-
-// ---------- Draw helpers ----------
-function drawBorder() {
-  if (!imgLoaded || currentBorder === 'none') return;
-  const w = canvas.width, h = canvas.height;
-  const base = Math.min(w, h);
-  const col = currentBorderColor;
-  const pct = currentBorderSize / 100;
-  if (currentBorder === 'white') {
-    const t = Math.round(base * pct);
-    ctx.fillStyle = col;
-    ctx.fillRect(0,0,w,t); ctx.fillRect(0,h-t,w,t); ctx.fillRect(0,0,t,h); ctx.fillRect(w-t,0,t,h);
-  } else if (currentBorder === 'black') {
-    const t = Math.round(base * pct * 1.6);
-    ctx.fillStyle = col;
-    ctx.fillRect(0,0,w,t); ctx.fillRect(0,h-t,w,t); ctx.fillRect(0,0,t,h); ctx.fillRect(w-t,0,t,h);
-  } else if (currentBorder === 'rounded') {
-    const t = Math.round(base * pct); const r = Math.round(base * pct * 1.6);
-    ctx.save(); ctx.fillStyle = col;
-    ctx.beginPath(); ctx.rect(0,0,w,h);
-    ctx.moveTo(t+r, t); ctx.lineTo(w-t-r, t); ctx.quadraticCurveTo(w-t, t, w-t, t+r);
-    ctx.lineTo(w-t, h-t-r); ctx.quadraticCurveTo(w-t, h-t, w-t-r, h-t);
-    ctx.lineTo(t+r, h-t); ctx.quadraticCurveTo(t, h-t, t, h-t-r);
-    ctx.lineTo(t, t+r); ctx.quadraticCurveTo(t, t, t+r, t);
-    ctx.closePath(); ctx.fill('evenodd'); ctx.restore();
-  } else if (currentBorder === 'polaroid') {
-    const side = Math.round(base * pct); const bottom = Math.round(base * pct * 3.4);
-    ctx.fillStyle = col;
-    ctx.fillRect(0,0,w,side); ctx.fillRect(0,0,side,h); ctx.fillRect(w-side,0,side,h); ctx.fillRect(0,h-bottom,w,bottom);
-  } else if (currentBorder === 'shadow') {
-    const grad = ctx.createRadialGradient(w/2, h/2, base*0.25, w/2, h/2, Math.max(w,h)*0.75);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, `rgba(0,0,0,${0.4 + pct * 3})`);
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
-  }
-}
-
-function drawCover(x, y, w, h, im) {
-  const sr = im.naturalWidth / im.naturalHeight;
-  const dr = w / h;
-  let sx = 0, sy = 0, sw = im.naturalWidth, sh = im.naturalHeight;
-  if (sr > dr) { sw = sh * dr; sx = (im.naturalWidth - sw) / 2; }
-  else { sh = sw / dr; sy = (im.naturalHeight - sh) / 2; }
-  ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h);
-}
-
-function drawSelectionBox(bx, by, bw, bh) {
-  ctx.strokeStyle = 'rgba(255,255,255,.95)';
-  ctx.lineWidth = 3;
-  ctx.setLineDash([]);
-  ctx.strokeRect(bx, by, bw, bh);
-  const r = 9;
-  ctx.fillStyle = '#fff';
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(bx+bw, by, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(bx, by+bh, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(bx+bw, by+bh, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,255,255,.9)';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(bx + bw/2, by); ctx.lineTo(bx + bw/2, by - 32); ctx.stroke();
-  ctx.fillStyle = '#fff';
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(bx + bw/2, by - 38, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-}
-
-function drawCutBox() {
-  if (!cutBodyActive) return;
-  const w = canvas.width, h = canvas.height;
-  const bx = cutBox.x * w, by = cutBox.y * h;
-  const bw = cutBox.w * w, bh = cutBox.h * h;
-  ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(0, 0, w, by);
-  ctx.fillRect(0, by + bh, w, h - by - bh);
-  ctx.fillRect(0, by, bx, bh);
-  ctx.fillRect(bx + bw, by, w - bx - bw, bh);
-  ctx.restore();
-  ctx.save();
-  ctx.strokeStyle = '#00d4ff';
-  ctx.lineWidth = 3;
-  ctx.setLineDash([]);
-  ctx.strokeRect(bx, by, bw, bh);
-  const r = 12;
-  ctx.fillStyle = '#00d4ff';
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(bx+bw, by, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(bx, by+bh, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(bx+bw, by+bh, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.restore();
-}
-
-// ---------- Main redraw ----------
-function redraw() {
-  if (!imgLoaded) return;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  let filterString = `brightness(${bInput.value}%) contrast(${cInput.value}%) saturate(${sInput.value}%) `;
-  if (currentFilter !== 'none' && currentFilter !== 'coverart') filterString += currentFilter;
-  const OVER = 6;
-  const photoLayer = document.createElement('canvas');
-  photoLayer.width = canvas.width; photoLayer.height = canvas.height;
-  const plctx = photoLayer.getContext('2d');
-  let srcImg = img;
-  let useCartoonDraw = false;
-  if (cartoonStyle !== 'none' && cartoonAmount > 0) {
-    const cacheKey = (img.src || '') + '|' + cartoonStyle + '|' + cartoonAmount + '|' + cartoonLevels + '|' + cartoonEdge + '|' + canvas.width;
-    if (!cartoonCanvas || cartoonCanvas._key !== cacheKey) {
-      const tmp = document.createElement('canvas');
-      tmp.width = canvas.width;
-      tmp.height = canvas.height;
-      const tctx = tmp.getContext('2d');
-      tctx.drawImage(img, -OVER, -OVER, canvas.width + OVER*2, canvas.height + OVER*2);
-      const cart = generateCartoon(tmp);
-      if (cartoonAmount < 100) {
-        const blended = document.createElement('canvas');
-        blended.width = canvas.width;
-        blended.height = canvas.height;
-        const bctx = blended.getContext('2d');
-        bctx.drawImage(tmp, 0, 0);
-        bctx.globalAlpha = cartoonAmount / 100;
-        bctx.drawImage(cart, 0, 0);
-        bctx.globalAlpha = 1;
-        blended._key = cacheKey;
-        cartoonCanvas = blended;
-      } else {
-        cart._key = cacheKey;
-        cartoonCanvas = cart;
-      }
-    }
-    srcImg = cartoonCanvas;
-    useCartoonDraw = true;
-  }
-  if (subjectReady && personMask && subjectMode !== 'none') {
-    const amt = parseInt(subjAmt.value);
-    const blurred = document.createElement('canvas');
-    blurred.width = canvas.width; blurred.height = canvas.height;
-    const bctx = blurred.getContext('2d');
-    bctx.filter = filterString + ` blur(${amt}px)`;
-    bctx.drawImage(img, -OVER, -OVER, canvas.width+OVER*2, canvas.height+OVER*2);
-    const person = document.createElement('canvas');
-    person.width = canvas.width; person.height = canvas.height;
-    const pctx = person.getContext('2d');
-    pctx.filter = filterString;
-    pctx.drawImage(img, -OVER, -OVER, canvas.width+OVER*2, canvas.height+OVER*2);
-    pctx.globalCompositeOperation = 'destination-in';
-    pctx.drawImage(personMask, 0, 0);
-    if (subjectMode === 'blur') { plctx.drawImage(blurred, 0, 0); plctx.drawImage(person, 0, 0); }
-    else if (subjectMode === 'stroke') {
-      const sharp = document.createElement('canvas');
-      sharp.width = canvas.width; sharp.height = canvas.height;
-      const sctx = sharp.getContext('2d');
-      sctx.filter = filterString;
-      sctx.drawImage(img, -OVER, -OVER, canvas.width+OVER*2, canvas.height+OVER*2);
-      plctx.drawImage(sharp, 0, 0);
-      const ring = document.createElement('canvas');
-      ring.width = canvas.width; ring.height = canvas.height;
-      const rctx = ring.getContext('2d');
-      const offset = Math.max(3, amt);
-      for (let a2 = 0; a2 < 360; a2 += 10) {
-        const rad = a2 * Math.PI / 180;
-        rctx.drawImage(personMask, Math.cos(rad) * offset, Math.sin(rad) * offset);
-      }
-      rctx.globalCompositeOperation = 'destination-out';
-      rctx.drawImage(personMask, 0, 0);
-      rctx.globalCompositeOperation = 'source-in';
-      rctx.fillStyle = strokeColor;
-      rctx.fillRect(0, 0, canvas.width, canvas.height);
-      plctx.drawImage(ring, 0, 0);
-      plctx.drawImage(person, 0, 0);
-    }
-  } else {
-    plctx.filter = filterString;
-    if (useCartoonDraw) {
-      plctx.drawImage(srcImg, 0, 0, canvas.width, canvas.height);
-    } else {
-      plctx.drawImage(img, -OVER, -OVER, canvas.width+OVER*2, canvas.height+OVER*2);
-    }
-    plctx.filter = 'none';
-  }
-if (currentFilter === 'coverart') {
-  applyCoverArtFilter(photoLayer, 3);
-}
-
-  if (unshowOpacity < 100 || cornerRound > 0) {
-    const mask = document.createElement('canvas');
-    mask.width = canvas.width; mask.height = canvas.height;
-    const mctx = mask.getContext('2d');
-    const topPx = canvas.height * (cutTop / 100);
-    const botPx = canvas.height * (cutBottom / 100);
-    const leftPx = canvas.width * (cutLeft / 100);
-    const rightPx = canvas.width * (cutRight / 100);
-    const x = leftPx, y = topPx;
-    const w = canvas.width - leftPx - rightPx;
-    const h = canvas.height - topPx - botPx;
-    const rr = Math.min(w, h) * (cornerRound / 100);
-    mctx.fillStyle = '#fff';
-    mctx.beginPath();
-    if (rr > 0) {
-      mctx.moveTo(x + rr, y); mctx.lineTo(x + w - rr, y);
-      mctx.quadraticCurveTo(x + w, y, x + w, y + rr);
-      mctx.lineTo(x + w, y + h - rr);
-      mctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
-      mctx.lineTo(x + rr, y + h);
-      mctx.quadraticCurveTo(x, y + h, x, y + h - rr);
-      mctx.lineTo(x, y + rr);
-      mctx.quadraticCurveTo(x, y, x + rr, y);
-      mctx.closePath();
-    } else { mctx.rect(x, y, w, h); }
-    mctx.fill();
-    if (cutFeather > 0) {
-      const blurred = document.createElement('canvas');
-      blurred.width = mask.width; blurred.height = mask.height;
-      const bctx = blurred.getContext('2d');
-      bctx.filter = `blur(${cutFeather}px)`;
-      bctx.drawImage(mask, 0, 0);
-      mctx.clearRect(0, 0, mask.width, mask.height);
-      mctx.drawImage(blurred, 0, 0);
-    }
-    const masked = document.createElement('canvas');
-    masked.width = canvas.width; masked.height = canvas.height;
-    const mm = masked.getContext('2d');
-    mm.drawImage(photoLayer, 0, 0);
-    mm.globalCompositeOperation = 'destination-in';
-    mm.drawImage(mask, 0, 0);
-    plctx.clearRect(0, 0, photoLayer.width, photoLayer.height);
-    plctx.globalAlpha = unshowOpacity / 100;
-    plctx.drawImage(masked, 0, 0);
-    plctx.globalAlpha = 1;
-  }
-  const hasBg = !!(currentBgColor || currentBgImage);
-  if (currentBgImage) {
-    const w = canvas.width, h = canvas.height;
-    const zoom = currentBgImageZoom / 100;
-    const offsetX = (currentBgImageX / 100) * w * 0.5;
-    const offsetY = (currentBgImageY / 100) * h * 0.5;
-    const scaledW = w * zoom;
-    const scaledH = h * zoom;
-    const dx = (w - scaledW) / 2 + offsetX;
-    const dy = (h - scaledH) / 2 + offsetY;
-    drawCover(dx, dy, scaledW, scaledH, currentBgImage);
-  } else if (currentBgColor) {
-    ctx.fillStyle = currentBgColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-  if (hasBg) {
-    const pad = Math.round(Math.min(canvas.width, canvas.height) * (((currentBgImageSize || currentBgColorSize) || 0) / 100));
-    const baseW = canvas.width - pad * 2;
-    const baseH = canvas.height - pad * 2;
-    const w2 = baseW * subjectScale;
-    const h2 = baseH * subjectScale;
-    const cx = canvas.width / 2 + (subjectX - 0.5) * canvas.width;
-    const cy = canvas.height / 2 + (subjectY - 0.5) * canvas.height;
-    ctx.drawImage(photoLayer, cx - w2 / 2, cy - h2 / 2, w2, h2);
-  } else {
-    ctx.drawImage(photoLayer, 0, 0);
-  }
-  const fade = parseInt(nInput.value);
-  if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${(fade/100)*0.4})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
-  if (!currentBgColor && !currentBgImage) drawBorder();
-  if (overlayImg) {
-    ctx.save();
-    const cw = canvas.width, ch = canvas.height;
-    const imAspect = overlayImg.naturalWidth / overlayImg.naturalHeight;
-    const baseW = cw * overlayScale;
-    const baseH = baseW / imAspect;
-    let displayW = baseW, displayH = baseH;
-    if (overlayCropRatio !== 'free') {
-      const p = overlayCropRatio.split(':');
-      const targetAspect = parseFloat(p[0]) / parseFloat(p[1]);
-      if (targetAspect > imAspect) {
-        displayW = baseW;
-        displayH = baseW / targetAspect;
-      } else {
-        displayH = baseH;
-        displayW = baseH * targetAspect;
-      }
-    }
-    const off = document.createElement('canvas');
-    off.width = Math.max(1, Math.round(displayW));
-    off.height = Math.max(1, Math.round(displayH));
-    const octx = off.getContext('2d');
-    if (overlayRound > 0) {
-      const r = Math.min(off.width, off.height) * (overlayRound / 100);
-      octx.beginPath();
-      octx.moveTo(r, 0);
-      octx.lineTo(off.width - r, 0);
-      octx.quadraticCurveTo(off.width, 0, off.width, r);
-      octx.lineTo(off.width, off.height - r);
-      octx.quadraticCurveTo(off.width, off.height, off.width - r, off.height);
-      octx.lineTo(r, off.height);
-      octx.quadraticCurveTo(0, off.height, 0, off.height - r);
-      octx.lineTo(0, r);
-      octx.quadraticCurveTo(0, 0, r, 0);
-      octx.closePath();
-      octx.clip();
-    }
-    const sr = overlayImg.naturalWidth / overlayImg.naturalHeight;
-    const dr = off.width / off.height;
-    let sx = 0, sy = 0, sw = overlayImg.naturalWidth, sh = overlayImg.naturalHeight;
-    if (sr > dr) { sw = sh * dr; sx = (overlayImg.naturalWidth - sw) / 2; }
-    else { sh = sw / dr; sy = (overlayImg.naturalHeight - sh) / 2; }
-    octx.drawImage(overlayImg, sx, sy, sw, sh, 0, 0, off.width, off.height);
-    if (overlayTint && overlayTintAmount > 0) {
-      octx.globalCompositeOperation = 'source-atop';
-      octx.globalAlpha = overlayTintAmount / 100;
-      octx.fillStyle = overlayTint;
-      octx.fillRect(0, 0, off.width, off.height);
-      octx.globalAlpha = 1;
-      octx.globalCompositeOperation = 'source-over';
-    }
-    if (cutTop > 0 || cutBottom > 0 || cutLeft > 0 || cutRight > 0 || cutFeather > 0) {
-      const mask = document.createElement('canvas');
-      mask.width = off.width;
-      mask.height = off.height;
-      const mctx = mask.getContext('2d');
-      const topPx = off.height * (cutTop / 100);
-      const botPx = off.height * (cutBottom / 100);
-      const leftPx = off.width * (cutLeft / 100);
-      const rightPx = off.width * (cutRight / 100);
-      mctx.fillStyle = '#fff';
-      mctx.fillRect(leftPx, topPx, off.width - leftPx - rightPx, off.height - topPx - botPx);
-      if (cutFeather > 0) {
-        const blurred = document.createElement('canvas');
-        blurred.width = mask.width;
-        blurred.height = mask.height;
-        const bctx = blurred.getContext('2d');
-        bctx.filter = `blur(${cutFeather}px)`;
-        bctx.drawImage(mask, 0, 0);
-        mctx.clearRect(0, 0, mask.width, mask.height);
-        mctx.drawImage(blurred, 0, 0);
-      }
-      octx.globalCompositeOperation = 'destination-in';
-      octx.drawImage(mask, 0, 0);
-      octx.globalCompositeOperation = 'source-over';
-    }
-    ctx.globalAlpha = overlayOpacity / 100;
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.translate(overlayX * cw, overlayY * ch);
-    if (overlayRotation) ctx.rotate(overlayRotation);
-    ctx.drawImage(off, -off.width / 2, -off.height / 2);
-    ctx.restore();
-  }
-  drawPersonOverlay();
-drawFxLayer();
-textLayers.forEach(layer => {
-    if (layer.text && layer.text.trim() !== '') {
-      ctx.save();
-      ctx.translate(layer.x, layer.y);
-      if (layer.rotation) ctx.rotate(layer.rotation);
-      ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      if (layer.style === 'stroke') { ctx.lineWidth = Math.max(2, layer.size * 0.08); ctx.strokeStyle = '#000'; ctx.strokeText(layer.text, 0, 0); }
-      else if (layer.style === 'shadow') { ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 4; ctx.shadowOffsetY = 4; }
-      else if (layer.style === 'glow') { ctx.shadowColor = layer.color; ctx.shadowBlur = 20; }
-      ctx.fillStyle = layer.color;
-      const persp = layer.persp || 0;
-      if (persp === 0) {
-        const _sx = layer.stretchX || 1;
-        if (_sx !== 1) ctx.scale(_sx, 1);
-        ctx.fillText(layer.text, 0, 0);
-      } else {
-        const mm = ctx.measureText(layer.text);
-        const pad = 30;
-        const textW = Math.ceil(mm.width) + pad * 2;
-        const textH = Math.ceil(layer.size * 1.8);
-        const SS = 4;
-        const off = document.createElement('canvas');
-        off.width = textW * SS;
-        off.height = textH * SS;
-        const octx = off.getContext('2d');
-        octx.scale(SS, SS);
-        octx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
-        octx.textAlign = 'center';
-        octx.textBaseline = 'middle';
-        octx.fillStyle = layer.color;
-        octx.fillText(layer.text, textW/2, textH/2);
-        ctx.save();
-        ctx.imageSmoothingEnabled = true;
-        if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
-        const rows = 200;
-        const k = Math.abs(persp) / 100 * 0.9;
-        const dir = persp > 0 ? 1 : -1;
-        const sAt = (t) => dir > 0 ? (1 - k * (1 - t)) : (1 - k * t);
-        const srcRowH = textH / rows;
-        let destY = 0;
-        const rowData = [];
-        for (let i = 0; i < rows; i++) {
-          const t0 = i / rows;
-          const t1 = (i + 1) / rows;
-          const s0 = sAt(t0);
-          const s1 = sAt(t1);
-          const destRowH = srcRowH * (s0 + s1) / 2;
-          rowData.push({ srcY: i * srcRowH, destY, destH: destRowH, scale: (s0 + s1) / 2 });
-          destY += destRowH;
-        }
-        const totalH = destY;
-        const startY = -totalH / 2;
-        const OVERLAP_SRC = srcRowH * 1.5;
-        for (const r of rowData) {
-          const w = textW * r.scale;
-          const srcY0 = Math.max(0, r.srcY - OVERLAP_SRC);
-          const srcY1 = Math.min(textH, r.srcY + srcRowH + OVERLAP_SRC);
-          const srcH = srcY1 - srcY0;
-          const overlapDstTop = (r.srcY - srcY0) * r.scale;
-          const overlapDstBot = (srcY1 - r.srcY - srcRowH) * r.scale;
-          const dstY = startY + r.destY - overlapDstTop;
-          const dstH = r.destH + overlapDstTop + overlapDstBot;
-          ctx.drawImage(off, 0, srcY0 * SS, textW * SS, srcH * SS, -w/2, dstY, w, dstH);
-        }
-        ctx.restore();
-      }
-      if (activeLayerId === layer.id) {
-        const m = ctx.measureText(layer.text);
-        const bw = m.width + 16, bh = layer.size + 8;
-        drawSelectionBox(-bw/2, -bh/2, bw, bh);
-      }
-      ctx.restore();
-    }
   });
-  drawCutBox();
 }
 
-// ---------- Clean pick ----------
-function pickAndClean(file) {
-  const status = document.getElementById('cleanStatus');
-  if (status) status.textContent = 'Loading photo...';
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const newImg = new Image();
-    newImg.onload = () => {
-      overlayImg = newImg;
-      overlayX = 0.5;
-      overlayY = 0.5;
-      overlayScale = 0.7;
-      overlayRotation = 0;
-      overlayOpacity = 0;
-      const op = document.getElementById('unshowOpacityInput'); if (op) op.value = 0;
-      const opv = document.getElementById('unshowOpacityVal'); if (opv) opv.innerText = '0';
-      if (!imgLoaded) {
-        img = newImg;
-        originalImageSrc = ev.target.result;
-        imgLoaded = true;
-        window.__originalBeforeBgRemove = ev.target.result;
-        currentBgColor = null;
-        currentBgImage = null;
-        setupCanvasFromImage(newImg);
-        buildFilterThumbs(); buildTemplates(); buildBorders();
-      }
-      redraw(); saveState();
-      if (status) status.textContent = 'Photo added as layer. Drag to move, pinch to resize.';
-      showToast('Photo added as layer');
-    };
-    newImg.onerror = () => { if (status) status.textContent = 'Failed to load image.'; };
-    newImg.src = ev.target.result;
-  };
-  reader.onerror = () => { if (status) status.textContent = 'Failed to read file.'; };
-  reader.readAsDataURL(file);
-}
+if($('updatesTabGithub'))$('updatesTabGithub').onclick=function(){setUpdatesTab('github')};
+if($('updatesTabLocal'))$('updatesTabLocal').onclick=function(){setUpdatesTab('local')};
+if($('updatesBackBtn'))$('updatesBackBtn').onclick=function(){$('updatesListView').hidden=false;$('updatesDetailView').hidden=true;renderUpdatesList()};
+if($('updatesSaveNowBtn'))$('updatesSaveNowBtn').onclick=saveSnapshotNow;
 
-// ---------- Cut Body ----------
-function startCutBody() {
-  const status = document.getElementById('cutBodyStatus');
-  if (!imgLoaded) { if (status) status.textContent = 'Load a photo first.'; return; }
-  if (!backgroundRemoved) {
-    if (status) status.textContent = '⚠ Remove background first. Go to BG RMV tab, tap REMOVE BACKGROUND, then come back.';
-    return;
-  }
-  cutBodyActive = true;
-  cutBox = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
-  document.getElementById('cutBodyActions').style.display = 'block';
-  if (status) status.textContent = 'Drag corners to resize. Drag inside to move. Tap APPLY when done.';
-  switchPanel('cutbody', document.querySelector('.nav-btn[data-panel="cutbody"]'));
-  redraw();
-}
+if($('homeProjectsBtn'))$('homeProjectsBtn').onclick=function(){showTab('projects')};
+if($('homePreviewBtn'))$('homePreviewBtn').onclick=function(){showTab('preview')};
+if($('homeBundleBtn'))$('homeBundleBtn').onclick=function(){exportBundle()};
+if($('homeOpenPreviewBtn'))$('homeOpenPreviewBtn').onclick=function(){showTab('preview');if(currentPagePath)openPage(currentPagePath)};
+if($('bundleBtn'))$('bundleBtn').onclick=exportBundle;
+if($('backupsBundleBtn'))$('backupsBundleBtn').onclick=function(){showTab('bundle')};
+if($('backHomeBtn'))$('backHomeBtn').onclick=function(){showTab('home')};
+if($('openPageBtn'))$('openPageBtn').onclick=function(){if($('pageSelect').value)openPage($('pageSelect').value)};
+if($('pageSelect'))$('pageSelect').onchange=function(e){currentPagePath=e.target.value};
+if($('refreshBtn'))$('refreshBtn').onclick=function(){if(currentPagePath)openPage(currentPagePath)};
+if($('fullScreenBtn'))$('fullScreenBtn').onclick=function(){const f=$('frame');if(f.requestFullscreen)f.requestFullscreen();else if(f.webkitRequestFullscreen)f.webkitRequestFullscreen()};
+if($('clearBtn'))$('clearBtn').onclick=async function(){
+  if(!files.length)return;
+  const ok=await showConfirm('Clear the current project from memory? Saved projects stay under Projects tab.',{title:'Clear project',confirmText:'Clear',cancelText:'Cancel'});
+  if(!ok)return;
+  resetPreview();files=[];urls=[];currentPagePath='';currentProjectId=null;setCurrentProjectName('No project loaded');
+try { localStorage.removeItem('mb_active_project'); } catch(e) {}
+render();showTab('home');showToast('Cleared');
+};
 
-function cancelCutBody() {
-  cutBodyActive = false;
-  isDraggingCutBox = false;
-  cutBoxDragStart = null;
-  document.getElementById('cutBodyActions').style.display = 'none';
-  document.getElementById('cutBodyStatus').textContent = 'Tap START CUT to place a crop box over the canvas.';
-  redraw();
-}
+document.querySelectorAll('.bottom span').forEach(function(s){s.onclick=function(){showTab(s.dataset.tab)}});
+window.dbGetAll = dbGetAll;
+window.dbSetAll = dbSetAll;
+window.loadToken = loadToken;
+window.clearToken = clearToken;
+window.getToken = getToken;
 
-function resetCutBoxFull() {
-  cutBox = { x: 0, y: 0, w: 1, h: 1 };
-  redraw();
-}
+window.__reloadGithub=async function(){
+  ghToken='';
+  if($('githubLoggedIn'))$('githubLoggedIn').hidden=true;if($('githubLoggedOut'))$('githubLoggedOut').hidden=false;
+  if($('githubToken'))$('githubToken').value='';
+  const t=await loadToken();
+  if(t){ghToken=t;try{const r=await fetch('https://api.github.com/user',{headers:{Authorization:'Bearer '+t}});if(r.ok){const u=await r.json();await showGithubLoggedIn(u)}}catch(e){}}
+};
+window.__refreshProjects = async function() {
+  if(__saveTimer)await __flushProjects();__projCache = null;if(typeof window.__reloadGithub==='function')window.__reloadGithub(); 
+  await renderProjectCards();
+  render();
+};
 
-function resetCutBoxCenter() {
-  cutBox = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
-  redraw();
-}
-
-function applyCutBody() {
-  if (!cutBodyActive || !imgLoaded) return;
-  const px = Math.round(cutBox.x * canvas.width);
-  const py = Math.round(cutBox.y * canvas.height);
-  const pw = Math.max(8, Math.round(cutBox.w * canvas.width));
-  const ph = Math.max(8, Math.round(cutBox.h * canvas.height));
-  const tmp = document.createElement('canvas');
-  tmp.width = pw; tmp.height = ph;
-  tmp.getContext('2d').drawImage(img, px, py, pw, ph, 0, 0, pw, ph);
-  const url = tmp.toDataURL('image/png');
-  const newImg = new Image();
-  newImg.onload = function() {
-    img = newImg;
-    imgLoaded = true;
-    originalImageSrc = url;
-    canvas.width = pw;
-    canvas.height = ph;
-    personMask = null;
-    subjectReady = false;
-    cutBodyActive = false;
-    isDraggingCutBox = false;
-    cutBoxDragStart = null;
-    document.getElementById('cutBodyActions').style.display = 'none';
-    document.getElementById('cutBodyStatus').textContent = 'Cut applied! Tap START CUT again to trim more.';
-    buildFilterThumbs();
-    buildTemplates();
-    buildBorders();
-    redraw();
-    saveState();
-  };
-  newImg.onerror = function() {
-    document.getElementById('cutBodyStatus').textContent = 'Cut failed. Try again.';
-  };
-  newImg.src = url;
-}
-
-// ---------- Panel switching ----------
-function switchPanel(name, btn) {
-document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
-  if (name === 'fx') gestureTarget = 'fx';
-  else if (name === 'bgremover') gestureTarget = 'subject';
-  else if (name === 'bgimage') gestureTarget = bgDragMode;
-  else if (name === 'clean') gestureTarget = 'overlay';
-  else if (name === 'person') gestureTarget = 'person';
-  else gestureTarget = 'text';
-  if (name === 'crop') {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    openCropMode();
-    return;
-  }
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const panel = document.getElementById('panel-' + name);
-  if (panel) panel.classList.add('active');
-  if (!btn) btn = document.querySelector('.nav-btn[data-panel="' + name + '"]');
-  if (btn) btn.classList.add('active');
-  if (name === 'filters') buildFilterThumbs();
-  if (name === 'border') buildBorders();
-  if (name === 'adjust') { buildTemplates(); buildPresetThumbs(); }
-  if (name === 'color') buildBgColors();
-  if (name === 'bgimage') { buildBgImageGrid(); buildBgColorsTab(); }
-  if (name === 'fx') { buildFxTabs(); buildFxGrids(); }
-  syncActiveInputs();
-}
-
-function switchSubTab(name, el) {
-  const panel = el.closest('.panel');
-  panel.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
-  panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-  const sv = panel.querySelector('#subtab-' + name);
-  if (sv) sv.classList.add('active');
-  el.classList.add('active');
-  if (name === 'basic' || name === 'layers') syncActiveInputs();
-  if (name === 'font') buildFontGrid();
-  if (name === 'bgcolors') buildBgColorsTab();
-}
-
-// ---------- Crop screen ----------
-function openCropMode() {
-  if (!imgLoaded) { alert('Load a photo first'); return; }
-  const cur = document.querySelector('.panel.active');
-  if (cur) cropPrevPanel = cur.id.replace('panel-','');
-  cropModeActive = true;
-  const cc = document.getElementById('cropCanvas');
-  cc.width = canvas.width; cc.height = canvas.height;
-  const cx = cc.getContext('2d');
-  cx.clearRect(0, 0, cc.width, cc.height);
-  cx.drawImage(img, 0, 0, cc.width, cc.height);
-  crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
-  document.getElementById('cropScreen').classList.add('active');
-  initCropFrameDrag();
-  requestAnimationFrame(() => { updateCropFrameUI(); });
-}
-
-function closeCropMode() {
-  cropModeActive = false;
-  document.getElementById('cropScreen').classList.remove('active');
-}
-
-function cancelCropMode() {
-  closeCropMode();
-  switchPanel(cropPrevPanel, document.querySelector('.nav-btn[data-panel="' + cropPrevPanel + '"]'));
-}
-
-function applyCropMode() {
-  if (!imgLoaded) return;
-  if (preCropImageSrc === null) {
-    preCropImageSrc = canvas.toDataURL('image/png');
-    preCropCanvasW = canvas.width;
-    preCropCanvasH = canvas.height;
-  }
-  const cc = document.getElementById('cropCanvas');
-  const px = Math.round(crop.x * cc.width);
-  const py = Math.round(crop.y * cc.height);
-  const pw = Math.max(8, Math.round(crop.w * cc.width));
-  const ph = Math.max(8, Math.round(crop.h * cc.height));
-  const tmp = document.createElement('canvas');
-  tmp.width = pw; tmp.height = ph;
-  tmp.getContext('2d').drawImage(cc, px, py, pw, ph, 0, 0, pw, ph);
-  const url = tmp.toDataURL('image/png');
-  const newImg = new Image();
-  newImg.onload = function() {
-    img = newImg; originalImageSrc = url;
-    canvas.width = pw; canvas.height = ph;
-    personMask = null; subjectReady = false;
-    buildFilterThumbs(); buildTemplates();
-    redraw(); saveState();
-    closeCropMode();
-    switchPanel('adjust', document.querySelector('.nav-btn[data-panel="adjust"]'));
-  };
-  newImg.src = url;
-}
-
-function restorePreCrop() {
-  if (!preCropImageSrc) { alert('Nothing to restore — no crop applied yet'); return; }
-  const newImg = new Image();
-  newImg.onload = function() {
-    img = newImg;
-    originalImageSrc = preCropImageSrc;
-    canvas.width = preCropCanvasW;
-    canvas.height = preCropCanvasH;
-    preCropImageSrc = null;
-    preCropCanvasW = 0;
-    preCropCanvasH = 0;
-    personMask = null; subjectReady = false;
-    buildFilterThumbs(); buildTemplates();
-    redraw(); saveState();
-    closeCropMode();
-    switchPanel('adjust', document.querySelector('.nav-btn[data-panel="adjust"]'));
-  };
-  newImg.src = preCropImageSrc;
-}
-
-function updateCropFrameUI() {
-  const cc = document.getElementById('cropCanvas');
-  const frame = document.getElementById('cropFrame');
-  if (!cc || !frame) return;
-  const r = cc.getBoundingClientRect();
-  const wr = cc.parentElement.getBoundingClientRect();
-  const ox = r.left - wr.left;
-  const oy = r.top - wr.top;
-  frame.style.left = (ox + r.width * crop.x) + 'px';
-  frame.style.top = (oy + r.height * crop.y) + 'px';
-  frame.style.width = (r.width * crop.w) + 'px';
-  frame.style.height = (r.height * crop.h) + 'px';
-}
-
-function initCropFrameDrag() {
-  const frame = document.getElementById('cropFrame');
-  if (!frame || frame.dataset.bound) return;
-  frame.dataset.bound = '1';
-  frame.addEventListener('pointerdown', e => {
-    if (!cropModeActive) return;
-    e.preventDefault(); e.stopPropagation();
-    const corner = (e.target.dataset && e.target.dataset.c) ? e.target.dataset.c : null;
-    const cc = document.getElementById('cropCanvas');
-    const r = cc.getBoundingClientRect();
-    cropFrameDrag = { type: corner || 'move', sx: e.clientX, sy: e.clientY, start: { ...crop }, cw: r.width, ch: r.height };
-  });
-  window.addEventListener('pointermove', e => {
-    if (!cropFrameDrag) return;
-    e.preventDefault();
-    const dx = (e.clientX - cropFrameDrag.sx) / cropFrameDrag.cw;
-    const dy = (e.clientY - cropFrameDrag.sy) / cropFrameDrag.ch;
-    const s = cropFrameDrag.start; const MIN = 0.12;
-    let { x, y, w, h } = s;
-    const t = cropFrameDrag.type;
-    if (t === 'move') { x = Math.max(0, Math.min(1-s.w, s.x+dx)); y = Math.max(0, Math.min(1-s.h, s.y+dy)); }
-    else if (t === 'tl') { const nx = Math.max(0, Math.min(s.x+s.w-MIN, s.x+dx)); const ny = Math.max(0, Math.min(s.y+s.h-MIN, s.y+dy)); x=nx; y=ny; w=s.x+s.w-nx; h=s.y+s.h-ny; }
-    else if (t === 'tr') { const ny = Math.max(0, Math.min(s.y+s.h-MIN, s.y+dy)); y=ny; h=s.y+s.h-ny; w=Math.max(MIN, Math.min(1-s.x, s.w+dx)); }
-    else if (t === 'bl') { const nx = Math.max(0, Math.min(s.x+s.w-MIN, s.x+dx)); x=nx; w=s.x+s.w-nx; h=Math.max(MIN, Math.min(1-s.y, s.h+dy)); }
-    else if (t === 'br') { w=Math.max(MIN, Math.min(1-s.x, s.w+dx)); h=Math.max(MIN, Math.min(1-s.y, s.h+dy)); }
-    crop = { x, y, w, h };
-    updateCropFrameUI();
-  });
-  window.addEventListener('pointerup', () => { cropFrameDrag = null; });
-  window.addEventListener('pointercancel', () => { cropFrameDrag = null; });
-  window.addEventListener('resize', () => { if (cropModeActive) updateCropFrameUI(); });
-}
-
-function setCropRatio(ratio, el) {
-  document.querySelectorAll('.crop-ratio-btn').forEach(b => b.classList.remove('active'));
-  if (el) el.classList.add('active');
-  if (ratio === 'free') return;
-  if (ratio === 'original') { crop = { x:0, y:0, w:1, h:1 }; updateCropFrameUI(); return; }
-  const cc = document.getElementById('cropCanvas');
-  const ca = cc.width / cc.height;
-  let tr;
-  if (ratio === '1:1') tr = 1;
-  else if (ratio === '4:5') tr = 4/5;
-  else if (ratio === '9:16') tr = 9/16;
-  else if (ratio === '4:3') tr = 4/3;
-  else if (ratio === '3:4') tr = 3/4;
-  if (!tr) return;
-  const cr = tr / ca;
-  let w, h;
-  if (cr >= 1) { w = 1; h = 1/cr; } else { h = 1; w = cr; }
-  crop = { x:(1-w)/2, y:(1-h)/2, w, h };
-  updateCropFrameUI();
-}
-
-function cropRotate(deg) {
-  const cc = document.getElementById('cropCanvas');
-  const c = document.createElement('canvas');
-  c.width = cc.height; c.height = cc.width;
-  const cx = c.getContext('2d');
-  cx.translate(c.width/2, c.height/2);
-  cx.rotate(deg * Math.PI / 180);
-  cx.drawImage(cc, -cc.width/2, -cc.height/2);
-  cc.width = c.width; cc.height = c.height;
-  const ccx = cc.getContext('2d');
-  ccx.clearRect(0, 0, cc.width, cc.height);
-  ccx.drawImage(c, 0, 0);
-  crop = { x:0.05, y:0.05, w:0.9, h:0.9 };
-  updateCropFrameUI();
-}
-
-function cropFlip(dir) {
-  const cc = document.getElementById('cropCanvas');
-  const c = document.createElement('canvas');
-  c.width = cc.width; c.height = cc.height;
-  const cx = c.getContext('2d');
-  cx.translate(dir === 'h' ? cc.width : 0, dir === 'v' ? cc.height : 0);
-  cx.scale(dir === 'h' ? -1 : 1, dir === 'v' ? -1 : 1);
-  cx.drawImage(cc, 0, 0);
-  const ccx = cc.getContext('2d');
-  ccx.clearRect(0, 0, cc.width, cc.height);
-  ccx.drawImage(c, 0, 0);
-  updateCropFrameUI();
-}
-
-function resetCropAngle() {
-  const a = document.getElementById('cropAngleInput');
-  if (a) a.value = 0;
-}
-
-// ---------- Subject / BG removal (via API) ----------
-window.removeBackgroundCompletely = async function() {
-  const status = document.getElementById('bgRmvStatus');
-  if (!imgLoaded) { if (status) status.textContent = 'Load a photo first.'; return; }
-  backgroundRemoved = true;
-  if (status) status.textContent = 'Sending to AI...';
+render();renderProjectCards();
+// NEW: Automatically restore the last opened project
+async function restoreLastProject() {
   try {
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-    const r = await fetch('https://mx-studio-editor.vercel.app/api/remove-bg', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: dataUrl })
+    const lastId = localStorage.getItem('mb_active_project');
+    if (!lastId) return;
+    
+    const all = await dbGetAll();
+    const p = all.find(x => x.id === lastId);
+    
+    if (p) {
+      currentProjectId = p.id;
+      setCurrentProjectName(p.name);
+      files = deserializeFiles(p.files);
+      populatePages(); // Updates the dropdown in Preview
+    } else {
+      localStorage.removeItem('mb_active_project'); // Clean up if project was deleted
+    }
+  } catch(e) {}
+}
+
+// Change the startup sequence:
+render();
+renderProjectCards();
+restoreLastProject().then(() => {
+  render(); // Re-render the home screen with the restored project
+  if (typeof window.__restoreEditor === 'function') window.__restoreEditor();
+});
+
+// --- NEW: GitHub Repos in Projects Tab ---
+async function loadGithubReposForProjects() {
+  const section = $('ghProjectsSection');
+  const box = $('ghProjectCards');
+  if (!section || !box) return;
+
+  // NEW: If no one is logged into Google, hide GitHub repos completely
+  if (typeof window.isCloudSignedIn === 'function' && !window.isCloudSignedIn()) {
+    section.hidden = true;
+    return;
+  }
+
+  // Check local storage if ghToken is empty
+  if (!ghToken) {
+    try { ghToken = localStorage.getItem('mb_gh_active_token') || ''; } catch(e) {}
+  }
+
+  if (!ghToken) {
+    section.hidden = true;
+    return;
+  }
+
+  section.hidden = false;
+  box.innerHTML = '<div style="color:var(--muted);font-size:12px;">Loading your GitHub repos...</div>';
+
+  try {
+    const res = await fetch('https://api.github.com/user/repos?per_page=10&sort=updated', {
+      headers: { 'Authorization': 'Bearer ' + ghToken }
     });
-    if (!r.ok) {
-      const err = await r.text();
-      if (status) status.textContent = 'Server error: ' + r.status;
+    
+    if (!res.ok) throw new Error('Could not load repos');
+    const repos = await res.json();
+    
+    if (!repos.length) {
+      box.innerHTML = '<div style="color:var(--muted);font-size:12px;">No repos found on your account.</div>';
       return;
     }
-    const json = await r.json();
-    if (!json.image) { if (status) status.textContent = 'No image in response.'; return; }
-    if (status) status.textContent = 'Applying cutout...';
-    const newImg = new Image();
-    newImg.onload = function() {
-      img = newImg;
-      originalImageSrc = json.image;
-      window.__originalBeforeBgRemove = json.image;
-      subjectReady = false;
-      personMask = null;
-      if (!currentBgColor && !currentBgImage) currentBgColor = '#000000';
-      backgroundRemoved = true;
-      if (status) status.textContent = 'Background removed ✓ Pick color or image from BG tab.';
-      buildBgColors();
-      redraw(); saveState();
-    };
-    newImg.src = json.image;
-  } catch (err) {
-    if (status) status.textContent = 'Failed: ' + (err.message || 'unknown');
+
+    if ($('ghProjectCount')) $('ghProjectCount').textContent = repos.length;
+
+    box.innerHTML = repos.map(function(r) {
+      const isPrivate = r.private;
+      return '<div class="project-card" onclick="importGithubRepoAsProject(\'' + esc(r.full_name) + '\', \'' + esc(r.default_branch) + '\')">' +
+        '<div class="pc-top">' +
+          '<div class="pc-icon" style="background:#24292f;color:#fff;">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>' +
+          '</div>' +
+          '<div class="pc-info">' +
+            '<div class="pc-name">' + esc(r.name) + '</div>' +
+            '<div class="pc-meta">' + (isPrivate ? 'Private' : 'Public') + ' · ' + (r.language || 'Code') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pc-actions">' +
+          '<button class="pc-btn primary" style="width:100%;">Import</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+  } catch (e) {
+    box.innerHTML = '<div style="color:#ff8a8a;font-size:12px;">Could not load repos. Make sure you are signed in to GitHub.</div>';
+  }
+}
+
+window.importGithubRepoAsProject = async function(fullName, branch) {
+  showToast('Downloading ' + fullName + '...');
+  if (typeof importRepo === 'function') {
+    await importRepo(fullName, branch);
+    showProjectsList();
   }
 };
 
-window.detectSubject = async function() {
-  const status = document.getElementById('bgRmvStatus') || document.getElementById('subjectStatus');
-  const btn = document.getElementById('detectBtn');
-  if (!imgLoaded) { status.textContent = 'Upload an image first.'; return; }
-  if (typeof SelfieSegmentation === 'undefined') { status.textContent = 'Model failed to load — tap again in a moment.'; return; }
-  btn.disabled = true; status.textContent = 'Loading model...';
-  try {
-    if (!selfieSeg) {
-      selfieSeg = new SelfieSegmentation({ locateFile:f => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/${f}` });
-      selfieSeg.setOptions({ modelSelection:1 });
-    }
-    status.textContent = 'Analysing photo...';
-    const result = await new Promise((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error('Timed out.')), 30000);
-      selfieSeg.onResults(r => { clearTimeout(t); resolve(r); });
-      selfieSeg.send({ image: img });
-    });
-    const raw = document.createElement('canvas');
-    raw.width = canvas.width; raw.height = canvas.height;
-    const rctx = raw.getContext('2d');
-    rctx.drawImage(result.segmentationMask, 0, 0, canvas.width, canvas.height);
-    const id = rctx.getImageData(0, 0, canvas.width, canvas.height);
-    const d = id.data;
-    for (let i = 0; i < d.length; i += 4) d[i+3] = d[i];
-    rctx.putImageData(id, 0, 0);
-    const soft = document.createElement('canvas');
-    soft.width = canvas.width; soft.height = canvas.height;
-    const sctx = soft.getContext('2d');
-    sctx.filter = 'blur(3px)';
-    sctx.drawImage(raw, 0, 0);
-    personMask = soft; subjectReady = true;
-    status.textContent = 'Detected! Pick Blur or Stroke below.';
-    btn.textContent = 'Redo'; btn.disabled = false;
-    redraw(); saveState();
-  } catch(err) { status.textContent = 'Failed: ' + err.message; btn.disabled = false; }
-};
-
-// ---------- Project save / load ----------
-function saveProjectToHome() {
-  if (!imgLoaded) return;
-  if (!currentProjectId) currentProjectId = 'proj_' + Date.now();
-  const serializedLayers = textLayers.map(l => ({
-    id: l.id, text: l.text, x: l.x, y: l.y, size: l.size,
-    font: l.font, color: l.color, style: l.style,
-    rotation: l.rotation, persp: l.persp || 0
-  }));
-  let bgFile = null;
-  if (currentBgImage) {
-    for (const f of BG_CONFIG.files) if (bgImages[f.fname] === currentBgImage) { bgFile = f.fname; break; }
-  }
-  const now = new Date();
-  let autoName = currentProjectName;
-  if (!autoName || autoName.startsWith('Cover ')) {
-    const firstText = textLayers.find(l => l.text && l.text.trim());
-    autoName = firstText ? firstText.text.trim().slice(0, 24) : (currentProjectName || 'Cover');
-  }
-  try {
-    localStorage.setItem('music_' + currentProjectId, JSON.stringify({
-      name: autoName, date: now.toISOString(), savedAt: now.getTime(),
-      image: originalImageSrc,
-      backgroundRemoved: backgroundRemoved,
-      originalImage: originalImageSrc,
-      preBgRemoveImage: window.__originalBeforeBgRemove || null,
-      canvasW: canvas.width, canvasH: canvas.height,
-      textLayers: serializedLayers,
-      brightness: bInput.value, contrast: cInput.value, saturation: sInput.value, noise: nInput.value,
-      filter: currentFilter, border: currentBorder, borderColor: currentBorderColor, borderSize: currentBorderSize,
-      bgColor: currentBgColor, bgColorSize: currentBgColorSize,
-      bgImageFile: bgFile, bgImageSize: currentBgImageSize,
-      customBgData: (currentBgImage && customBgImage && currentBgImage === customBgImage) ? customBgImage.src : null,
-      bgImageZoom: currentBgImageZoom, bgImageX: currentBgImageX, bgImageY: currentBgImageY,
-      template: currentTemplate, fx: currentFx, fxAmount: currentFxAmount,
-      fxX, fxY, fxScale, fxRotation,
-      subjectX, subjectY, subjectScale,
-      subjectAmount: subjAmt.value,
-  personOverlay: personOverlay ? personOverlay.src : null,
-  personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation
-}));
-  } catch(e) { alert('Storage full.'); return; }
-  undoStack = []; redoStack = []; updateHistoryButtons();
-  showToast('Saved');
-  playCount(() => { goHome(); });
-}
-
-
-    function saveImage() {
-  if (!imgLoaded) return;
-  const projName = (currentProjectName || 'Mx-Studio').trim().replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
-  const d = new Date();
-  const stamp = d.getFullYear()
-    + String(d.getMonth()+1).padStart(2,'0')
-    + String(d.getDate()).padStart(2,'0')
-    + '-'
-    + String(d.getHours()).padStart(2,'0')
-    + String(d.getMinutes()).padStart(2,'0')
-    + String(d.getSeconds()).padStart(2,'0');
-  const filename = projName + '-' + stamp + '.png';
-
-  canvas.toBlob(async function(blob) {
-    if (!blob) { showToast('Save failed'); return; }
-    const file = new File([blob], filename, { type: 'image/png' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: filename });
-        showToast('Saved');
-        return;
-      } catch (err) {
-        if (err && err.name === 'AbortError') return;
-      }
-    }
-    fallbackDownload(blob, filename, 'Saved');
-  }, 'image/png');
-}
-function loadProject(key) {
-document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
-  resetStudioState();
-  const p = JSON.parse(localStorage.getItem(key));
-  currentProjectId = key.replace('music_', '');
-  currentProjectName = p.name || 'Untitled';
-  textLayers = p.textLayers || [];
-  activeLayerId = null;
-  bInput.value = p.brightness ?? 100; cInput.value = p.contrast ?? 100; sInput.value = p.saturation ?? 100; nInput.value = p.noise ?? 0;
-  subjAmt.value = p.subjectAmount ?? 12;
-  currentFilter = p.filter ?? 'none';
-  currentBorder = p.border ?? 'none'; currentBorderColor = p.borderColor ?? '#ffffff'; currentBorderSize = p.borderSize ?? 5;
-  currentBgColor = p.bgColor ?? null; currentBgColorSize = p.bgColorSize ?? 8;
-  currentBgImageSize = p.bgImageSize ?? 8;
-  currentBgImageZoom = p.bgImageZoom ?? 100;
-  currentBgImageX = p.bgImageX ?? 0;
-  currentBgImageY = p.bgImageY ?? 0;
-  currentFx = p.fx ?? 'none'; currentFxAmount = p.fxAmount ?? 70;
-  fxX = p.fxX ?? 0.5; fxY = p.fxY ?? 0.5; fxScale = p.fxScale ?? 1; fxRotation = p.fxRotation ?? 0;
-  subjectX = p.subjectX ?? 0.5; subjectY = p.subjectY ?? 0.5; subjectScale = p.subjectScale ?? 1;
-  const fxAmt = document.getElementById('fxAmount'); if (fxAmt) fxAmt.value = currentFxAmount;
-  const fxV = document.getElementById('fxVal'); if (fxV) fxV.innerText = currentFxAmount;
-  const zIn = document.getElementById('bgImgZoomInput'); if (zIn) zIn.value = currentBgImageZoom;
-  const zV = document.getElementById('bgImgZoomVal'); if (zV) zV.innerText = currentBgImageZoom;
-  const xIn = document.getElementById('bgImgXInput'); if (xIn) xIn.value = currentBgImageX;
-  const xV = document.getElementById('bgImgXVal'); if (xV) xV.innerText = currentBgImageX;
-  const yIn = document.getElementById('bgImgYInput'); if (yIn) yIn.value = currentBgImageY;
-  const yV = document.getElementById('bgImgYVal'); if (yV) yV.innerText = currentBgImageY;
-  currentBgImage = null;
-  if (p.bgImageFile) {
-    const bgKey = p.bgImageFile;
-    if (bgImages[bgKey]) { currentBgImage = bgImages[bgKey]; }
-    else {
-      loadImage(EFFECTS_BASE + bgKey).then(im => {
-        if (im) { bgImages[bgKey] = im; currentBgImage = im; if (imgLoaded) redraw(); }
-      });
-    }
-  }
-  if (p.customBgData && !currentBgImage) {
-    const ci = new Image();
-    ci.onload = () => { currentBgImage = ci; customBgImage = ci; if (imgLoaded) redraw(); };
-    ci.src = p.customBgData;
-  }
-  const bsi = document.getElementById('borderSizeInput'); if (bsi) bsi.value = currentBorderSize;
-  const bsv = document.getElementById('borderSizeVal'); if (bsv) bsv.innerText = currentBorderSize;
-  const bcsi = document.getElementById('bgColorSizeInput'); if (bcsi) bcsi.value = currentBgColorSize;
-  const bcsv = document.getElementById('bgColorSizeVal'); if (bcsv) bcsv.innerText = currentBgColorSize;
-  const bgsi = document.getElementById('bgImgSizeInput'); if (bgsi) bgsi.value = currentBgImageSize;
-  const bgsv = document.getElementById('bgImgSizeVal'); if (bgsv) bgsv.innerText = currentBgImageSize;
-  currentTemplate = p.template ?? 'none';
-  subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
-if (p.personOverlay) {
-  const pi = new Image();
-  pi.onload = () => { personOverlay = pi; if (imgLoaded) redraw(); };
-  pi.src = p.personOverlay;
-  personOverlayX = p.personOverlayX ?? 0;
-  personOverlayY = p.personOverlayY ?? 0;
-  personOverlayScale = p.personOverlayScale ?? 1;
-  personOverlayRotation = p.personOverlayRotation ?? 0;
-}  
-  const sourceImage = p.originalImage || p.image;
-  originalImageSrc = sourceImage;
-  window.__originalBeforeBgRemove = p.preBgRemoveImage || null;
-  img.onload = function() {
-    if (p.canvasW && p.canvasH) { canvas.width = p.canvasW; canvas.height = p.canvasH; } else setupCanvasFromImage(img);
-    imgLoaded = true;
-    buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-    buildFxGrids(); buildBgImageGrid(); buildFontGrid(); buildPresetThumbs();
-    redraw();
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
-    }
-    setTimeout(() => { if (imgLoaded) redraw(); }, 400);
-    if (currentFx && currentFx !== 'none' && !currentFx.endsWith(':none')) {
-      const parts = currentFx.split(':');
-      const catKey = parts[0], fname = parts[1];
-      const imgKey = catKey + ':' + fname;
-      if (fxImages[imgKey]) { redraw(); }
-      else {
-        loadImage(EFFECTS_BASE + fname).then(im => {
-          if (im) { fxImages[imgKey] = im; if (imgLoaded) redraw(); }
-        });
-      }
-    }
-    saveState();
-  };
-  img.src = sourceImage;
-  document.getElementById('view-home').classList.remove('active');
-  document.getElementById('view-studio').classList.add('active');
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-adjust').classList.add('active');
-  document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
-}
-
-function goHome() {
-  document.getElementById('view-studio').classList.remove('active');
-  document.getElementById('view-home').classList.add('active');
-  textMenu.style.display = 'none';
-  const bn = document.querySelector('.bottom-nav');
-  if (bn) bn.style.display = 'none';
-  resetStudioState();
-  renderProjectsList();
-}
-
-function resetEverything() {
-  bInput.value = 100; cInput.value = 100; sInput.value = 100; nInput.value = 0;
-  currentFilter = 'none'; currentBorder = 'none'; currentBgColor = null; currentBgImage = null;
-  currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
-  currentFx = 'none'; currentFxAmount = 70;
-  textLayers = []; activeLayerId = null;
-  subjectMode = 'none'; personMask = null; subjectReady = false;
-  preCropImageSrc = null;
-  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
-  subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
-  unshowOpacity = 100; cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0; cutFeather = 0; cornerRound = 0;
-  currentTemplate = 'none';
-  document.querySelectorAll('.template-thumb, .filter-thumb, .border-thumb, .bgcolor-swatch, .bg-item, .fx-card').forEach(c => c.classList.remove('selected'));
-  if (window.__originalBeforeBgRemove && window.__originalBeforeBgRemove !== originalImageSrc) {
-    const restoreImg = new Image();
-    restoreImg.onload = () => {
-      img = restoreImg;
-      originalImageSrc = window.__originalBeforeBgRemove;
-      setupCanvasFromImage(restoreImg);
-      window.__originalBeforeBgRemove = null;
-      buildFilterThumbs(); buildTemplates();
-      syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
-      showToast('Reset to original');
-    };
-    restoreImg.src = window.__originalBeforeBgRemove;
-    return;
-  }
-  syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
-}
-
-// ---------- Backup sheet / .mx ----------
-function openBackupSheet() {
-  const sheet = document.getElementById('backupSheet');
-  const card = document.getElementById('backupSheetCard');
-  if (!sheet || !card) return;
-  sheet.style.display = 'flex';
-  requestAnimationFrame(() => { card.style.transform = 'translateY(0)'; });
-}
-function closeBackupSheet() {
-  const sheet = document.getElementById('backupSheet');
-  const card = document.getElementById('backupSheetCard');
-  if (!sheet || !card) return;
-  card.style.transform = 'translateY(-100%)';
-  setTimeout(() => { sheet.style.display = 'none'; }, 300);
-}
-
-document.addEventListener('click', function(e) {
-  if (e.target && e.target.id === 'backupSheet') closeBackupSheet();
-});
-
-function buildMxData() {
-  const serializedLayers = textLayers.map(l => ({
-    id: l.id, text: l.text, x: l.x, y: l.y, size: l.size,
-    font: l.font, color: l.color, style: l.style,
-    rotation: l.rotation, persp: l.persp || 0
-  }));
-  let bgFile = null;
-  if (currentBgImage) {
-    for (const f of BG_CONFIG.files) if (bgImages[f.fname] === currentBgImage) { bgFile = f.fname; break; }
-  }
-  return {
-    version: 1,
-    app: 'MxStudio',
-    projectId: currentProjectId || null,
-    savedAt: new Date().toISOString(),
-    name: currentProjectName || 'Untitled',
-    photo: originalImageSrc,
-    canvasW: canvas.width,
-    canvasH: canvas.height,
-    textLayers: serializedLayers,
-    brightness: bInput.value, contrast: cInput.value, saturation: sInput.value, noise: nInput.value,
-    filter: currentFilter, border: currentBorder, borderColor: currentBorderColor, borderSize: currentBorderSize,
-    bgColor: currentBgColor, bgColorSize: currentBgColorSize,
-    bgImageFile: bgFile, bgImageSize: currentBgImageSize,
-    customBgData: (currentBgImage && customBgImage && currentBgImage === customBgImage) ? customBgImage.src : null,
-    bgImageZoom: currentBgImageZoom, bgImageX: currentBgImageX, bgImageY: currentBgImageY,
-    template: currentTemplate,
-    fx: currentFx, fxAmount: currentFxAmount,
-    fxX, fxY, fxScale, fxRotation,
-    subjectX, subjectY, subjectScale,
-    subjectMode, strokeColor,
-    subjectAmount: subjAmt.value
-  };
-}
-
-function importMxProject() {
-  const inp = document.getElementById('mxImportInput');
-  if (!inp) { showToast('Import input missing'); return; }
-  inp.click();
-}
-
-function handleMxImport(e) {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
+// NEW: Connect GitHub from the GitHub Tab using OAuth
+if ($('ghOauthBtn')) {
+  $('ghOauthBtn').onclick = async function() {
+    const provider = new firebase.auth.GithubAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    provider.addScope('repo');
     try {
-      const data = JSON.parse(ev.target.result);
-      applyMxData(data);
-    } catch (err) {
-      showToast('Invalid .mx file');
+      const res = await (firebase.auth().currentUser ? firebase.auth().currentUser.linkWithPopup(provider) : firebase.auth().signInWithPopup(provider));
+      
+      const tok = res.credential.accessToken;
+      ghToken = tok; 
+      try { localStorage.setItem('mb_gh_active_token', tok); } catch(e) {}
+
+      if (typeof saveToken === 'function') await saveToken(tok);
+      
+      showToast('GitHub linked successfully!', 'success');
+      await showGithubLoggedIn(res.user);
+      
+      if (typeof loadGithubReposForProjects === 'function') loadGithubReposForProjects();
+      
+    } catch (e) {
+      if (e && e.code === 'auth/credential-already-in-use' && e.credential && e.credential.accessToken) { const tok2 = e.credential.accessToken; ghToken = tok2; try { localStorage.setItem('mb_gh_active_token', tok2); } catch (e3) {} if (typeof saveToken === 'function') await saveToken(tok2); showToast('GitHub connected!', 'success'); try { const ur = await fetch('https://api.github.com/user', { headers: { Authorization: 'Bearer ' + tok2 } }); if (ur.ok) await showGithubLoggedIn(await ur.json()); } catch (e4) {} return; }
+      showToast('Could not link GitHub: ' + e.message, 'error');
     }
   };
-  reader.readAsText(file);
 }
-
-document.addEventListener('change', function(e) {
-  if (e.target && e.target.id === 'mxImportInput') handleMxImport(e);
-});
-
-function applyMxData(data) {
-  if (!data || data.app !== 'MxStudio') { showToast('Invalid .mx file'); return; }
-  const newImg = new Image();
-  newImg.onload = function() {
-    img = newImg;
-    imgLoaded = true;
-    originalImageSrc = data.photo;
-    backgroundRemoved = false;
-    window.__originalBeforeBgRemove = data.photo;
-    canvas.width = data.canvasW || newImg.width;
-    canvas.height = data.canvasH || newImg.height;
-currentProjectName = data.name || 'Imported';
-
-// Try projectId first (most reliable), fallback to name
-if (data.projectId && localStorage.getItem('music_' + data.projectId)) {
-  currentProjectId = data.projectId;
-} else {
-  let existingKey = null;
-  Object.keys(localStorage).forEach(k => {
-    if (k.startsWith('music_proj_')) {
-      try {
-        const p = JSON.parse(localStorage.getItem(k));
-        if (p.name === currentProjectName) existingKey = k;
-      } catch(e) {}
-    }
-  });
-  currentProjectId = existingKey ? existingKey.replace('music_', '') : 'proj_' + Date.now();
-}
-    textLayers = (data.textLayers || []).map(l => ({
-      id: l.id || Date.now() + Math.random(),
-      text: l.text || '', x: l.x, y: l.y,
-      size: l.size || 40, font: l.font || 'Impact',
-      color: l.color || '#ffffff', style: l.style || 'normal',
-      rotation: l.rotation || 0, persp: l.persp || 0
-    }));
-    activeLayerId = null;
-    if (data.brightness !== undefined) bInput.value = data.brightness;
-    if (data.contrast !== undefined) cInput.value = data.contrast;
-    if (data.saturation !== undefined) sInput.value = data.saturation;
-    if (data.noise !== undefined) nInput.value = data.noise;
-    currentFilter = data.filter || 'none';
-    currentBorder = data.border || 'none';
-    currentBorderColor = data.borderColor || '#ffffff';
-    currentBorderSize = data.borderSize || 5;
-    currentBgColor = data.bgColor || null;
-    currentBgColorSize = data.bgColorSize || 8;
-    currentBgImageSize = data.bgImageSize || 8;
-    currentBgImageZoom = data.bgImageZoom || 100;
-    currentBgImageX = data.bgImageX || 0;
-    currentBgImageY = data.bgImageY || 0;
-    currentTemplate = data.template || 'none';
-    currentFx = data.fx || 'none';
-    currentFxAmount = data.fxAmount || 70;
-    fxX = data.fxX !== undefined ? data.fxX : 0.5;
-    fxY = data.fxY !== undefined ? data.fxY : 0.5;
-    fxScale = data.fxScale || 1;
-    fxRotation = data.fxRotation || 0;
-    subjectX = data.subjectX !== undefined ? data.subjectX : 0.5;
-    subjectY = data.subjectY !== undefined ? data.subjectY : 0.5;
-    subjectScale = data.subjectScale || 1;
-    backgroundRemoved = !!data.backgroundRemoved;
-    subjectMode = data.subjectMode || 'none';
-    if (data.personOverlay) {
-  const pi = new Image();
-  pi.onload = () => { personOverlay = pi; redraw(); };
-  pi.src = data.personOverlay;
-  personOverlayX = data.personOverlayX ?? 0;
-  personOverlayY = data.personOverlayY ?? 0;
-  personOverlayScale = data.personOverlayScale ?? 1;
-  personOverlayRotation = data.personOverlayRotation ?? 0;
-}
-    strokeColor = data.strokeColor || '#ffffff';
-    if (data.bgImageFile && bgImages[data.bgImageFile]) {
-      currentBgImage = bgImages[data.bgImageFile];
-    } else if (data.customBgData) {
-      const c = new Image();
-      c.onload = () => { currentBgImage = c; customBgImage = c; redraw(); };
-      c.src = data.customBgData;
-    } else {
-      currentBgImage = null;
-    }
-    if (data.customBgData) {
-      const c = new Image();
-      c.onload = () => { customBgImage = c; redraw(); };
-      c.src = data.customBgData;
-    }
-    personMask = null; subjectReady = false;
-    buildFilterThumbs(); buildTemplates(); buildBorders(); buildBgColors();
-    buildBgImageGrid();
-    redraw();
-    undoStack = []; redoStack = []; updateHistoryButtons();
-    closeBackupSheet();
-    showToast('Imported: ' + currentProjectName);
-    setTimeout(function() {
-      document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-      var sv = document.getElementById('view-studio');
-      if (sv) sv.classList.add('active');
-document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');      
-      redraw();
-    }, 400);
-  };
-  newImg.onerror = function() { showToast('Image data failed to load'); };
-  newImg.src = data.photo;
-}
-
-function shareMxProject() {
-  if (!imgLoaded) { showToast('Load a photo first'); return; }
-  const data = buildMxData();
-  const json = JSON.stringify(data);
-  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
-  const blob = new Blob([json], { type: 'application/octet-stream' });
-  const file = new File([blob], filename, { type: 'application/octet-stream' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: filename }).then(() => {
-      closeBackupSheet();
-      showToast('Shared');
-    }).catch(err => { if (err && err.name === 'AbortError') return; showToast('Share failed'); });
-  } else {
-    showToast('Share not supported');
-  }
-}
-
-  
-function fallbackDownload(blob, filename, msg) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; a.style.display = 'none';
-  document.body.appendChild(a); a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
-  closeBackupSheet();
-  showToast(msg || 'Saved');
-}
-
-// ---------- Home list ----------
-function timeAgo(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (diff < 60) return 'Just now';
-  if (diff < 3600) return Math.floor(diff/60) + ' min ago';
-  if (diff < 86400) return Math.floor(diff/3600) + ' hr ago';
-  if (diff < 604800) return Math.floor(diff/86400) + 'd ago';
-  return d.toLocaleDateString();
-}
-
-function renderProjectsList() {
-  const container = document.getElementById('gallery');
-  if (!container) return;
-  const keys = Object.keys(localStorage).filter(k => k.startsWith('music_proj_'));
-  const items = [];
-  keys.forEach(key => {
-    try {
-      const p = JSON.parse(localStorage.getItem(key));
-      items.push({ key, image: p.image, name: p.name || 'Untitled', date: p.date || null, timestamp: p.savedAt || new Date(p.date || 0).getTime() || 0 });
-    } catch(e) {}
-  });
-  items.sort((a, b) => b.timestamp - a.timestamp);
-
-  let html = `<div class="home-top-bar"><button class="home-new-btn" onclick="document.getElementById('homeImageUpload').click()"><div class="plus-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>New Project</span></button></div>`;
-  html += `<div style="display:flex;gap:8px;margin-bottom:16px;">
-  <button onclick="importMxProject()" style="flex:1;background:transparent;color:#fff;border:1.5px dashed #555;padding:16px 12px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Import
-  </button>
-  <button onclick="openBgPickerHome()" style="flex:1;background:transparent;color:#fff;border:1.5px dashed #555;padding:16px 12px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-    BG
-  </button>
-</div>`;
-  if (items.length === 0) {
-    html += `<div class="home-empty"><div class="home-empty-icon"> </div><div class="home-empty-title">START YOUR FIRST COVER</div><div class="home-empty-sub">Upload a photo and make something real.</div></div>`;
-  } else {
-    html += `<div class="section-title">Drafts</div><div class="projects-grid">`;
-    items.forEach(it => {
-      html += `<div class="project-card" onclick="openProjectWithCount('${it.key}')"><div class="project-card-img"><img src="${it.image}"></div><div class="project-card-info"><div class="project-card-name">${it.name}</div><div class="project-card-date">${timeAgo(it.date)}</div></div><button class="project-card-del" onclick="event.stopPropagation();deleteProject('${it.key}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
-    });
-    html += `</div>`;
-  }
-  container.innerHTML = html;
-}
-
-function openProjectWithCount(key) {
-  if (counterLocked) return;
-  playCount(() => { loadProject(key); });
-}
-
-function deleteProject(key) {
-  pendingDeleteKey = key;
-  const modal = document.getElementById('confirmModal');
-  const btn = document.getElementById('confirmDeleteBtn');
-  btn.onclick = function() {
-    if (pendingDeleteKey) {
-      localStorage.removeItem(pendingDeleteKey);
-      pendingDeleteKey = null;
-    }
-    closeConfirm();
-    renderProjectsList();
-  };
-  modal.classList.add('active');
-}
-
-function closeConfirm() {
-  const modal = document.getElementById('confirmModal');
-  if (modal) modal.classList.remove('active');
-  pendingDeleteKey = null;
-}
-
-// ---------- Home upload / import ----------
-function initHomeUpload() {
-  const input = document.getElementById('homeImageUpload');
-  if (!input) return;
-  input.addEventListener('change', async function(e) {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    e.target.value = '';
-    let overlay = document.getElementById('importOverlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'importOverlay';
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:14px;';
-      overlay.innerHTML = '<div id="importCount" style="margin-bottom:12px;">Importing...</div><div style="width:180px;height:3px;background:#1a1a1a;border-radius:2px;overflow:hidden;"><div id="importBar" style="height:100%;width:0;background:#fff;transition:width .2s;"></div></div>';
-      document.body.appendChild(overlay);
-    }
-    overlay.style.display = 'flex';
-    let done = 0;
-    for (const file of files) {
-      await importOnePhoto(file); done++;
-      document.getElementById('importBar').style.width = Math.round((done / files.length) * 100) + '%';
-      document.getElementById('importCount').textContent = 'Importing ' + done + ' / ' + files.length;
-    }
-    overlay.style.display = 'none';
-    renderProjectsList();
-  });
-}
-
-function importOnePhoto(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const newImg = new Image();
-      newImg.onload = function() {
-        const MAX = 1080; let w = newImg.width, h = newImg.height;
-        if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
-        const tmp = document.createElement('canvas');
-        tmp.width = w; tmp.height = h;
-        tmp.getContext('2d').drawImage(newImg, 0, 0, w, h);
-        const dataURL = tmp.toDataURL('image/jpeg', 0.85);
-        const id = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-        const now = new Date();
-        try {
-          localStorage.setItem('music_' + id, JSON.stringify({
-            name: 'Cover ' + (Object.keys(localStorage).filter(k => k.startsWith('music_proj_')).length + 1),
-            date: now.toISOString(), savedAt: now.getTime(),
-            image: dataURL, originalImage: dataURL,
-            canvasW: w, canvasH: h, textLayers: [],
-            brightness: 100, contrast: 100, saturation: 100, noise: 0,
-            filter: 'none', border: 'none', borderColor: '#ffffff', borderSize: 5,
-            bgColor: null, bgColorSize: 8, template: 'none', fx: 'none', fxAmount: 70,
-            subjectMode: 'none', strokeColor: '#ffffff', subjectAmount: 12,
-            bgImageFile: null, bgImageSize: 8,
-            bgImageZoom: 100, bgImageX: 0, bgImageY: 0
-          }));
-        } catch(err) {}
-        resolve();
-      };
-      newImg.onerror = () => resolve();
-      newImg.src = ev.target.result;
-    };
-    reader.onerror = () => resolve();
-    reader.readAsDataURL(file);
-  });
-}
-
-// ---------- Input listeners ----------
-[bInput, cInput, sInput, nInput, subjAmt].forEach(input => {
-  if (!input) return;
-  input.addEventListener('input', () => {
-    const sa = document.getElementById('subjectAmtVal');
-    if (sa) sa.innerText = subjAmt.value;
-    currentTemplate = 'none';
-    const tmpl = document.getElementById('templateContainer');
-    if (tmpl) tmpl.querySelectorAll('.template-thumb').forEach(c => c.classList.remove('selected'));
-    redraw();
-  });
-  input.addEventListener('change', saveState);
-});
-
-// ---------- Boot ----------
-document.querySelector('.bottom-nav').style.setProperty('display', 'none', 'important');
-document.addEventListener('DOMContentLoaded', function() {
-  const el = document.getElementById('splashScreen');
-  if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
-
-  const bgInp = document.getElementById('bgUploadInput');
-  if (bgInp) {
-    bgInp.addEventListener('change', function(e) {
-      const file = (e.target.files || [])[0];
-      if (!file) return;
-      e.target.value = '';
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const newImg = new Image();
-        newImg.onload = () => {
-          customBgImage = newImg;
-          currentBgImage = newImg;
-          currentBgColor = null;
-          currentBgImageZoom = 100;
-          currentBgImageX = 0;
-          currentBgImageY = 0;
-          document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
-          document.querySelectorAll('.bgcolor-swatch').forEach(s => s.classList.remove('selected'));
-          redraw();
-          saveState();
-          showToast('Background imported');
-        };
-        newImg.onerror = () => alert('Failed to load image.');
-        newImg.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  (async () => {
-    buildFontGrid(); buildTemplates(); buildBorders(); buildBgColors();
-    buildPresetThumbs();
-    updateTextLayersUI(); initHomeUpload(); renderProjectsList();
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
-    }
-    setTimeout(() => {
-      try { if (typeof preloadEffects === 'function') preloadEffects(); } catch (e) { console.warn(e); }
-    }, 0);
-    setTimeout(() => {
-      const s = document.getElementById('splashScreen');
-      if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 300); }
-    }, 400);
-  })();
-});
-
-document.addEventListener('visibilitychange', function() {
-  if (!document.hidden && imgLoaded) redraw();
-});
-window.addEventListener('focus', function() {
-  if (imgLoaded) redraw();
-});
-
-// ---------- Expose globals for inline onclick handlers ----------
-window.undo = undo;
-window.redo = redo;
-window.switchAdjustCat = switchAdjustCat;
-window.switchFxTab = switchFxTab;
-window.setFx = setFx;
-window.setFxAmount = setFxAmount;
-window.resetFxTransform = resetFxTransform;
-window.setCartoonStyle = setCartoonStyle;
-window.setCartoonAmount = setCartoonAmount;
-window.setCartoonLevels = setCartoonLevels;
-window.setCartoonEdge = setCartoonEdge;
-window.resetCartoon = resetCartoon;
-window.setBgImage = setBgImage;
-window.setBgImageSize = setBgImageSize;
-window.setBgImageZoom = setBgImageZoom;
-window.setBgImageX = setBgImageX;
-window.setBgImageY = setBgImageY;
-window.resetBgPosition = resetBgPosition;
-window.clearBgImage = clearBgImage;
-window.clearAllBg = clearAllBg;
-window.switchBgDrag = switchBgDrag;
-window.resetSubjectTransform = resetSubjectTransform;
-window.setUnshowOpacity = setUnshowOpacity;
-window.setCut = setCut;
-window.setCutFeather = setCutFeather;
-window.setCornerRound = setCornerRound;
-window.resetUnshow = resetUnshow;
-window.handleCleanPick = handleCleanPick;
-window.setOverlayTint = setOverlayTint;
-window.setOverlayTintAmt = setOverlayTintAmt;
-window.setOverlayBrightness = setOverlayBrightness;
-window.setOverlayHue = setOverlayHue;
-window.resetOverlayTint = resetOverlayTint;
-window.setOverlayCrop = setOverlayCrop;
-window.setOverlayRound = setOverlayRound;
-window.setOverlayScale = setOverlayScale;
-window.setOverlayRot = setOverlayRot;
-window.resetOverlayTransform = resetOverlayTransform;
-window.setBgColor = setBgColor;
-window.setBgColorSize = setBgColorSize;
-window.setBorder = setBorder;
-window.setBorderColor = setBorderColor;
-window.setBorderSize = setBorderSize;
-window.applyTemplate = applyTemplate;
-window.applyFilterByIndex = applyFilterByIndex;
-window.setActiveFont = setActiveFont;
-window.setActiveFontSize = setActiveFontSize;
-window.setActiveFontRotation = setActiveFontRotation;
-window.setActiveTextColor = setActiveTextColor;
-window.setActiveTextStyle = setActiveTextStyle;
-window.setActiveTextBrightness = setActiveTextBrightness;
-window.setActiveTextHue = setActiveTextHue;
-window.setActiveTextPersp = setActiveTextPersp;
-window.updateActiveTextContent = updateActiveTextContent;
-window.moveActiveText = moveActiveText;
-window.centerActiveTextHoriz = centerActiveTextHoriz;
-window.stretchActiveText = stretchActiveText;
-window.copyActiveText = copyActiveText;
-window.editActiveText = editActiveText;
-window.deleteActiveTextLayer = deleteActiveTextLayer;
-window.openTextCard = openTextCard;
-window.closeTextCard = closeTextCard;
-window.confirmTextCard = confirmTextCard;
-window.selectLayer = selectLayer;
-window.setSubjectMode = setSubjectMode;
-window.switchPanel = switchPanel;
-window.switchSubTab = switchSubTab;
-window.openBackupSheet = openBackupSheet;
-window.closeBackupSheet = closeBackupSheet;
-window.exportMxProject = exportMxProject;
-window.shareMxProject = shareMxProject;
-window.importMxProject = importMxProject;
-window.deleteCurrentProject = deleteCurrentProject;
-window.startCutBody = startCutBody;
-window.cancelCutBody = cancelCutBody;
-window.applyCutBody = applyCutBody;
-window.resetCutBoxFull = resetCutBoxFull;
-window.resetCutBoxCenter = resetCutBoxCenter;
-window.openProjectWithCount = openProjectWithCount;
-window.deleteProject = deleteProject;
-window.closeConfirm = closeConfirm;
-window.cancelCropMode = cancelCropMode;
-window.applyCropMode = applyCropMode;
-window.restorePreCrop = restorePreCrop;
-window.cropRotate = cropRotate;
-window.cropFlip = cropFlip;
-window.resetCropAngle = resetCropAngle;
-window.setCropRatio = setCropRatio;
-window.resetEverything = resetEverything;
-window.saveProjectToHome = saveProjectToHome;
-window.saveImage = saveImage;
-window.removeBackgroundCompletely = window.removeBackgroundCompletely;
-window.detectSubject = window.detectSubject;
-// ---------- ADD PERSON overlay ----------
-let personOverlay = null;
-let personOverlayX = 0;
-let personOverlayY = 0;
-let personOverlayScale = 1;
-let personOverlayRotation = 0;
-
-function handlePersonPhoto(input) {
-  const file = (input.files || [])[0];
-  if (!file) return;
-  input.value = '';
-  const status = document.getElementById('personStatus');
-  if (status) status.textContent = 'Loading photo...';
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const newImg = new Image();
-    newImg.onload = () => {
-      if (status) status.textContent = 'Removing background...';
-      removePersonBg(newImg);
-    };
-    newImg.onerror = () => { if (status) status.textContent = 'Failed to load image.'; };
-    newImg.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-async function removePersonBg(srcImg) {
-  const status = document.getElementById('personStatus');
-  try {
-    const tmp = document.createElement('canvas');
-    tmp.width = srcImg.width;
-    tmp.height = srcImg.height;
-    tmp.getContext('2d').drawImage(srcImg, 0, 0);
-    const dataUrl = tmp.toDataURL('image/jpeg', 0.92);
-
-    const r = await fetch('https://mx-studio-editor.vercel.app/api/remove-bg', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: dataUrl })
-    });
-    if (!r.ok) { if (status) status.textContent = 'Server error: ' + r.status; return; }
-    const json = await r.json();
-    if (!json.image) { if (status) status.textContent = 'No image in response.'; return; }
-
-    const cutout = new Image();
-    cutout.onload = function() {
-      personOverlay = cutout;
-      personOverlayX = 0; personOverlayY = 0;
-      personOverlayScale = 1; personOverlayRotation = 0;
-      const sx = document.getElementById('personXInput'); if (sx) sx.value = 0;
-      const sy = document.getElementById('personYInput'); if (sy) sy.value = 0;
-      const ss = document.getElementById('personScaleInput'); if (ss) ss.value = 100;
-      const sr = document.getElementById('personRotInput'); if (sr) sr.value = 0;
-      const vx = document.getElementById('personXVal'); if (vx) vx.innerText = '0';
-      const vy = document.getElementById('personYVal'); if (vy) vy.innerText = '0';
-      const vs = document.getElementById('personScaleVal'); if (vs) vs.innerText = '100';
-      const vr = document.getElementById('personRotVal'); if (vr) vr.innerText = '0';
-      const ctrl = document.getElementById('personControls');
-      if (ctrl) ctrl.style.display = 'block';
-      if (status) status.textContent = 'Person added ✓ Use sliders to adjust.';
-      redraw(); saveState();
-      showToast('Person added');
-    };
-    cutout.onerror = () => { if (status) status.textContent = 'Failed to load cutout.'; };
-    cutout.src = json.image;
-  } catch (err) {
-    if (status) status.textContent = 'Failed: ' + (err.message || 'unknown');
-  }
-}
-
-function setPersonX(v) { personOverlayX = parseInt(v); const e = document.getElementById('personXVal'); if (e) e.innerText = v; redraw(); saveState(); }
-function setPersonY(v) { personOverlayY = parseInt(v); const e = document.getElementById('personYVal'); if (e) e.innerText = v; redraw(); saveState(); }
-function setPersonScale(v) { personOverlayScale = parseInt(v) / 100; const e = document.getElementById('personScaleVal'); if (e) e.innerText = v; redraw(); saveState(); }
-function setPersonRotation(v) { personOverlayRotation = parseInt(v); const e = document.getElementById('personRotVal'); if (e) e.innerText = v; redraw(); saveState(); }
-
-function resetPersonOverlay() {
-  personOverlay = null;
-  personOverlayX = 0; personOverlayY = 0;
-  personOverlayScale = 1; personOverlayRotation = 0;
-  const ctrl = document.getElementById('personControls'); if (ctrl) ctrl.style.display = 'none';
-  const status = document.getElementById('personStatus');
-  if (status) status.textContent = 'Pick a photo from your gallery. The background will be removed automatically.';
-  redraw(); saveState();
-  showToast('Person removed');
-}
-
-function drawPersonOverlay() {
-  if (!personOverlay) return;
-  const cw = canvas.width, ch = canvas.height;
-  const aspect = personOverlay.naturalWidth / personOverlay.naturalHeight;
-  let baseW, baseH;
-  if (aspect > 1) { baseW = cw * 0.7; baseH = baseW / aspect; }
-  else { baseH = ch * 0.7; baseW = baseH * aspect; }
-  const w = baseW * personOverlayScale;
-  const h = baseH * personOverlayScale;
-  const cx = cw / 2 + (personOverlayX / 100) * cw;
-  const cy = ch / 2 + (personOverlayY / 100) * ch;
-  ctx.save();
-  ctx.translate(cx, cy);
-  if (personOverlayRotation) ctx.rotate(personOverlayRotation * Math.PI / 180);
-  ctx.drawImage(personOverlay, -w / 2, -h / 2, w, h);
-  ctx.restore();
-}
-
-window.handlePersonPhoto = handlePersonPhoto;
-window.setPersonX = setPersonX;
-window.setPersonY = setPersonY;
-window.setPersonScale = setPersonScale;
-window.setPersonRotation = setPersonRotation;
-window.resetPersonOverlay = resetPersonOverlay;
-function syncPersonSliders() {
-  const sx = document.getElementById('personXInput'); if (sx) sx.value = Math.round(personOverlayX);
-  const sy = document.getElementById('personYInput'); if (sy) sy.value = Math.round(personOverlayY);
-  const ss = document.getElementById('personScaleInput'); if (ss) ss.value = Math.round(personOverlayScale * 100);
-  const sr = document.getElementById('personRotInput'); if (sr) sr.value = Math.round(personOverlayRotation);
-  const vx = document.getElementById('personXVal'); if (vx) vx.innerText = Math.round(personOverlayX);
-  const vy = document.getElementById('personYVal'); if (vy) vy.innerText = Math.round(personOverlayY);
-  const vs = document.getElementById('personScaleVal'); if (vs) vs.innerText = Math.round(personOverlayScale * 100);
-  const vr = document.getElementById('personRotVal'); if (vr) vr.innerText = Math.round(personOverlayRotation);
-}
-window.syncPersonSliders = syncPersonSliders;
-// ---------- BG Picker from Home ----------
-// ---------- BG Picker from Home ----------
-const SOLID_COLORS = [
-  '#ffffff', '#f5f5f5', '#e0e0e0', '#c0c0c0', '#808080', '#404040',
-  '#1a1a1a', '#0a0a0a', '#000000',
-  '#ff0000', '#dc143c', '#8b0000', '#ff2c2c', '#ff69b4', '#ffb6c1',
-  '#ff1493', '#c71585', '#ff7f7f',
-  '#ffa500', '#ff8c00', '#ff6347', '#ffd700', '#ffff00', '#ffdead',
-  '#f4a460', '#ffc04c', '#ffcc99',
-  '#00ff00', '#008000', '#006400', '#00ff88', '#98fb98', '#7cfc00',
-  '#adff2f', '#228b22', '#556b2f',
-  '#00d4ff', '#1e90ff', '#0000ff', '#00008b', '#87ceeb', '#00bfff',
-  '#00ced1', '#40e0d0', '#4682b4',
-  '#800080', '#9d4edd', '#ff00ff', '#da70d6', '#8a2be2', '#9400d3',
-  '#ba55d3', '#dda0dd',
-  '#8b4513', '#a0522d', '#cd853f', '#d2b48c', '#deb887',
-  '#2f4f4f', '#708090', '#36454f', '#1c1c1c', '#2a2a2a', '#333333'
-];
-
-function openBgPickerHome() {
-  const modal = document.getElementById('bgPickerHomeModal');
-  if (!modal) { showToast('BG picker missing'); return; }
-
-  buildBgPickerColors();
-
-  modal.style.display = 'flex';
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      modal.classList.add('bg-open');
-    });
-  });
-  // Load images in the background (no blocking)
-  if (!BG_CONFIG.files.length && typeof probeBackgrounds === 'function') {
-    const grid = document.getElementById('bgPickerHomeGrid');
-    if (grid) grid.innerHTML = '<div style="color:#666;font-size:12px;padding:20px;grid-column:1/-1;">Loading images...</div>';
-    probeBackgrounds().then(() => { buildBgPickerImages(); }).catch(() => {});
-  } else {
-    buildBgPickerImages();
-  }
-}
-function buildBgPickerImages() {
-  const grid = document.getElementById('bgPickerHomeGrid');
-  if (!grid) return;
-  let html = '';
-  BG_CONFIG.files.forEach(f => {
-    if (f.fname === 'background10.jpg') return;
-    const label = BG_LABELS[f.fname] || f.fname.replace('.jpg','').replace('background','');
-    html += `<div class="bg-item" onclick="pickBgForNewProject('${f.fname}')">
-      <div class="bg-item-img"><img src="${EFFECTS_BASE + f.fname}"></div>
-      <span class="bg-item-label">${label}</span>
-    </div>`;
-  });
-  grid.innerHTML = html;
-}
-
-function buildBgPickerColors() {
-  const grid = document.getElementById('bgPickerColorsGrid');
-  if (!grid) return;
-  let html = '';
-  SOLID_COLORS.forEach(col => {
-    html += `<div onclick="pickColorForNewProject('${col}')" style="aspect-ratio:1/1;background:${col};cursor:pointer;border-radius:0;"></div>`;
-  });
-  grid.innerHTML = html;
-}
-
-function switchBgPickerTab(name, el) {
-  const modal = document.getElementById('bgPickerHomeModal');
-  if (!modal) return;
-  modal.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
-  modal.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-  const view = document.getElementById(name === 'images' ? 'bgPickerViewImages' : 'bgPickerViewColors');
-  if (view) view.classList.add('active');
-  if (el) el.classList.add('active');
-}
-
-function closeBgPickerHome() {
-  const m = document.getElementById('bgPickerHomeModal');
-  if (!m) return;
-  m.classList.remove('bg-open');
-  setTimeout(() => {
-    m.style.display = 'none';
-  }, 250);
-}
-
-function pickColorForNewProject(color) {
-  closeBgPickerHome();
-  resetStudioState();
-  canvas.width = 1080;
-  canvas.height = 1080;
-  const blank = document.createElement('canvas');
-  blank.width = 1080;
-  blank.height = 1080;
-  const bctx = blank.getContext('2d');
-  bctx.fillStyle = color;
-  bctx.fillRect(0, 0, 1080, 1080);
-  const blankImg = new Image();
-  blankImg.onload = function() {
-    img = blankImg;
-    imgLoaded = true;
-    originalImageSrc = blank.toDataURL('image/png');
-    currentBgImage = null;
-    currentBgColor = null;
-    currentProjectId = null;
-    currentProjectName = 'Solid ' + color.toUpperCase();
-    document.getElementById('view-home').classList.remove('active');
-    document.getElementById('view-studio').classList.add('active');
-    document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('panel-adjust').classList.add('active');
-    const adjustBtn = document.querySelector('.nav-btn[data-panel="adjust"]');
-    if (adjustBtn) adjustBtn.classList.add('active');
-    buildFilterThumbs(); buildTemplates(); buildBorders();
-    redraw();
-    saveState();
-    showToast('Color ready — add text');
-  };
-  blankImg.src = blank.toDataURL();
-}
-
-function pickBgForNewProject(fname) {
-  const im = bgImages[fname];
-  if (!im) { showToast('Background not loaded'); return; }
-  closeBgPickerHome();
-  resetStudioState();
-  canvas.width = 1080;
-  canvas.height = 1080;
-  const blank = document.createElement('canvas');
-  blank.width = 1080;
-  blank.height = 1080;
-  const bctx = blank.getContext('2d');
-  bctx.fillStyle = '#ffffff';
-  bctx.fillRect(0, 0, 1080, 1080);
-  const blankImg = new Image();
-  blankImg.onload = function() {
-    img = blankImg;
-    imgLoaded = true;
-    originalImageSrc = blank.toDataURL('image/png');
-    currentBgImage = im;
-    currentBgColor = null;
-    currentProjectId = null;
-    currentProjectName = 'BG ' + (BG_LABELS[fname] || 'Project');
-    document.getElementById('view-home').classList.remove('active');
-    document.getElementById('view-studio').classList.add('active');
-    document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('panel-adjust').classList.add('active');
-    const adjustBtn = document.querySelector('.nav-btn[data-panel="adjust"]');
-    if (adjustBtn) adjustBtn.classList.add('active');
-    buildFilterThumbs(); buildTemplates(); buildBorders();
-    redraw();
-    saveState();
-    showToast('Background ready — add text or photo');
-  };
-  blankImg.src = blank.toDataURL();
-}
-
-window.openBgPickerHome = openBgPickerHome;
-window.closeBgPickerHome = closeBgPickerHome;
-window.switchBgPickerTab = switchBgPickerTab;
-window.pickBgForNewProject = pickBgForNewProject;
-window.pickColorForNewProject = pickColorForNewProject;
-// ---------- BG Colors tab ----------
-function buildBgColorsTab() {
-  const grid = document.getElementById('bgColorsTabGrid');
-  if (!grid) return;
-  if (typeof SOLID_COLORS === 'undefined') { grid.innerHTML = ''; return; }
-
-  let html = '';
-
-  // "None" option first
-  const noneSel = (!currentBgColor && !currentBgImage);
-  html += `<div onclick="applyBgColorFromTab(null, this)" style="flex:0 0 auto;width:62px;height:62px;background:#111;border-radius:0;border:${noneSel ? '2px' : '1px'} solid ${noneSel ? '#fff' : '#222'};cursor:pointer;display:flex;align-items:center;justify-content:center;">
-    <span style="color:#666;font-size:10px;font-weight:800;letter-spacing:1px;">NONE</span>
-  </div>`;
-
-  // All colors
-  SOLID_COLORS.forEach(col => {
-    const isSel = (currentBgColor === col);
-    html += `<div onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:0;border:${isSel ? '2px' : '1px'} solid ${isSel ? '#fff' : 'transparent'};cursor:pointer;"></div>`;
-  });
-
-  grid.innerHTML = html;
-}
-function applyBgColorFromTab(color, el) {
-  if (color === null) {
-    // None = clear background
-    currentBgColor = null;
-    currentBgImage = null;
-  } else {
-    currentBgColor = color;
-    currentBgImage = null;
-  }
-  document.querySelectorAll('.bg-item').forEach(x => x.classList.remove('selected'));
-  document.querySelectorAll('#bgColorsTabGrid > div').forEach(x => {
-    x.style.border = '1px solid transparent';
-  });
-  if (el) el.style.border = '2px solid #fff';
-  redraw();
-  saveState();
-}
-window.buildBgColorsTab = buildBgColorsTab;
-window.applyBgColorFromTab = applyBgColorFromTab;
-// ---------- Save image (added) ----------
-function saveImage() {
-  if (!imgLoaded) return;
-  const projName = (currentProjectName || 'Mx-Studio').trim().replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
-  const d = new Date();
-  const stamp = d.getFullYear()
-    + String(d.getMonth()+1).padStart(2,'0')
-    + String(d.getDate()).padStart(2,'0')
-    + '-'
-    + String(d.getHours()).padStart(2,'0')
-    + String(d.getMinutes()).padStart(2,'0')
-    + String(d.getSeconds()).padStart(2,'0');
-  const filename = projName + '-' + stamp + '.png';
-
-  canvas.toBlob(async function(blob) {
-    if (!blob) { showToast('Save failed'); return; }
-    const file = new File([blob], filename, { type: 'image/png' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: filename });
-        showToast('Saved');
-        return;
-      } catch (err) {
-        if (err && err.name === 'AbortError') return;
-      }
-    }
-    fallbackDownload(blob, filename, 'Saved');
-  }, 'image/png');
-}
-// ---------- New Export with naming popup ----------
-function exportMxProject() {
-  if (!imgLoaded) { showToast('Load a photo first'); return; }
-
-  // Step 1: Close the backup sheet FIRST
-  closeBackupSheet();
-
-  // Step 2: Wait 400ms for the slide-up animation to finish
-  setTimeout(function() {
-    // Step 3: NOW show the naming popup
-    const modal = document.getElementById('exportNameModal');
-    const inp = document.getElementById('exportNameInput');
-    if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
-
-    inp.value = '';
-inp.setAttribute('autocomplete', 'new-password');
-inp.setAttribute('name', 'mx-export-name-x');
-    // Focus the input after popup renders
-    setTimeout(function() { inp.focus(); inp.select(); }, 150);
-  }, 400);
-}
-function closeExportNameCard() {
-  const m = document.getElementById('exportNameModal');
-  if (m) m.style.display = 'none';
-}
-function confirmExportName() {
-  const inp = document.getElementById('exportNameInput');
-  let raw = (inp.value || '').trim();
-  if (!raw) raw = 'My Project';
-  let clean = raw
-    .replace(/\.mx$/i, '')
-    .replace(/[^a-zA-Z0-9 _\-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 40);
-  if (!clean) clean = 'My-Project';
-  closeExportNameCard();
-  doMxExport(clean);
-}
-function doMxExport(cleanName) {
-  const data = buildMxData();
-  const json = JSON.stringify(data);
-  const d = new Date();
-  const stamp = d.getFullYear()
-    + String(d.getMonth()+1).padStart(2,'0')
-    + String(d.getDate()).padStart(2,'0')
-    + '-'
-    + String(d.getHours()).padStart(2,'0')
-    + String(d.getMinutes()).padStart(2,'0')
-    + String(d.getSeconds()).padStart(2,'0');
-  const filename = cleanName + '-' + stamp + '.mx';
-  const blob = new Blob([json], { type: 'application/octet-stream' });
-  const file = new File([blob], filename, { type: 'application/octet-stream' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: filename })
-      .then(() => { closeBackupSheet(); showToast('Exported'); })
-      .catch(err => {
-        if (err && err.name === 'AbortError') return;
-        fallbackDownload(blob, filename, 'Exported ' + filename);
-      });
-  } else {
-    fallbackDownload(blob, filename, 'Exported ' + filename);
-  }
-}
-window.exportMxProject = exportMxProject;
-window.closeExportNameCard = closeExportNameCard;
-window.confirmExportName = confirmExportName;
-// ============================================================
-//  RESTORED FUNCTIONS (in case they got deleted)
-// ============================================================
-
-function deleteCurrentProject() {
-  if (!currentProjectId) { showToast('Nothing to delete'); return; }
-  localStorage.removeItem('music_' + currentProjectId);
-  currentProjectId = null;
-  currentProjectName = '';
-  closeBackupSheet();
-  showToast('Deleted from Studio');
-  setTimeout(function() { goHome(); }, 800);
-}
-
-function shareMxProject() {
-  if (!imgLoaded) { showToast('Load a photo first'); return; }
-  const data = buildMxData();
-  const json = JSON.stringify(data);
-  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
-  const blob = new Blob([json], { type: 'application/octet-stream' });
-  const file = new File([blob], filename, { type: 'application/octet-stream' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: filename })
-      .then(function() { closeBackupSheet(); showToast('Shared'); })
-      .catch(function(err) { if (err && err.name === 'AbortError') return; showToast('Share failed'); });
-  } else {
-    showToast('Share not supported');
-  }
-}
-
-function handleMxImport(e) {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    try {
-      const data = JSON.parse(ev.target.result);
-      applyMxData(data);
-    } catch (err) {
-      showToast('Invalid .mx file');
-    }
-  };
-  reader.readAsText(file);
-}
-
-function importMxProject() {
-  const inp = document.getElementById('mxImportInput');
-  if (!inp) { showToast('Import input missing'); return; }
-  inp.click();
-}
-
-// Expose them all to inline handlers
-window.deleteCurrentProject = deleteCurrentProject;
-window.shareMxProject = shareMxProject;
-window.handleMxImport = handleMxImport;
-window.importMxProject = importMxProject;
-// ---------- Export naming popup ----------
-function exportMxProject() {
-  if (!imgLoaded) { showToast('Load a photo first'); return; }
-  closeBackupSheet();
-  setTimeout(function() {
-    const modal = document.getElementById('exportNameModal');
-    const inp = document.getElementById('exportNameInput');
-    if (!modal || !inp) { doMxExport(currentProjectName || 'MxProject'); return; }
-    inp.value = '';
-    inp.setAttribute('autocomplete', 'new-password');
-    inp.setAttribute('name', 'mx-export-name-x');
-    modal.style.display = 'flex';
-    setTimeout(function() { inp.focus(); inp.select(); }, 150);
-  }, 400);
-}
-
-function closeExportNameCard() {
-  const m = document.getElementById('exportNameModal');
-  if (m) m.style.display = 'none';
-}
-
-function confirmExportName() {
-  const inp = document.getElementById('exportNameInput');
-  let raw = (inp.value || '').trim();
-  if (!raw) raw = 'My Project';
-  let clean = raw
-    .replace(/\.mx$/i, '')
-    .replace(/[^a-zA-Z0-9 _\-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 40);
-  if (!clean) clean = 'My-Project';
-  closeExportNameCard();
-  doMxExport(clean);
-}
-
-function doMxExport(cleanName) {
-  const data = buildMxData();
-  const json = JSON.stringify(data);
-  const d = new Date();
-  const stamp = d.getFullYear()
-    + String(d.getMonth()+1).padStart(2,'0')
-    + String(d.getDate()).padStart(2,'0')
-    + '-'
-    + String(d.getHours()).padStart(2,'0')
-    + String(d.getMinutes()).padStart(2,'0')
-    + String(d.getSeconds()).padStart(2,'0');
-  const filename = cleanName + '-' + stamp + '.mx';
-  const blob = new Blob([json], { type: 'application/octet-stream' });
-  const file = new File([blob], filename, { type: 'application/octet-stream' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: filename })
-      .then(function() { closeBackupSheet(); showToast('Exported'); })
-      .catch(function(err) {
-        if (err && err.name === 'AbortError') return;
-        fallbackDownload(blob, filename, 'Exported ' + filename);
-      });
-  } else {
-    fallbackDownload(blob, filename, 'Exported ' + filename);
-  }
-}
-
-function saveImage() {
-  if (!imgLoaded) return;
-  const projName = (currentProjectName || 'Mx-Studio').trim().replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
-  const d = new Date();
-  const stamp = d.getFullYear()
-    + String(d.getMonth()+1).padStart(2,'0')
-    + String(d.getDate()).padStart(2,'0')
-    + '-'
-    + String(d.getHours()).padStart(2,'0')
-    + String(d.getMinutes()).padStart(2,'0')
-    + String(d.getSeconds()).padStart(2,'0');
-  const filename = projName + '-' + stamp + '.png';
-  canvas.toBlob(function(blob) {
-    if (!blob) { showToast('Save failed'); return; }
-    const file = new File([blob], filename, { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: filename })
-        .then(function() { showToast('Saved'); })
-        .catch(function(err) {
-          if (err && err.name === 'AbortError') return;
-          fallbackDownload(blob, filename, 'Saved');
-        });
-    } else {
-      fallbackDownload(blob, filename, 'Saved');
-    }
-  }, 'image/png');
-}
-
-window.exportMxProject = exportMxProject;
-window.closeExportNameCard = closeExportNameCard;
-window.confirmExportName = confirmExportName;
-window.saveImage = saveImage;
