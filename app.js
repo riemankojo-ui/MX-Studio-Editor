@@ -954,6 +954,7 @@ function updateColorPreview() {
 }
 
 function syncActiveInputs() {
+  if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) {
     if (sizeInput) sizeInput.value = 36;
@@ -1016,9 +1017,18 @@ function setActiveFontRotation(v) {
   redraw(); saveState();
 }
 
-function setActiveFont(f, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.font = f; redraw(); saveState(); }
-function setActiveTextColor(c, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.color = c; syncActiveInputs(); redraw(); saveState(); }
-function setActiveTextStyle(s, el) { const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.style = s; redraw(); saveState(); }
+function setActiveFont(f, el) { 
+  if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
+  const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.font = f; redraw(); saveState(); 
+}
+function setActiveTextColor(c, el) { 
+  if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
+  const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.color = c; syncActiveInputs(); redraw(); saveState(); 
+}
+function setActiveTextStyle(s, el) { 
+  if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
+  const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.style = s; redraw(); saveState(); 
+}
 
 function updateSelection(el) {
   if (!el || !el.parentElement) return;
@@ -1039,6 +1049,10 @@ function openTextCard(mode, layerId) {
     const l = textLayers.find(x => x.id === textCardLayerId);
     title.textContent = 'Edit Text';
     inp.value = l ? (l.text || '') : '';
+    activeLayerId = textCardLayerId; // 👈 ADD THIS LINE
+    activeLayerId = textCardLayerId; // 👈 ADD THIS LINE
+    activeLayerId = textCardLayerId; // 👈 ADD THIS LINE
+    activeLayerId = textCardLayerId; // 👈 ADD THIS LINE
   } else {
     title.textContent = 'Add Text';
     inp.value = '';
@@ -1058,9 +1072,12 @@ function confirmTextCard() {
   const val = (document.getElementById('textCardInput').value || '').trim();
   if (!val) { closeTextCard(); return; }
   if (textCardMode === 'edit' && textCardLayerId) {
-    const l = textLayers.find(x => x.id === textCardLayerId);
-    if (l) l.text = val;
-  } else {
+  const l = textLayers.find(x => x.id === textCardLayerId);
+  if (l) {
+    l.text = val;
+    activeLayerId = textCardLayerId; // 👈 Forces the app to remember the text
+  }
+} else {
     const id = Date.now();
     const newLayer = { id, text: val, x: canvas.width/2, y: canvas.height/2, font:"Impact", size: Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0, stretchX:1, stretchY:1 };
     textLayers.push(newLayer);
@@ -1336,28 +1353,19 @@ function resetStudioState() {
   currentBgImageZoom = 100; currentBgImageX = 0; currentBgImageY = 0;
   currentFx = 'none'; currentFxAmount = 70;
   subjectMode = 'none'; personMask = null; subjectReady = false;
-  // Reset Person Overlay (fixes bug where it appears on new projects)
-  personOverlay = null; personOverlayX = 0; personOverlayY = 0;
+  
+  // --- THIS REMOVES THE PERSON ON NEW PROJECT ---
+  personOverlay = null; 
+  personOverlayX = 0; personOverlayY = 0;
   personOverlayScale = 1; personOverlayRotation = 0;
   const personCtrl = document.getElementById('personControls');
   if (personCtrl) personCtrl.style.display = 'none';
-  const personStatus = document.getElementById('personStatus');
-  if (personStatus) personStatus.textContent = 'Pick a photo from your gallery. The background will be removed automatically.';
-  // Reset other state that was also leaking between projects
-  overlayImg = null; overlayOpacity = 0; overlayX = 0.5; overlayY = 0.5;
-  overlayScale = 0.7; overlayRotation = 0; overlayTint = null;
-  overlayTintAmount = 60; overlayCropRatio = 'free'; overlayRound = 0;
-  unshowOpacity = 100; cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0;
-  cutFeather = 0; cornerRound = 0;
-  cartoonStyle = 'none'; cartoonAmount = 70; cartoonLevels = 6;
-  cartoonEdge = 1.2; cartoonCanvas = null;
-  subjectX = 0.5; subjectY = 0.5; subjectScale = 1;
-  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
-  customBgImage = null;
-  cutBodyActive = false;
+  // ----------------------------------------------
+
   undoStack = []; redoStack = []; updateHistoryButtons();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
+
 // ---------- Gestures ----------
 function getCanvasCoordinates(e, touch) {
   const rect = canvas.getBoundingClientRect();
@@ -2014,7 +2022,6 @@ if (currentFilter === 'coverart') {
   const fade = parseInt(nInput.value);
   if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${(fade/100)*0.4})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   if (!currentBgColor && !currentBgImage) drawBorder();
-  drawFxLayer();
   if (overlayImg) {
     ctx.save();
     const cw = canvas.width, ch = canvas.height;
@@ -2099,7 +2106,8 @@ if (currentFilter === 'coverart') {
     ctx.restore();
   }
   drawPersonOverlay();
-  textLayers.forEach(layer => {
+drawFxLayer();
+textLayers.forEach(layer => {
     if (layer.text && layer.text.trim() !== '') {
       ctx.save();
       ctx.translate(layer.x, layer.y);
