@@ -190,7 +190,7 @@ async function loadCategoryConfig() {
     { key:'grunge-noise', label:'Grunge Noise', prefix:'grunge-noise', blend:'overlay', max:60, files:[] },
     { key:'noise', label:'Noise', prefix:'noise', blend:'overlay', max:60, files:[] },
     { key:'streetlight', label:'Street Light', prefix:'streetlight', blend:'screen', max:60, files:[] },
-    { key:'frame-paper', label:'Paper', prefix:'frame-paper', blend:'normal', max:20, files:[] }
+    { key:'frame-paper', label:'Paper', prefix:'frame-paper', blend:'normal', max:10, files:[] }
   ];
 }
   if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) currentFxTab = FX_CATEGORIES[0].key;
@@ -340,7 +340,13 @@ function switchFxTab(key, el) {
   panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('fx-tab-' + key).classList.add('active');
   el.classList.add('active');
-  buildFxGrid(key); // Let buildFxGrid handle the loading safely
+  const cat = FX_CATEGORIES.find(c => c.key === key);
+  // 🚀 FIX: Load images when the tab is clicked (removed the blocking 'cat.fileList' check)
+  if (cat && (!cat.files || !cat.files.length)) {
+    const g = document.getElementById('fxGrid-' + key);
+    if (g) g.innerHTML = '<div class="filter-empty">Loading effects...</div>';
+    probeCategory(cat).then(() => { buildFxGrid(key); });
+  }
 }
 
 function buildFxGrid(catKey) {
@@ -349,44 +355,93 @@ function buildFxGrid(catKey) {
   const g = document.getElementById('fxGrid-' + catKey);
   if (!g) return;
 
-  // If files are already loaded, render them immediately
-  if (cat.files && cat.files.length > 0) {
-    let html = `<div class="fx-card ${currentFx === catKey + ':none' ? 'selected' : ''}" onclick="setFx('${catKey}:none', this)">
-      <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </div>
-      <span class="fx-card-label">Off</span>
-    </div>`;
-    
-    cat.files.forEach(f => {
-      const key = catKey + ':' + f.fname;
-      const sel = (currentFx === key) ? 'selected' : '';
-      let labelText = f.fname.replace('.png', '').replace('.jpg', '').replace('.webp', '');
-      if (catKey === 'frame-paper') labelText = labelText.replace('frame-paper', 'Paper ');
-      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${labelText}</span></div>`;
+  // 🚀 FIX: If files aren't loaded yet, trigger the download automatically
+  if (!cat.files || !cat.files.length) {
+    if (cat._loading) return; // Prevent infinite loops
+    cat._loading = true;
+    g.innerHTML = '<div class="filter-empty" style="padding: 20px;">Loading effects...</div>';
+    probeCategory(cat).then(() => { 
+      cat._loading = false;
+      buildFxGrid(catKey); 
     });
-    
-    g.innerHTML = html;
     return;
   }
 
-  // If not loaded and not currently loading, start loading
-  if (!cat._loading) {
-    cat._loading = true;
-    g.innerHTML = '<div class="filter-empty" style="padding: 20px;">Loading effects...</div>';
-    
-    probeCategory(cat).then(() => { 
-      cat._loading = false;
-      if (!cat.files || !cat.files.length) {
-        g.innerHTML = '<div class="filter-empty" style="padding: 20px; color:#ff5c5c; font-weight:bold;">⚠️ Error: Files not found. Check folder & names.</div>';
-        return;
-      }
-      buildFxGrid(catKey); 
-    }).catch(err => {
-      cat._loading = false;
-      g.innerHTML = '<div class="filter-empty" style="padding: 20px; color:#ff5c5c;">Error loading: ' + err.message + '</div>';
-    });
-  }
+  let html = `<div class="fx-card ${currentFx === catKey + ':none' ? 'selected' : ''}" onclick="setFx('${catKey}:none', this)">
+    <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <span class="fx-card-label">Off</span>
+  </div>`;
+  
+  cat.files.forEach(f => {
+    const key = catKey + ':' + f.fname;
+    const sel = (currentFx === key) ? 'selected' : '';
+    html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${f.base}</span></div>`;
+  });
+  
+  g.innerHTML = html;
+}
+
+function setFx(key, el) {
+  currentFx = key;
+  document.querySelectorAll('.fx-card').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  redraw(); saveState();
+}
+
+function setFxAmount(v) {
+  currentFxAmount = parseInt(v);
+  const fv = document.getElementById('fxVal'); if (fv) fv.innerText = v;
+  redraw(); saveState();
+}
+
+function resetFxTransform() {
+  fxX = 0.5; fxY = 0.5; fxScale = 1; fxRotation = 0;
+  redraw(); saveState();
+}
+
+function drawFxLayer() {
+  if (!imgLoaded || currentFx === 'none' || currentFxAmount === 0) return;
+  const parts = currentFx.split(':');
+  const catKey = parts[0], fname = parts[1];
+  if (fname === 'none') return;
+  const im = fxImages[catKey + ':' + fname];
+  if (!im) return;
+  const cat = FX_CATEGORIES.find(c => c.key === catKey);
+  const a = currentFxAmount / 100;
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.globalCompositeOperation = (cat && cat.blend) ? cat.blend : 'screen';
+  const cw = canvas.width, ch = canvas.height;
+  const baseW = cw * fxScale;
+  const baseH = ch * fxScale;
+  ctx.translate(fxX * cw, fxY * ch);
+  if (fxRotation) ctx.rotate(fxRotation);
+  const sr = im.naturalWidth / im.naturalHeight;
+  const dr = baseW / baseH;
+  let sx = 0, sy = 0, sw = im.naturalWidth, sh = im.naturalHeight;
+  if (sr > dr) { sw = sh * dr; sx = (im.naturalWidth - sw) / 2; }
+  else { sh = sw / dr; sy = (im.naturalHeight - sh) / 2; }
+  ctx.drawImage(im, sx, sy, sw, sh, -baseW/2, -baseH/2, baseW, baseH);
+  ctx.restore();
+}
+
+// ---------- Background image grid ----------
+function buildBgImageGrid() {
+  const g = document.getElementById('bgImageGrid');
+  if (!g) return;
+  let html = '';
+  const noneSel = (!currentBgImage && !currentBgColor) ? 'selected' : '';
+  html += '<div class="bg-item ' + noneSel + '" onclick="clearAllBg()"><div class="bg-item-img" style="display:flex;align-items:center;justify-content:center;background:#1a1a1a;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><span class="bg-item-label">None</span></div>';
+  if (!BG_CONFIG.files.length) { g.innerHTML = html; return; }
+  BG_CONFIG.files.forEach(f => {
+    if (f.fname === 'background10.jpg') return;
+    const sel = (currentBgImage && currentBgImage.src.endsWith(f.fname)) ? 'selected' : '';
+    const label = BG_LABELS[f.fname] || f.fname.replace('.jpg','').replace('background','');
+    html += `<div class="bg-item ${sel}" onclick="setBgImage('${f.fname}', this)"><div class="bg-item-img"><img src="${EFFECTS_BASE + f.fname}"></div><span class="bg-item-label">${label}</span></div>`;
+  });
+  g.innerHTML = html;
 }
 
 function setBgImage(fname, el) {

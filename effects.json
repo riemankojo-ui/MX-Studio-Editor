@@ -8,10 +8,7 @@
     { "label": "Street Light", "prefix": "streetlight", "blend": "screen",   "files": [] },
 
     { "label": "Paper",        "prefix": "frame-paper", "blend": "normal",   "files": [
-      "frame-paper1.png", "frame-paper2.png", "frame-paper3.png", "frame-paper4.png", "frame-paper5.png",
-      "frame-paper6.png", "frame-paper7.png", "frame-paper8.png", "frame-paper9.png", "frame-paper10.png",
-      "frame-paper11.png", "frame-paper12.png", "frame-paper13.png", "frame-paper14.png", "frame-paper15.png",
-      "frame-paper16.png", "frame-paper17.png", "frame-paper18.png"
+      "frame-paper1.jpg", "frame-paper2.jpg", "frame-paper3.jpg", "frame-paper4.jpg", "frame-paper5.jpg"
     ]}
   ]
 }
