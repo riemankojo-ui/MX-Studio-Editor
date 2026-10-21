@@ -190,7 +190,7 @@ async function loadCategoryConfig() {
     { key:'grunge-noise', label:'Grunge Noise', prefix:'grunge-noise', blend:'overlay', max:60, files:[] },
     { key:'noise', label:'Noise', prefix:'noise', blend:'overlay', max:60, files:[] },
     { key:'streetlight', label:'Street Light', prefix:'streetlight', blend:'screen', max:60, files:[] },
-    { key:'frame-paper', label:'Paper', prefix:'frame-paper', blend:'normal', max:10, files:[] }
+    { key:'frame-paper', label:'Paper', prefix:'frame-paper', blend:'normal', max:20, files:[] }
   ];
 }
   if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) currentFxTab = FX_CATEGORIES[0].key;
@@ -340,13 +340,7 @@ function switchFxTab(key, el) {
   panel.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('fx-tab-' + key).classList.add('active');
   el.classList.add('active');
-  const cat = FX_CATEGORIES.find(c => c.key === key);
-  // 🚀 FIX: Load images when the tab is clicked (removed the blocking 'cat.fileList' check)
-  if (cat && (!cat.files || !cat.files.length)) {
-    const g = document.getElementById('fxGrid-' + key);
-    if (g) g.innerHTML = '<div class="filter-empty">Loading effects...</div>';
-    probeCategory(cat).then(() => { buildFxGrid(key); });
-  }
+  buildFxGrid(key); 
 }
 
 function buildFxGrid(catKey) {
@@ -355,32 +349,41 @@ function buildFxGrid(catKey) {
   const g = document.getElementById('fxGrid-' + catKey);
   if (!g) return;
 
-  // 🚀 FIX: If files aren't loaded yet, trigger the download automatically
-  if (!cat.files || !cat.files.length) {
-    if (cat._loading) return; // Prevent infinite loops
-    cat._loading = true;
-    g.innerHTML = '<div class="filter-empty" style="padding: 20px;">Loading effects...</div>';
-    probeCategory(cat).then(() => { 
-      cat._loading = false;
-      buildFxGrid(catKey); 
+  // If files are already loaded, render them immediately
+  if (cat.files && cat.files.length > 0) {
+    let html = `<div class="fx-card ${currentFx === catKey + ':none' ? 'selected' : ''}" onclick="setFx('${catKey}:none', this)">
+      <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+      <span class="fx-card-label">Off</span>
+    </div>`;
+    
+    cat.files.forEach(f => {
+      const key = catKey + ':' + f.fname;
+      const sel = (currentFx === key) ? 'selected' : '';
+      let labelText = f.fname.replace('.png', '').replace('.jpg', '').replace('.webp', '');
+      if (catKey === 'frame-paper') labelText = labelText.replace('frame-paper', 'Paper ');
+      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${labelText}</span></div>`;
     });
+    
+    g.innerHTML = html;
     return;
   }
 
-  let html = `<div class="fx-card ${currentFx === catKey + ':none' ? 'selected' : ''}" onclick="setFx('${catKey}:none', this)">
-    <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </div>
-    <span class="fx-card-label">Off</span>
-  </div>`;
-  
-  cat.files.forEach(f => {
-    const key = catKey + ':' + f.fname;
-    const sel = (currentFx === key) ? 'selected' : '';
-    html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${f.base}</span></div>`;
-  });
-  
-  g.innerHTML = html;
+  // Safely load without infinite loops
+  if (!cat._loading) {
+    cat._loading = true;
+    g.innerHTML = '<div class="filter-empty" style="padding: 20px;">Loading effects...</div>';
+    
+    probeCategory(cat).then(() => { 
+      cat._loading = false;
+      if (!cat.files || !cat.files.length) {
+        g.innerHTML = '<div class="filter-empty" style="padding: 20px; color:#ff5c5c; font-weight:bold;">⚠️ No files found. Check names.</div>';
+        return;
+      }
+      buildFxGrid(catKey); 
+    });
+  }
 }
 
 function setFx(key, el) {
