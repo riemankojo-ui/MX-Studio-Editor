@@ -183,21 +183,22 @@ async function loadCategoryConfig() {
     } catch (e) {}
   }
   if (!FX_CATEGORIES.length) {
-    FX_CATEGORIES = [
-      { key:'grunge', label:'Grunge', prefix:'grunge', blend:'screen', max:60, files:[] },
-      { key:'lightleak', label:'Light Leak', prefix:'lightleak', blend:'screen', max:60, files:[] },
-      { key:'fire', label:'Fire', prefix:'fire', blend:'screen', max:60, files:[] },
-      { key:'noise', label:'Noise', prefix:'noise', blend:'overlay', max:60, files:[] },
-      { key:'streetlight', label:'Street Light', prefix:'streetlight', blend:'screen', max:60, files:[] },
-      { key:'af', label:'AF', prefix:'af', blend:'screen', max:60, files:[] },
-      { key:'heart', label:'Heart', prefix:'heart', blend:'normal', max:60, files:[] }
-    ];
-  }
+  FX_CATEGORIES = [
+    { key:'lightleak', label:'Light Leak', prefix:'lightleak', blend:'screen', max:60, files:[] },
+    { key:'Mood-leak', label:'Moody Leak', prefix:'Mood-leak', blend:'screen', max:60, files:[] },
+    { key:'grunge', label:'Grunge', prefix:'grunge', blend:'screen', max:60, files:[] },
+    { key:'grunge-noise', label:'Grunge Noise', prefix:'grunge-noise', blend:'overlay', max:60, files:[] },
+    { key:'noise', label:'Noise', prefix:'noise', blend:'overlay', max:60, files:[] },
+    { key:'streetlight', label:'Street Light', prefix:'streetlight', blend:'screen', max:60, files:[] }
+  ];
+}
   if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) currentFxTab = FX_CATEGORIES[0].key;
 }
 
 async function probeOne(base) {
-  let im = await loadImage(EFFECTS_BASE + base + '.jpg');
+  let im = await loadImage(EFFECTS_BASE + base + '.webp');
+  if (im) return { fname: base + '.webp', im };
+  im = await loadImage(EFFECTS_BASE + base + '.jpg');
   if (im) return { fname: base + '.jpg', im };
   im = await loadImage(EFFECTS_BASE + base + '.jpeg');
   if (im) return { fname: base + '.jpeg', im };
@@ -339,9 +340,10 @@ function switchFxTab(key, el) {
   document.getElementById('fx-tab-' + key).classList.add('active');
   el.classList.add('active');
   const cat = FX_CATEGORIES.find(c => c.key === key);
-  if (cat && cat.fileList && (!cat.files || !cat.files.length)) {
+  // 🚀 FIX: Load images when the tab is clicked (removed the blocking 'cat.fileList' check)
+  if (cat && (!cat.files || !cat.files.length)) {
     const g = document.getElementById('fxGrid-' + key);
-    if (g) g.innerHTML = '<div class="filter-empty">Loading ' + cat.fileList.length + ' effects...</div>';
+    if (g) g.innerHTML = '<div class="filter-empty">Loading effects...</div>';
     probeCategory(cat).then(() => { buildFxGrid(key); });
   }
 }
