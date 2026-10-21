@@ -28,7 +28,7 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .home-empty-title { font-size:18px; letter-spacing:2px; color:#fff; margin-bottom:8px; font-weight:900; }
 .home-empty-sub { font-size:12px; color:#666; line-height:1.6; margin-bottom:22px; }
 
-.canvas-container { position:relative; display:flex; align-items:center; justify-content:center; flex:1 1 auto; max-height:70vh; min-height:100px; max-width:100%; margin:0; padding:0 4px; overflow:hidden; }
+.canvas-container { position:relative; display:flex; align-items:center; justify-content:center; flex:1 1 auto; max-height:70vh; min-height:100px; max-width:100%; margin:0; padding:0 4px; overflow:hidden; transition: max-height 0.3s ease-in-out, flex 0.3s ease-in-out; }
 .panel { display:none; background:transparent; padding:8px 4px; text-align:left; font-size:12px; flex:0 0 auto; max-height:45vh; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; position:relative; }
 #textFloatingMenu { display:none; position:absolute; background:rgba(15,15,15,.96); padding:8px; border-radius:10px; z-index:50; transform:translate(-50%,-125%); width:150px; }
 .arrow-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:6px; }
@@ -53,7 +53,11 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .nav-btn.active { color:#ffffff; opacity:1; transform:translateY(-2px); }
 .nav-btn.active svg { stroke:#ffffff; }
 
-.panel.active { display:block; }
+.panel.active { display:block; animation: fadeInSmooth 0.25s ease-out forwards; }
+@keyframes fadeInSmooth {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .sub-tabs { display:flex; justify-content:flex-start; gap:16px; margin-bottom:8px; border-bottom:1px solid #1a1a1a; padding-bottom:8px; overflow-x:auto; }
 .sub-tabs::-webkit-scrollbar { display:none; }
@@ -183,7 +187,7 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .crop-topbar { display:flex; justify-content:space-between; align-items:center; padding:14px 20px 6px; }
 .crop-icon-btn { background:none; border:none; cursor:pointer; padding:8px; display:inline-flex; }
 .crop-canvas-wrap { flex:1; position:relative; display:flex; align-items:center; justify-content:center; padding:10px 16px; min-height:0; }
-canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#121212; cursor:move; touch-action:none; display:block; }
+canvas { max-width:100%; max-height:100%; height:auto; width:auto; background:#121212; cursor:move; touch-action:none; display:block; transition: max-width 0.3s ease-in-out, max-height 0.3s ease-in-out, width 0.3s ease-in-out, height 0.3s ease-in-out; }
 #cropFrame { position:absolute; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,.55); }
 #cropFrame .grid-line { position:absolute; background:rgba(255,255,255,.4); }
 #cropFrame .grid-line.grid-v { top:0; bottom:0; width:1px; }
