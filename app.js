@@ -141,7 +141,7 @@ const BG_LABELS = {
 
 const EFFECTS_BASE = './effects/';
 let FX_CATEGORIES = [];
-let currentFxTab = 'grunge';
+let currentFxTab = '';
 const BG_CONFIG = { prefix:'background', max:20, files:[] };
 const fxImages = {};
 const bgImages = {};
@@ -189,7 +189,8 @@ async function loadCategoryConfig() {
     { key:'grunge', label:'Grunge', prefix:'grunge', blend:'screen', max:60, files:[] },
     { key:'grunge-noise', label:'Grunge Noise', prefix:'grunge-noise', blend:'overlay', max:60, files:[] },
     { key:'noise', label:'Noise', prefix:'noise', blend:'overlay', max:60, files:[] },
-    { key:'streetlight', label:'Street Light', prefix:'streetlight', blend:'screen', max:60, files:[] }
+    { key:'streetlight', label:'Street Light', prefix:'streetlight', blend:'screen', max:60, files:[] },
+    { key:'frame-paper', label:'Paper', prefix:'frame-paper', blend:'normal', max:10, files:[] }
   ];
 }
   if (FX_CATEGORIES.length && !FX_CATEGORIES.find(c => c.key === currentFxTab)) currentFxTab = FX_CATEGORIES[0].key;
@@ -353,20 +354,32 @@ function buildFxGrid(catKey) {
   if (!cat) return;
   const g = document.getElementById('fxGrid-' + catKey);
   if (!g) return;
+
+  // 🚀 FIX: If files aren't loaded yet, trigger the download automatically
+  if (!cat.files || !cat.files.length) {
+    if (cat._loading) return; // Prevent infinite loops
+    cat._loading = true;
+    g.innerHTML = '<div class="filter-empty" style="padding: 20px;">Loading effects...</div>';
+    probeCategory(cat).then(() => { 
+      cat._loading = false;
+      buildFxGrid(catKey); 
+    });
+    return;
+  }
+
   let html = `<div class="fx-card ${currentFx === catKey + ':none' ? 'selected' : ''}" onclick="setFx('${catKey}:none', this)">
     <div class="fx-card-preview" style="display:flex;align-items:center;justify-content:center;">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>
     <span class="fx-card-label">Off</span>
   </div>`;
-  if (!cat.files || !cat.files.length) html += `<div class="filter-empty">No files</div>`;
-  else {
-    cat.files.forEach(f => {
-      const key = catKey + ':' + f.fname;
-      const sel = (currentFx === key) ? 'selected' : '';
-      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${f.base}</span></div>`;
-    });
-  }
+  
+  cat.files.forEach(f => {
+    const key = catKey + ':' + f.fname;
+    const sel = (currentFx === key) ? 'selected' : '';
+    html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${f.base}</span></div>`;
+  });
+  
   g.innerHTML = html;
 }
 
