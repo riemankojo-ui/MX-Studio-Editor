@@ -3213,9 +3213,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
     }
-    setTimeout(() => {
-      try { if (typeof preloadEffects === 'function') preloadEffects(); } catch (e) { console.warn(e); }
-    }, 0);
+    // 🚀 HIDDEN FIX: Only load categories the user actually clicks to save massive bandwidth
+setTimeout(() => {
+  try { 
+    if (typeof loadCategoryConfig === 'function') {
+        loadCategoryConfig().then(() => {
+            buildFxTabs();
+            // Do NOT preload all categories. They load on-click now.
+        }); 
+    }
+  } catch (e) { console.warn(e); }
+}, 0);
     setTimeout(() => {
       const s = document.getElementById('splashScreen');
       if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 300); }
