@@ -150,7 +150,7 @@ const bgImages = {};
 function loadImage(url) {
   return new Promise(res => {
     const im = new Image();
-    im.crossOrigin = 'anonymous';
+    // crossOrigin removed to prevent mobile browser blocking
     im.onload = () => res(im);
     im.onerror = () => res(null);
     im.src = url;
@@ -211,7 +211,7 @@ async function probeOne(base) {
 async function probeCategory(cat) {
   if (cat.fileList && Array.isArray(cat.fileList) && cat.fileList.length) {
     const results = await Promise.all(cat.fileList.map(async fname => {
-      const im = await loadImage(EFFECTS_BASE + fname);
+      const im = await loadImage(EFFECTS_BASE + fname + '?v=99'); // Cache buster added
       return im ? { fname, im } : null;
     }));
     cat.files = results.filter(Boolean);
