@@ -359,12 +359,13 @@ function buildFxGrid(catKey) {
     </div>`;
     
     cat.files.forEach(f => {
-      const key = catKey + ':' + f.fname;
-      const sel = (currentFx === key) ? 'selected' : '';
-      let labelText = f.fname.replace('.png', '').replace('.jpg', '').replace('.webp', '');
-      if (catKey === 'frame-paper') labelText = labelText.replace('frame-paper', 'Paper ');
-      html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${labelText}</span></div>`;
-    });
+  const key = catKey + ':' + f.fname;
+  const sel = (currentFx === key) ? 'selected' : '';
+  let labelText = f.fname.replace('.png', '').replace('.jpg', '').replace('.webp', '');
+  if (catKey === 'frame-paper') labelText = labelText.replace('frame-paper', 'Paper ');
+  // Added ?v=99 here to break the broken image cache
+  html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}?v=99" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${labelText}</span></div>`;
+});
     
     g.innerHTML = html;
     return;
