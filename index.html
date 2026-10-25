@@ -537,19 +537,28 @@
   </div>
 </div>
 <div id="panel-cutbody" class="panel">
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('cutcrop', this)">CUT</button>
-    <button class="sub-tab" onclick="switchSubTab('cutlayers', this)">LAYERS</button>
-    <button class="sub-tab" onclick="switchSubTab('cuteffects', this)">EFFECTS</button>
+  <div id="cbCatView">
+    <div class="sub-tabs">
+      <button class="sub-tab fx-ic" onclick="cbOpenSection('cutcrop')"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="8.12" y1="8.12" x2="12" y2="12"/><line x1="8.12" y1="15.88" x2="12" y2="12"/><line x1="12" y1="12" x2="20" y2="4"/><line x1="12" y1="12" x2="20" y2="20"/></svg><span>Cut</span></button>
+      <button class="sub-tab fx-ic" onclick="cbOpenSection('cutlayers')"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/></svg><span>Layers</span></button>
+      <button class="sub-tab fx-ic" onclick="cbOpenSection('cuteffects')"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg><span>Effects</span></button>
+      <button class="sub-tab fx-ic" onclick="cbOpenSection('cutadjust')"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span>Adjust</span></button>
+    </div>
+    <div id="cbHint" style="font-size:11px;color:#777;text-align:center;padding:10px 12px;line-height:1.6;">Pick a tool. First remove the background (BG RMV), then cut or copy the body.</div>
   </div>
 
-<div style="color:#ff0000;font-size:20px;padding:20px;text-align:center;background:#330000;">TEST CUTBODY SHOWING</div>
+  <div id="cbDetailView" style="display:none;">
+  <div class="fx-head">
+    <button class="fx-back" onclick="cbBack()" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <span class="fx-title" id="cbSecTitle"></span>
+    <button class="fx-save" onclick="cbSave()" aria-label="Save"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+  </div>
   <div id="subtab-cutcrop" class="sub-view active">
     <div style="padding:8px 8px 14px 8px;text-align:center;">
       <div id="cutBodyStatus" style="font-size:11px;color:#888;line-height:1.5;padding:0 8px;">Tap scissors to cut, or copy to duplicate the body.</div>
 
       <div style="display:flex;justify-content:center;gap:14px;margin-top:10px;">
-        <button onclick="startCutBody()" style="width:60px;height:60px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <button onclick="cbStartCut()" style="width:60px;height:60px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="8.12" y1="8.12" x2="12" y2="12"/><line x1="8.12" y1="15.88" x2="12" y2="12"/><line x1="12" y1="12" x2="20" y2="4"/><line x1="12" y1="12" x2="20" y2="20"/></svg>
         </button>
         <button onclick="addBodyLayer()" style="width:60px;height:60px;background:#141414;border:1.5px solid #242424;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
@@ -558,12 +567,15 @@
       </div>
       <div id="cutBodyActions" style="display:none;margin-top:16px;">
         <div style="display:flex;gap:8px;margin-bottom:10px;">
-          <button onclick="applyCutBody()" style="flex:1;background:#00d4ff;color:#000;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✓ APPLY</button>
+          <button onclick="applyCutBody()" style="flex:1;background:#00d4ff;color:#000;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;" hidden>✓ APPLY</button>
+          <button onclick="cbApplyCut(true)" style="flex:1;background:#00d4ff;color:#000;border:none;padding:16px 4px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;">✂ CUT OUT</button>
+          <button onclick="cbApplyCut(false)" style="flex:1;background:#00ff88;color:#000;border:none;padding:16px 4px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;">⧉ COPY</button>
           <button onclick="cancelCutBody()" style="flex:1;background:#242424;color:#fff;border:none;padding:16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">✕ CANCEL</button>
         </div>
         <div style="display:flex;gap:8px;">
           <button onclick="resetCutBoxFull()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">FULL</button>
           <button onclick="resetCutBoxCenter()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">CENTER</button>
+          <button onclick="applyCutBody()" style="flex:1;background:#141414;color:#fff;border:1px solid #242424;padding:12px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;">TRIM CANVAS</button>
         </div>
       </div>
     </div>
@@ -589,8 +601,34 @@
       <label class="section-label">OPACITY: <span id="bodyLayerOpacityVal">100</span>%</label>
       <input type="range" id="bodyLayerOpacityInput" min="0" max="100" value="100" oninput="setBodyLayerOpacity(this.value)">
 
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px;">
+        <button onclick="duplicateBodyLayer()" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">DUPLICATE</button>
+        <button onclick="flipBodyLayer('h')" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">FLIP ↔</button>
+        <button onclick="flipBodyLayer('v')" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">FLIP ↕</button>
+        <button onclick="moveBodyLayerOrder(1)" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">FORWARD</button>
+        <button onclick="moveBodyLayerOrder(-1)" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">BACKWARD</button>
+        <button onclick="resetBodyLayerTransform()" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">RESET</button>
+      </div>
+
       <button onclick="deleteBodyLayer()" style="margin-top:14px;width:100%;background:#ff2c2c;color:#fff;border:none;padding:12px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;">DELETE THIS LAYER</button>
     </div>
+  </div>
+
+  <!-- ========== TAB 4: ADJUST ========== -->
+  <div id="subtab-cutadjust" class="sub-view">
+    <div style="background:#141414;border-radius:12px;padding:16px 14px;">
+      <label class="section-label" style="margin-top:0;">BRIGHTNESS: <span id="bodyLayerBrightVal">100</span>%</label>
+      <input type="range" id="bodyLayerBrightInput" min="20" max="200" value="100" oninput="setBodyLayerBright(this.value)">
+
+      <label class="section-label">CONTRAST: <span id="bodyLayerContrastVal">100</span>%</label>
+      <input type="range" id="bodyLayerContrastInput" min="20" max="200" value="100" oninput="setBodyLayerContrast(this.value)">
+
+      <label class="section-label">SATURATION: <span id="bodyLayerSatVal">100</span>%</label>
+      <input type="range" id="bodyLayerSatInput" min="0" max="200" value="100" oninput="setBodyLayerSat(this.value)">
+
+      <button onclick="resetBodyLayerAdjust()" style="margin-top:14px;width:100%;background:#1b1b1b;color:#fff;border:none;padding:11px;border-radius:10px;font-size:11px;font-weight:800;cursor:pointer;">RESET ADJUST</button>
+    </div>
+    <div style="font-size:10px;color:#555;text-align:center;margin-top:12px;line-height:1.6;">Select a layer in the LAYERS tab first.</div>
   </div>
 
   <!-- ========== TAB 3: EFFECTS ========== -->
@@ -619,6 +657,7 @@
       </div>
     </div>
     <div style="font-size:10px;color:#555;text-align:center;margin-top:16px;line-height:1.6;">Select a layer in the LAYERS tab, then pick an effect here.</div>
+  </div>
   </div>
 </div>
   <div class="bottom-nav">

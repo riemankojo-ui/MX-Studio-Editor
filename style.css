@@ -141,6 +141,14 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .fx-ctrl input[type="range"]::-moz-range-thumb { width:18px; height:18px; background:#fff; border:3px solid #00d4ff; }
 .fx-reset { flex:0 0 auto; width:38px; height:38px; border:none; border-radius:50%; background:#1b1b1b; color:#ddd; font-size:20px; line-height:1; cursor:pointer; }
 .fx-reset:active { background:#2a2a2a; transform:scale(.94); }
+#panel-text { padding-top:2px; }
+#panel-text .fx-head { padding:0 2px 2px; }
+#panel-text .fx-back, #panel-text .fx-save { width:30px; height:30px; }
+#panel-text .section-label { margin:6px 0 2px; }
+#panel-text .color-row { gap:6px; padding:2px 2px 4px; }
+#panel-text .color-circle { width:30px; height:30px; }
+#panel-text .color-slider-wrap { gap:4px; padding:2px 4px; }
+#panel-text .slider-row { height:28px; }
 .fx-head { display:flex; align-items:center; justify-content:space-between; padding:2px 2px 8px; }
 .fx-back { width:34px; height:34px; border:none; border-radius:50%; background:#1b1b1b; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
 .fx-back:active { background:#2a2a2a; }

@@ -1304,6 +1304,7 @@ function captureState() {
     personMask, subjectReady,
     brightness: bInput.value, contrast: cInput.value, saturation: sInput.value, noise: nInput.value,
     imgRef: img, originalImageSrc,
+    bodyLayers: bodyLayers.map(l => ({ ...l })),
     canvasW: canvas.width, canvasH: canvas.height
   };
 }
@@ -1337,6 +1338,8 @@ function applyState(s) {
   nInput.value = s.noise;
   img = s.imgRef;
   originalImageSrc = s.originalImageSrc;
+  bodyLayers = (s.bodyLayers || []).map(l => ({ ...l }));
+  if (!bodyLayers.find(l => l.id === activeBodyId)) activeBodyId = null;
   canvas.width = s.canvasW;
   canvas.height = s.canvasH;
   const fa = document.getElementById('fxAmount'); if (fa) fa.value = s.currentFxAmount;
@@ -1382,6 +1385,7 @@ function setupCanvasFromImage(newImg) {
   if (w > MAX || h > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
   canvas.width = w; canvas.height = h;
   backgroundRemoved = false;
+  bodyLayers = []; activeBodyId = null;
   textLayers = [];
   activeLayerId = null;
   currentProjectId = null;
@@ -1429,6 +1433,7 @@ function setupCanvasFromImage(newImg) {
 function resetStudioState() {
   img = new Image(); imgLoaded = false; originalImageSrc = null;
   preCropImageSrc = null; preCropCanvasW = 0; preCropCanvasH = 0;
+  bodyLayers = []; activeBodyId = null;
   textLayers = []; activeLayerId = null;
   currentFilter = 'none'; currentBorder = 'none'; currentBorderColor = '#ffffff'; currentBorderSize = 5;
   currentTemplate = 'none'; currentBgColor = null; currentBgImage = null;
@@ -2187,6 +2192,7 @@ if (currentFilter === 'coverart') {
     ctx.restore();
   }
   drawPersonOverlay();
+  drawBodyLayers();
   if (!currentBgColor && !currentBgImage) drawBorder();
 drawFxLayer();
 textLayers.forEach(layer => {
@@ -2375,6 +2381,462 @@ function applyCutBody() {
   newImg.src = url;
 }
 
+// ---------- Cut Body: categories, layers, effects ----------
+let bodyLayers = [];
+let activeBodyId = null;
+let cbSnap = null, cbUndoLen = 0, cbDirty = false, cbIdCounter = 1;
+let cbDrag = null, cbPinch = null;
+const CB_TITLES = { cutcrop:'Cut', cutlayers:'Layers', cuteffects:'Effects', cutadjust:'Adjust' };
+const CB_DEFAULT_STATUS = 'Tap scissors to cut, or copy to duplicate the body.';
+
+function cbStatus(msg) { const s = document.getElementById('cutBodyStatus'); if (s) s.textContent = msg; }
+function cbActive() { return bodyLayers.find(l => l.id === activeBodyId) || null; }
+
+function showCbCategories() {
+  cbSnap = null;
+  const cv = document.getElementById('cbCatView');
+  const dv = document.getElementById('cbDetailView');
+  if (cv) cv.style.display = 'block';
+  if (dv) dv.style.display = 'none';
+}
+
+function cbSwitchSection(name) {
+  document.querySelectorAll('#cbDetailView .sub-view').forEach(v => v.classList.remove('active'));
+  const sv = document.getElementById('subtab-' + name);
+  if (sv) sv.classList.add('active');
+  const t = document.getElementById('cbSecTitle');
+  if (t) t.textContent = CB_TITLES[name] || '';
+  updateBodyLayersUI();
+  cbSyncSliders();
+}
+
+function cbOpenSection(name) {
+  if (!imgLoaded) { alert('Load a photo first'); return; }
+  cbSnap = captureState();
+  cbUndoLen = undoStack.length;
+  cbDirty = false;
+  document.getElementById('cbCatView').style.display = 'none';
+  document.getElementById('cbDetailView').style.display = 'block';
+  cbStatus(CB_DEFAULT_STATUS);
+  cbSwitchSection(name);
+}
+
+function cbCancelBox() {
+  cutBodyActive = false;
+  isDraggingCutBox = false;
+  cutBoxDragStart = null;
+  const a = document.getElementById('cutBodyActions');
+  if (a) a.style.display = 'none';
+}
+
+function cbBack() {
+  cbCancelBox();
+  if (cbSnap) {
+    if (undoStack.length > cbUndoLen) undoStack.length = cbUndoLen;
+    applyState(cbSnap);
+    updateHistoryButtons();
+  }
+  cbDirty = false;
+  updateBodyLayersUI();
+  redraw();
+  showCbCategories();
+}
+
+function cbSave() {
+  cbCancelBox();
+  if (cbDirty) { saveState(); cbDirty = false; }
+  redraw();
+  showCbCategories();
+}
+
+function cbLeave() {
+  if (cbDirty) { saveState(); cbDirty = false; }
+  if (cutBodyActive) { cbCancelBox(); redraw(); }
+  showCbCategories();
+}
+
+// ----- cut / copy -----
+function cbRegion() {
+  const cw = canvas.width, ch = canvas.height;
+  const px = Math.max(0, Math.round(cutBox.x * cw));
+  const py = Math.max(0, Math.round(cutBox.y * ch));
+  const pw = Math.max(8, Math.min(cw - px, Math.round(cutBox.w * cw)));
+  const ph = Math.max(8, Math.min(ch - py, Math.round(cutBox.h * ch)));
+  return { px, py, pw, ph };
+}
+
+function cbBaseCanvas() {
+  const c = document.createElement('canvas');
+  c.width = canvas.width; c.height = canvas.height;
+  c.getContext('2d').drawImage(img, 0, 0, img.naturalWidth || c.width, img.naturalHeight || c.height, 0, 0, c.width, c.height);
+  return c;
+}
+
+function cbMakeLayer(base, r, name) {
+  const cv = document.createElement('canvas');
+  cv.width = r.pw; cv.height = r.ph;
+  cv.getContext('2d').drawImage(base, r.px, r.py, r.pw, r.ph, 0, 0, r.pw, r.ph);
+  const cw = canvas.width, ch = canvas.height;
+  return {
+    id: cbIdCounter++, name, cv,
+    x: ((r.px + r.pw / 2) - cw / 2) / cw * 100,
+    y: ((r.py + r.ph / 2) - ch / 2) / ch * 100,
+    scale: 100, rot: 0, opacity: 100, flipH: false, flipV: false,
+    effect: 'none', effAmt: 10, effColor: '#000000',
+    bright: 100, contrast: 100, sat: 100
+  };
+}
+
+function cbCheckReady() {
+  if (!imgLoaded) { cbStatus('Load a photo first.'); return false; }
+  if (!backgroundRemoved) { cbStatus('⚠ Remove the background first: go to BG RMV, tap REMOVE BACKGROUND, then come back.'); return false; }
+  return true;
+}
+
+function cbStartCut() {
+  if (!cbCheckReady()) return;
+  cutBodyActive = true;
+  cutBox = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+  const a = document.getElementById('cutBodyActions');
+  if (a) a.style.display = 'block';
+  cbStatus('Drag the corners to select the body, then tap CUT OUT or COPY.');
+  redraw();
+}
+
+function cbApplyCut(erase) {
+  if (!cutBodyActive || !imgLoaded) return;
+  const r = cbRegion();
+  const base = cbBaseCanvas();
+  const layer = cbMakeLayer(base, r, (erase ? 'Cut ' : 'Copy ') + (bodyLayers.length + 1));
+  const finish = function() {
+    bodyLayers.push(layer);
+    activeBodyId = layer.id;
+    cbCancelBox();
+    cbDirty = true;
+    cbStatus(erase ? 'Cut done. Drag it on the photo or use the LAYERS tab.' : 'Copied. Drag it on the photo or use the LAYERS tab.');
+    cbSwitchSection('cutlayers');
+    redraw();
+  };
+  if (!erase) { finish(); return; }
+  const hole = document.createElement('canvas');
+  hole.width = base.width; hole.height = base.height;
+  const hc = hole.getContext('2d');
+  hc.drawImage(base, 0, 0);
+  hc.clearRect(r.px, r.py, r.pw, r.ph);
+  const url = hole.toDataURL('image/png');
+  const ni = new Image();
+  ni.onload = function() { img = ni; originalImageSrc = url; finish(); };
+  ni.onerror = function() { cbStatus('Cut failed. Try again.'); };
+  ni.src = url;
+}
+
+function addBodyLayer() {
+  if (!cbCheckReady()) return;
+  const r = { px: 0, py: 0, pw: canvas.width, ph: canvas.height };
+  const layer = cbMakeLayer(cbBaseCanvas(), r, 'Body ' + (bodyLayers.length + 1));
+  bodyLayers.push(layer);
+  activeBodyId = layer.id;
+  cbDirty = true;
+  cbStatus('Body copied. Drag it on the photo or use the LAYERS tab.');
+  cbSwitchSection('cutlayers');
+  redraw();
+}
+
+// ----- layers UI -----
+function updateBodyLayersUI() {
+  const el = document.getElementById('bodyLayersList');
+  if (!el) return;
+  if (!bodyLayers.length) {
+    el.innerHTML = '<div class="filter-empty" style="padding:10px;">No body layers yet. Use Cut or Copy first.</div>';
+    return;
+  }
+  el.innerHTML = bodyLayers.map(l =>
+    '<div class="text-layer-item ' + (l.id === activeBodyId ? 'active' : '') + '" onclick="cbSelectLayer(' + l.id + ')">' +
+    '<span style="font-weight:bold;font-size:11px;">' + l.name + '</span>' +
+    '<span style="font-size:10px;color:#666;">' + Math.round(l.scale) + '%</span></div>'
+  ).join('');
+}
+
+function cbSelectLayer(id) {
+  activeBodyId = id;
+  updateBodyLayersUI();
+  cbSyncSliders();
+  redraw();
+}
+
+function cbSyncSliders() {
+  const l = cbActive();
+  const d = l || { x:0, y:0, scale:100, rot:0, opacity:100, bright:100, contrast:100, sat:100, effect:'none', effAmt:10 };
+  [['bodyLayerX', d.x], ['bodyLayerY', d.y], ['bodyLayerScale', d.scale], ['bodyLayerRot', d.rot],
+   ['bodyLayerOpacity', d.opacity], ['bodyLayerBright', d.bright], ['bodyLayerContrast', d.contrast], ['bodyLayerSat', d.sat]
+  ].forEach(function(p) {
+    const i = document.getElementById(p[0] + 'Input'); if (i) i.value = Math.round(p[1]);
+    const t = document.getElementById(p[0] + 'Val'); if (t) t.innerText = Math.round(p[1]);
+  });
+  const ea = document.getElementById('bodyLayerEffectAmt'); if (ea) ea.value = d.effAmt;
+  const ev = document.getElementById('bodyLayerEffectAmtVal'); if (ev) ev.innerText = d.effAmt;
+  document.querySelectorAll('#subtab-cuteffects .h-card').forEach(function(c) {
+    const m = (c.getAttribute('onclick') || '').match(/'(\w+)'/);
+    c.classList.toggle('selected', !!m && m[1] === d.effect);
+  });
+}
+
+function cbSetProp(prop, v, valId) {
+  const n = parseFloat(v);
+  const t = document.getElementById(valId); if (t) t.innerText = Math.round(n);
+  const l = cbActive();
+  if (!l) return;
+  l[prop] = n;
+  cbDirty = true;
+  redraw();
+}
+
+function setBodyLayerX(v) { cbSetProp('x', v, 'bodyLayerXVal'); }
+function setBodyLayerY(v) { cbSetProp('y', v, 'bodyLayerYVal'); }
+function setBodyLayerScale(v) { cbSetProp('scale', v, 'bodyLayerScaleVal'); updateBodyLayersUI(); }
+function setBodyLayerRot(v) { cbSetProp('rot', v, 'bodyLayerRotVal'); }
+function setBodyLayerOpacity(v) { cbSetProp('opacity', v, 'bodyLayerOpacityVal'); }
+function setBodyLayerBright(v) { cbSetProp('bright', v, 'bodyLayerBrightVal'); }
+function setBodyLayerContrast(v) { cbSetProp('contrast', v, 'bodyLayerContrastVal'); }
+function setBodyLayerSat(v) { cbSetProp('sat', v, 'bodyLayerSatVal'); }
+function setBodyLayerEffectAmt(v) { cbSetProp('effAmt', v, 'bodyLayerEffectAmtVal'); }
+
+function setBodyLayerEffect(name, el) {
+  if (el && el.parentElement) el.parentElement.querySelectorAll('.h-card').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  const l = cbActive();
+  if (!l) return;
+  l.effect = name;
+  cbDirty = true;
+  redraw();
+}
+
+function setBodyLayerEffectColor(c, el) {
+  if (el && el.parentElement) el.parentElement.querySelectorAll('.color-circle').forEach(x => x.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  const l = cbActive();
+  if (!l) return;
+  l.effColor = c;
+  cbDirty = true;
+  redraw();
+}
+
+function resetBodyLayerAdjust() {
+  const l = cbActive(); if (!l) return;
+  l.bright = 100; l.contrast = 100; l.sat = 100;
+  cbDirty = true; cbSyncSliders(); redraw();
+}
+
+function resetBodyLayerTransform() {
+  const l = cbActive(); if (!l) return;
+  l.scale = 100; l.rot = 0; l.opacity = 100; l.flipH = false; l.flipV = false;
+  cbDirty = true; updateBodyLayersUI(); cbSyncSliders(); redraw();
+}
+
+function deleteBodyLayer() {
+  if (!cbActive()) return;
+  bodyLayers = bodyLayers.filter(l => l.id !== activeBodyId);
+  activeBodyId = bodyLayers.length ? bodyLayers[bodyLayers.length - 1].id : null;
+  cbDirty = true;
+  updateBodyLayersUI(); cbSyncSliders(); redraw();
+}
+
+function duplicateBodyLayer() {
+  const l = cbActive(); if (!l) return;
+  const c = { ...l, id: cbIdCounter++, name: l.name + ' copy', x: Math.min(100, l.x + 5), y: Math.min(100, l.y + 5) };
+  bodyLayers.push(c);
+  activeBodyId = c.id;
+  cbDirty = true;
+  updateBodyLayersUI(); cbSyncSliders(); redraw();
+}
+
+function flipBodyLayer(axis) {
+  const l = cbActive(); if (!l) return;
+  if (axis === 'h') l.flipH = !l.flipH; else l.flipV = !l.flipV;
+  cbDirty = true; redraw();
+}
+
+function moveBodyLayerOrder(dir) {
+  const i = bodyLayers.findIndex(l => l.id === activeBodyId);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= bodyLayers.length) return;
+  const t = bodyLayers[i]; bodyLayers[i] = bodyLayers[j]; bodyLayers[j] = t;
+  cbDirty = true; updateBodyLayersUI(); redraw();
+}
+
+// ----- drawing -----
+function drawBodyLayers() {
+  if (!bodyLayers.length) return;
+  const cw = canvas.width, ch = canvas.height;
+  bodyLayers.forEach(function(l) {
+    const w = l.cv.width * l.scale / 100, h = l.cv.height * l.scale / 100;
+    const adj = (l.bright !== 100 || l.contrast !== 100 || l.sat !== 100)
+      ? 'brightness(' + l.bright + '%) contrast(' + l.contrast + '%) saturate(' + l.sat + '%)' : '';
+    const amt = l.effAmt;
+    ctx.save();
+    ctx.translate(cw / 2 + l.x / 100 * cw, ch / 2 + l.y / 100 * ch);
+    if (l.rot) ctx.rotate(l.rot * Math.PI / 180);
+    ctx.scale(l.flipH ? -1 : 1, l.flipV ? -1 : 1);
+    ctx.globalAlpha = Math.max(0, Math.min(1, l.opacity / 100));
+    if (l.effect === 'outline') {
+      const tint = document.createElement('canvas');
+      tint.width = l.cv.width; tint.height = l.cv.height;
+      const tc = tint.getContext('2d');
+      tc.drawImage(l.cv, 0, 0);
+      tc.globalCompositeOperation = 'source-in';
+      tc.fillStyle = l.effColor;
+      tc.fillRect(0, 0, tint.width, tint.height);
+      const r = Math.max(1, amt / 2) * l.scale / 100;
+      for (let a = 0; a < 360; a += 20) {
+        const rad = a * Math.PI / 180;
+        ctx.drawImage(tint, -w / 2 + Math.cos(rad) * r, -h / 2 + Math.sin(rad) * r, w, h);
+      }
+    } else if (l.effect === 'shadow') {
+      ctx.shadowColor = l.effColor; ctx.shadowBlur = amt * 1.5;
+      ctx.shadowOffsetX = amt * 0.6; ctx.shadowOffsetY = amt * 0.6;
+    } else if (l.effect === 'glow') {
+      ctx.shadowColor = l.effColor; ctx.shadowBlur = amt * 2;
+    }
+    ctx.filter = ((l.effect === 'blur' ? 'blur(' + (amt / 2) + 'px) ' : '') + adj) || 'none';
+    ctx.drawImage(l.cv, -w / 2, -h / 2, w, h);
+    if (l.effect === 'glow') ctx.drawImage(l.cv, -w / 2, -h / 2, w, h);
+    ctx.restore();
+  });
+}
+
+// ----- touch: drag / pinch layers, move cut box -----
+function cbHitLayer(pos) {
+  const cw = canvas.width, ch = canvas.height;
+  for (let i = bodyLayers.length - 1; i >= 0; i--) {
+    const l = bodyLayers[i];
+    const dx = pos.x - (cw / 2 + l.x / 100 * cw), dy = pos.y - (ch / 2 + l.y / 100 * ch);
+    const a = -(l.rot || 0) * Math.PI / 180;
+    let lx = dx * Math.cos(a) - dy * Math.sin(a), ly = dx * Math.sin(a) + dy * Math.cos(a);
+    if (l.flipH) lx = -lx;
+    if (l.flipV) ly = -ly;
+    lx = lx / (l.scale / 100) + l.cv.width / 2;
+    ly = ly / (l.scale / 100) + l.cv.height / 2;
+    if (lx < 0 || ly < 0 || lx >= l.cv.width || ly >= l.cv.height) continue;
+    try {
+      if (l.cv.getContext('2d').getImageData(Math.floor(lx), Math.floor(ly), 1, 1).data[3] > 20) return l;
+    } catch (err) { return l; }
+  }
+  return null;
+}
+
+function cbPts(e) { return e.touches ? Array.from(e.touches) : [e]; }
+function cbClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function cbStart(e) {
+  if (gestureTarget !== 'cbody' || !imgLoaded) return;
+  if (e.target && e.target.closest && e.target.closest('#textFloatingMenu')) return;
+  e.stopPropagation(); e.stopImmediatePropagation();
+  if (e.cancelable) e.preventDefault();
+  const pts = cbPts(e);
+  if (pts.length >= 2) {
+    const l = cbActive();
+    if (l && !cutBodyActive) {
+      cbPinch = {
+        d: Math.hypot(pts[1].clientX - pts[0].clientX, pts[1].clientY - pts[0].clientY),
+        a: Math.atan2(pts[1].clientY - pts[0].clientY, pts[1].clientX - pts[0].clientX),
+        s: l.scale, r: l.rot
+      };
+      cbDrag = null;
+    }
+    return;
+  }
+  const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+  if (cutBodyActive) {
+    const w = canvas.width, h = canvas.height;
+    const bx = cutBox.x * w, by = cutBox.y * h, bw = cutBox.w * w, bh = cutBox.h * h;
+    const R = 40;
+    let corner = null;
+    if (Math.hypot(pos.x - bx, pos.y - by) < R) corner = 'tl';
+    else if (Math.hypot(pos.x - (bx + bw), pos.y - by) < R) corner = 'tr';
+    else if (Math.hypot(pos.x - bx, pos.y - (by + bh)) < R) corner = 'bl';
+    else if (Math.hypot(pos.x - (bx + bw), pos.y - (by + bh)) < R) corner = 'br';
+    else if (pos.x > bx && pos.x < bx + bw && pos.y > by && pos.y < by + bh) corner = 'move';
+    if (corner) {
+      isDraggingCutBox = true;
+      cutBoxDragStart = { corner: corner, sx: pos.x, sy: pos.y, start: { ...cutBox } };
+    }
+    return;
+  }
+  const hit = cbHitLayer(pos);
+  if (hit && hit.id !== activeBodyId) { activeBodyId = hit.id; updateBodyLayersUI(); cbSyncSliders(); }
+  const l = cbActive();
+  if (l) cbDrag = { sx: pos.x, sy: pos.y, ox: l.x, oy: l.y };
+}
+
+function cbMove(e) {
+  if (gestureTarget !== 'cbody' || !imgLoaded) return;
+  if (!cbDrag && !cbPinch && !isDraggingCutBox) return;
+  e.stopPropagation(); e.stopImmediatePropagation();
+  if (e.cancelable) e.preventDefault();
+  const pts = cbPts(e);
+  if (cbPinch && pts.length >= 2) {
+    const l = cbActive(); if (!l) return;
+    const d = Math.hypot(pts[1].clientX - pts[0].clientX, pts[1].clientY - pts[0].clientY);
+    const a = Math.atan2(pts[1].clientY - pts[0].clientY, pts[1].clientX - pts[0].clientX);
+    l.scale = cbClamp(cbPinch.s * d / cbPinch.d, 20, 200);
+    let r = cbPinch.r + (a - cbPinch.a) * 180 / Math.PI;
+    while (r > 180) r -= 360;
+    while (r < -180) r += 360;
+    l.rot = r;
+    cbDirty = true; cbSyncSliders(); updateBodyLayersUI(); redraw();
+    return;
+  }
+  const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+  if (isDraggingCutBox && cutBoxDragStart) {
+    const w = canvas.width, h = canvas.height;
+    const dx = (pos.x - cutBoxDragStart.sx) / w, dy = (pos.y - cutBoxDragStart.sy) / h;
+    const s = cutBoxDragStart.start, c = cutBoxDragStart.corner, MIN = 0.08;
+    let nx = s.x, ny = s.y, nw = s.w, nh = s.h;
+    if (c === 'move') {
+      nx = cbClamp(s.x + dx, 0, 1 - s.w); ny = cbClamp(s.y + dy, 0, 1 - s.h);
+    } else if (c === 'tl') {
+      nx = cbClamp(s.x + dx, 0, s.x + s.w - MIN); ny = cbClamp(s.y + dy, 0, s.y + s.h - MIN);
+      nw = s.x + s.w - nx; nh = s.y + s.h - ny;
+    } else if (c === 'tr') {
+      ny = cbClamp(s.y + dy, 0, s.y + s.h - MIN); nh = s.y + s.h - ny;
+      nw = cbClamp(s.w + dx, MIN, 1 - s.x);
+    } else if (c === 'bl') {
+      nx = cbClamp(s.x + dx, 0, s.x + s.w - MIN); nw = s.x + s.w - nx;
+      nh = cbClamp(s.h + dy, MIN, 1 - s.y);
+    } else if (c === 'br') {
+      nw = cbClamp(s.w + dx, MIN, 1 - s.x); nh = cbClamp(s.h + dy, MIN, 1 - s.y);
+    }
+    cutBox = { x: nx, y: ny, w: nw, h: nh };
+    redraw();
+    return;
+  }
+  if (cbDrag) {
+    const l = cbActive(); if (!l) return;
+    l.x = cbClamp(cbDrag.ox + (pos.x - cbDrag.sx) / canvas.width * 100, -100, 100);
+    l.y = cbClamp(cbDrag.oy + (pos.y - cbDrag.sy) / canvas.height * 100, -100, 100);
+    cbDirty = true; cbSyncSliders(); redraw();
+  }
+}
+
+function cbEnd(e) {
+  if (!cbDrag && !cbPinch && !isDraggingCutBox) return;
+  if (e && e.touches && e.touches.length > 0) { cbPinch = null; cbDrag = null; return; }
+  cbDrag = null; cbPinch = null;
+  isDraggingCutBox = false; cutBoxDragStart = null;
+}
+
+(function() {
+  const host = canvas.parentElement;
+  const opt = { passive: false, capture: true };
+  host.addEventListener('mousedown', cbStart, opt);
+  host.addEventListener('touchstart', cbStart, opt);
+  host.addEventListener('mousemove', cbMove, opt);
+  host.addEventListener('touchmove', cbMove, opt);
+  host.addEventListener('mouseup', cbEnd, opt);
+  host.addEventListener('touchend', cbEnd, opt);
+  host.addEventListener('touchcancel', cbEnd, opt);
+})();
+
 // ---------- Panel switching ----------
 function switchPanel(name, btn) {
 document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
@@ -2382,6 +2844,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   else if (name === 'bgremover') gestureTarget = 'subject';
   else if (name === 'bgimage') gestureTarget = bgDragMode;
   else if (name === 'clean') gestureTarget = 'overlay';
+  else if (name === 'cutbody') gestureTarget = 'cbody';
   else if (name === 'person') gestureTarget = 'person';
   else gestureTarget = 'text';
   if (name === 'crop') {
@@ -2403,6 +2866,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   if (name === 'bgimage') { buildBgImageGrid(); buildBgColorsTab(); }
   if (name === 'fx') { buildFxTabs(); buildFxGrids(); showFxCategories(); }
   if (name === 'text') showTextCategories();
+  if (name === 'cutbody') showCbCategories(); else cbLeave();
   syncActiveInputs();
 }
 
