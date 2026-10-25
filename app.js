@@ -866,7 +866,7 @@ function buildTemplates() {
   TEMPLATES.forEach((t, i) => {
     const sel = (currentTemplate === t.name) ? 'selected' : '';
     const filterStyle = `brightness(${t.b}%) contrast(${t.c}%) saturate(${t.s}%) ${t.f !== 'none' ? t.f : ''}`;
-    html += `<div class="template-thumb ${sel}" onclick="applyTemplate(${i}, this)"><div class="template-thumb-img" style="background-image:url('sample${(i % 3) + 1}.jpg'); filter:${filterStyle};"></div><span class="template-thumb-label">${t.name}</span></div>`;
+    html += `<div class="template-thumb ${sel}" onclick="applyTemplate(${i}, this)"><div class="template-thumb-img" style="background-image:url('sample${(Math.floor(i / 6) % 3) + 1}.jpg'); filter:${filterStyle};"></div><span class="template-thumb-label">${t.name}</span></div>`;
 
   });
   c.innerHTML = html;
