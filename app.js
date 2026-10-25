@@ -932,6 +932,8 @@ function buildBorders() {
   const c = document.getElementById('borderContainer');
   if (!c) return;
   let html = '';
+  if (imgLoaded && img && img.src) c.style.setProperty('--bt-photo', 'url("' + img.src + '")');
+  else c.style.removeProperty('--bt-photo');
   BORDERS.forEach(b => {
     const sel = (currentBorder === b.code) ? 'selected' : '';
     html += `<div class="border-thumb ${sel}" onclick="setBorder('${b.code}', this)"><div class="border-thumb-img">${borderPreviewHTML(b.code)}</div><span class="border-thumb-label">${b.name}</span></div>`;
@@ -2101,7 +2103,6 @@ if (currentFilter === 'coverart') {
   }
   const fade = parseInt(nInput.value);
   if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${(fade/100)*0.4})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
-  if (!currentBgColor && !currentBgImage) drawBorder();
   if (overlayImg) {
     ctx.save();
     const cw = canvas.width, ch = canvas.height;
@@ -2186,6 +2187,7 @@ if (currentFilter === 'coverart') {
     ctx.restore();
   }
   drawPersonOverlay();
+  if (!currentBgColor && !currentBgImage) drawBorder();
 drawFxLayer();
 textLayers.forEach(layer => {
     if (layer.text && layer.text.trim() !== '') {

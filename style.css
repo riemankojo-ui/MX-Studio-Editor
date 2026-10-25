@@ -104,7 +104,7 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .border-thumb.selected .border-thumb-img { box-shadow:0 0 0 2px #fff; }
 .border-thumb-label { font-size:9px; color:#888; margin-top:4px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
 .border-thumb.selected .border-thumb-label { color:#fff; }
-.bt-inner { position:absolute; inset:0; background:#333; }
+.bt-inner { position:absolute; inset:0; background-color:#333; background-image:var(--bt-photo, none); background-size:cover; background-position:center; }
 
 .fx-card { flex:0 0 auto; width:68px; cursor:pointer; text-align:center; }
 .fx-card-preview { width:68px; height:68px; border-radius:8px; background:#0a0a0a; position:relative; overflow:hidden; border:1px solid #1f1f1f; }
