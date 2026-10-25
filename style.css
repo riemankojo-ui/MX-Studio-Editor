@@ -141,6 +141,12 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 .fx-ctrl input[type="range"]::-moz-range-thumb { width:18px; height:18px; background:#fff; border:3px solid #00d4ff; }
 .fx-reset { flex:0 0 auto; width:38px; height:38px; border:none; border-radius:50%; background:#1b1b1b; color:#ddd; font-size:20px; line-height:1; cursor:pointer; }
 .fx-reset:active { background:#2a2a2a; transform:scale(.94); }
+.fx-head { display:flex; align-items:center; justify-content:space-between; padding:2px 2px 8px; }
+.fx-back { width:34px; height:34px; border:none; border-radius:50%; background:#1b1b1b; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.fx-back:active { background:#2a2a2a; }
+.fx-title { font-size:12px; font-weight:700; color:#ddd; }
+.fx-save { width:34px; height:34px; border:none; border-radius:50%; background:#1b1b1b; color:#00d4ff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.fx-save:active { transform:scale(.95); }
 
 .corner-btn { position:absolute; left:12px; bottom:12px; background:#ffffff; color:#000; border:none; width:36px; height:36px; border-radius:50%; font-size:20px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.6); z-index:20; line-height:1; transition:transform .1s ease; }
 .corner-btn:active { transform:scale(.92); }

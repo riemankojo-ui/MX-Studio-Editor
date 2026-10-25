@@ -329,7 +329,7 @@ function buildFxTabs() {
   let html = '';
   FX_CATEGORIES.forEach(cat => {
     const sel = (currentFxTab === cat.key) ? 'active' : '';
-    html += `<button class="sub-tab fx-ic ${sel}" onclick="switchFxTab('${cat.key}', this)">${fxIcon(cat.key)}<span>${cat.label}</span></button>`;
+    html += `<button class="sub-tab fx-ic ${sel}" onclick="openFxCategory('${cat.key}')">${fxIcon(cat.key)}<span>${cat.label}</span></button>`;
   });
   bar.innerHTML = html;
 }
@@ -344,6 +344,53 @@ function buildFxGrids() {
   });
   container.innerHTML = html;
   FX_CATEGORIES.forEach(cat => buildFxGrid(cat.key));
+}
+
+let fxSnapshot = null, fxUndoLen = 0;
+
+function showFxCategories() {
+  fxSnapshot = null;
+  const cv = document.getElementById('fxCatView');
+  const dv = document.getElementById('fxDetailView');
+  if (cv) cv.style.display = 'block';
+  if (dv) dv.style.display = 'none';
+}
+
+function openFxCategory(key) {
+  currentFxTab = key;
+  fxSnapshot = { fx: currentFx, amt: currentFxAmount, x: fxX, y: fxY, s: fxScale, r: fxRotation };
+  fxUndoLen = undoStack.length;
+  document.querySelectorAll('#fxGrids .sub-view').forEach(v => v.classList.remove('active'));
+  const v = document.getElementById('fx-tab-' + key);
+  if (v) v.classList.add('active');
+  const cat = FX_CATEGORIES.find(c => c.key === key);
+  const t = document.getElementById('fxCatTitle');
+  if (t) t.textContent = cat ? cat.label : '';
+  document.getElementById('fxCatView').style.display = 'none';
+  document.getElementById('fxDetailView').style.display = 'block';
+  buildFxGrid(key);
+}
+
+function fxBack() {
+  if (fxSnapshot) {
+    currentFx = fxSnapshot.fx;
+    currentFxAmount = fxSnapshot.amt;
+    fxX = fxSnapshot.x; fxY = fxSnapshot.y; fxScale = fxSnapshot.s; fxRotation = fxSnapshot.r;
+    if (undoStack.length > fxUndoLen) undoStack.length = fxUndoLen;
+    const fa = document.getElementById('fxAmount'); if (fa) fa.value = currentFxAmount;
+    const fv = document.getElementById('fxVal'); if (fv) fv.innerText = currentFxAmount;
+    updateHistoryButtons();
+    redraw();
+  }
+  showFxCategories();
+}
+
+function fxSave() {
+  if (fxSnapshot && undoStack.length > fxUndoLen) {
+    undoStack.length = fxUndoLen;
+    saveState();
+  }
+  showFxCategories();
 }
 
 function switchFxTab(key, el) {
@@ -2352,7 +2399,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   if (name === 'adjust') { buildTemplates(); buildPresetThumbs(); }
   if (name === 'color') buildBgColors();
   if (name === 'bgimage') { buildBgImageGrid(); buildBgColorsTab(); }
-  if (name === 'fx') { buildFxTabs(); buildFxGrids(); }
+  if (name === 'fx') { buildFxTabs(); buildFxGrids(); showFxCategories(); }
   syncActiveInputs();
 }
 

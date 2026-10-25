@@ -119,11 +119,18 @@
   </div>
 
   <div id="panel-fx" class="panel">
-    <div class="sub-tabs" id="fxTabBar"></div>
+    <div id="fxCatView"><div class="sub-tabs" id="fxTabBar"></div></div>
+    <div id="fxDetailView" style="display:none;">
+    <div class="fx-head">
+      <button class="fx-back" onclick="fxBack()" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <span class="fx-title" id="fxCatTitle"></span>
+      <button class="fx-save" onclick="fxSave()" aria-label="Save"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+    </div>
     <div id="fxGrids"></div>
     <div class="fx-ctrl"><span class="fx-ctrl-l">Intensity <b id="fxVal">70</b>%</span>
     <input type="range" id="fxAmount" min="0" max="100" value="70" oninput="setFxAmount(this.value)">
     <button class="fx-reset" onclick="resetFxTransform()" aria-label="Reset effect position">↺</button></div>
+    </div>
   </div>
 
   <div id="panel-text" class="panel">
