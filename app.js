@@ -306,17 +306,30 @@ function buildPresetThumbs() {
   FILTERS.forEach((f, i) => {
     const sel = (currentFilter === f.code) ? 'selected' : '';
     const filterStyle = f.code === 'none' ? 'none' : f.code;
-    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
+    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('sample2.jpg'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
   });
   el.innerHTML = html;
 }// ---------- FX system ----------
+function fxIcon(k) {
+  const P = {
+    'lightleak': '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+    'Mood-leak': '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+    'grunge': '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="12" cy="13" r="1"/><circle cx="9" cy="16" r="1"/><circle cx="15" cy="16" r="1"/>',
+    'grunge-noise': '<path d="M3 7c3-3 6 3 9 0s6 3 9 0M3 13c3-3 6 3 9 0s6 3 9 0M3 19c3-3 6 3 9 0s6 3 9 0"/>',
+    'noise': '<circle cx="6" cy="6" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="18" cy="7" r="1"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="5" cy="15" r="1"/><circle cx="11" cy="18" r="1"/><circle cx="18" cy="18" r="1"/>',
+    'streetlight': '<path d="M12 21V9M8 21h8M7 9h10l-2-5H9z"/>',
+    'frame-paper': '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/>'
+  };
+  const d = P[k] || '<path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>';
+  return '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+}
 function buildFxTabs() {
   const bar = document.getElementById('fxTabBar');
   if (!bar) return;
   let html = '';
   FX_CATEGORIES.forEach(cat => {
     const sel = (currentFxTab === cat.key) ? 'active' : '';
-    html += `<button class="sub-tab ${sel}" onclick="switchFxTab('${cat.key}', this)">${cat.label.toUpperCase()}</button>`;
+    html += `<button class="sub-tab fx-ic ${sel}" onclick="switchFxTab('${cat.key}', this)">${fxIcon(cat.key)}<span>${cat.label}</span></button>`;
   });
   bar.innerHTML = html;
 }
@@ -831,7 +844,7 @@ function buildFilterThumbs() {
   FILTERS.forEach((f, i) => {
     const sel = (currentFilter === f.code) ? 'selected' : '';
     const filterStyle = f.code === 'none' ? 'none' : f.code;
-    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
+    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('sample1.jpg'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
   });
   el.innerHTML = html;
 }
@@ -853,7 +866,8 @@ function buildTemplates() {
   TEMPLATES.forEach((t, i) => {
     const sel = (currentTemplate === t.name) ? 'selected' : '';
     const filterStyle = `brightness(${t.b}%) contrast(${t.c}%) saturate(${t.s}%) ${t.f !== 'none' ? t.f : ''}`;
-    html += `<div class="template-thumb ${sel}" onclick="applyTemplate(${i}, this)"><div class="template-thumb-img" style="background-image:url('${src}'); filter:${filterStyle};"></div><span class="template-thumb-label">${t.name}</span></div>`;
+    html += `<div class="template-thumb ${sel}" onclick="applyTemplate(${i}, this)"><div class="template-thumb-img" style="background-image:url('sample${(i % 3) + 1}.jpg'); filter:${filterStyle};"></div><span class="template-thumb-label">${t.name}</span></div>`;
+
   });
   c.innerHTML = html;
 }

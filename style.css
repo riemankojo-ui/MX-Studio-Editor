@@ -63,6 +63,11 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .sub-tabs::-webkit-scrollbar { display:none; }
 .sub-tab { background:none; border:none; color:#666; font-weight:bold; font-size:11px; cursor:pointer; padding:2px 0; white-space:nowrap; flex-shrink:0; }
 .sub-tab.active { color:#fff; border-bottom:2px solid #fff; }
+.sub-tab.fx-ic { display:flex; flex-direction:column; align-items:center; gap:6px; min-width:68px; padding:8px 4px; font-size:11px; color:#8a8a8a; border-bottom:none; }
+.sub-tab.fx-ic svg { width:26px; height:26px; fill:none; stroke:currentColor; stroke-width:1.8; }
+.sub-tab.fx-ic.active { color:#fff; border-bottom:none; }
+.sub-tab.fx-ic.active svg { stroke:#00d4ff; }
+.sub-tab.fx-ic.active span { color:#00d4ff; }
 .sub-view { display:none; }
 .sub-view.active { display:block; }
 
