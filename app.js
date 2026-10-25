@@ -2402,6 +2402,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   if (name === 'color') buildBgColors();
   if (name === 'bgimage') { buildBgImageGrid(); buildBgColorsTab(); }
   if (name === 'fx') { buildFxTabs(); buildFxGrids(); showFxCategories(); }
+  if (name === 'text') showTextCategories();
   syncActiveInputs();
 }
 
@@ -2415,6 +2416,54 @@ function switchSubTab(name, el) {
   if (name === 'basic' || name === 'layers') syncActiveInputs();
   if (name === 'font') buildFontGrid();
   if (name === 'bgcolors') buildBgColorsTab();
+}
+
+// ---------- Text sections (categories) ----------
+let txtSnap = null, txtUndoLen = 0;
+const TXT_TITLES = { layers:'Text', font:'Fonts', color:'Color', basic:'Style', featured:'Effects' };
+
+function showTextCategories() {
+  txtSnap = null;
+  const cv = document.getElementById('txtCatView');
+  const dv = document.getElementById('txtDetailView');
+  if (cv) cv.style.display = 'block';
+  if (dv) dv.style.display = 'none';
+}
+
+function openTextSection(name) {
+  txtSnap = { layers: JSON.parse(JSON.stringify(textLayers)), active: activeLayerId };
+  txtUndoLen = undoStack.length;
+  document.querySelectorAll('#txtDetailView .sub-view').forEach(v => v.classList.remove('active'));
+  const sv = document.getElementById('subtab-' + name);
+  if (sv) sv.classList.add('active');
+  const t = document.getElementById('txtSecTitle');
+  if (t) t.textContent = TXT_TITLES[name] || '';
+  document.getElementById('txtCatView').style.display = 'none';
+  document.getElementById('txtDetailView').style.display = 'block';
+  if (name === 'basic' || name === 'layers') syncActiveInputs();
+  if (name === 'font') buildFontGrid();
+}
+
+function txtBack() {
+  if (txtSnap) {
+    textLayers = JSON.parse(JSON.stringify(txtSnap.layers));
+    activeLayerId = txtSnap.active;
+    if (undoStack.length > txtUndoLen) undoStack.length = txtUndoLen;
+    const l = textLayers.find(x => x.id === activeLayerId);
+    if (l) showFloatingMenu(l.x, l.y); else textMenu.style.display = 'none';
+    syncActiveInputs(); updateTextLayersUI(); buildFontGrid();
+    updateHistoryButtons();
+    redraw();
+  }
+  showTextCategories();
+}
+
+function txtSave() {
+  if (txtSnap && undoStack.length > txtUndoLen) {
+    undoStack.length = txtUndoLen;
+    saveState();
+  }
+  showTextCategories();
 }
 
 // ---------- Crop screen ----------

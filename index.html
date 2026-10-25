@@ -134,12 +134,21 @@
   </div>
 
   <div id="panel-text" class="panel">
-    <div class="sub-tabs">
-      <button class="sub-tab active" onclick="switchSubTab('layers', this)">TEXT</button>
-      <button class="sub-tab" onclick="switchSubTab('font', this)">FONTS</button>
-      <button class="sub-tab" onclick="switchSubTab('color', this)">COLOR</button>
-      <button class="sub-tab" onclick="switchSubTab('basic', this)">STYLE</button>
-      <button class="sub-tab" onclick="switchSubTab('featured', this)">EFFECTS</button>
+    <div id="txtCatView">
+      <div class="sub-tabs">
+        <button class="sub-tab fx-ic" onclick="openTextSection('layers')"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg><span>Text</span></button>
+        <button class="sub-tab fx-ic" onclick="openTextSection('font')"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19L8 6l5 13M5 14h6"/><path d="M15 19v-5.5a2.5 2.5 0 0 1 5 0V19M15 16.5h5"/></svg><span>Fonts</span></button>
+        <button class="sub-tab fx-ic" onclick="openTextSection('color')"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg><span>Color</span></button>
+        <button class="sub-tab fx-ic" onclick="openTextSection('basic')"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span>Style</span></button>
+        <button class="sub-tab fx-ic" onclick="openTextSection('featured')"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg><span>Effects</span></button>
+      </div>
+    </div>
+
+    <div id="txtDetailView" style="display:none;">
+    <div class="fx-head">
+      <button class="fx-back" onclick="txtBack()" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <span class="fx-title" id="txtSecTitle"></span>
+      <button class="fx-save" onclick="txtSave()" aria-label="Save"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
     </div>
 
     <div id="subtab-layers" class="sub-view active" style="padding-bottom:70px;">
@@ -232,6 +241,7 @@
         <button class="arrow-btn" onclick="moveActiveText(0,5)" style="padding:14px 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
         <div></div>
       </div>
+    </div>
     </div>
   </div>
 
