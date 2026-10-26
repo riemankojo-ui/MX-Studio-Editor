@@ -1580,7 +1580,7 @@ if (gestureTarget === 'person' && personOverlay) {
   }
   if (touches.size === 1) {
     const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
-    const ph = personHandles();
+    const ph = window.__personBoxHidden ? null : personHandles();
     if (ph) {
       if (Math.hypot(pos.x - ph.del.x, pos.y - ph.del.y) < 36) { resetPersonOverlay(); return; }
       if (Math.hypot(pos.x - ph.scale.x, pos.y - ph.scale.y) < 36) {
@@ -1592,7 +1592,14 @@ if (gestureTarget === 'person' && personOverlay) {
         return;
       }
     }
+    const prevPerson = personOverlay;
     pickPersonAt(pos);
+    const switchedPerson = personOverlay !== prevPerson;
+    if (switchedPerson) window.__personBoxHidden = false;
+    window.__personTap = {
+      switched: switchedPerson, px: personOverlayX, py: personOverlayY,
+      onActive: personHit(pos, personOverlay, personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation) || personBoxHit(pos, personOverlay, personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation)
+    };
     isDraggingPerson = true;
     personDragStart = { x: pos.x, y: pos.y, px: personOverlayX, py: personOverlayY };
     return;
@@ -1874,7 +1881,14 @@ function endTouch(e) {
   if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
   if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }
   if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
-  if (isDraggingPerson) { isDraggingPerson = false; personDragStart = null; saveState(); }
+  if (isDraggingPerson) {
+    isDraggingPerson = false; personDragStart = null;
+    const tp = window.__personTap; window.__personTap = null;
+    if (tp && !tp.switched && tp.onActive && Math.abs(personOverlayX - tp.px) < 0.5 && Math.abs(personOverlayY - tp.py) < 0.5) {
+      window.__personBoxHidden = !window.__personBoxHidden; redraw();
+    }
+    saveState();
+  }
   if (touches.size === 0 && window.__savedGestureTarget) { gestureTarget = window.__savedGestureTarget; window.__savedGestureTarget = null; }
 }
 function getTextBox(layer) {
@@ -4073,6 +4087,7 @@ async function removePersonBg(srcImg) {
     cutout.onload = function() {
       if (personOverlay) personExtras.push({ img: personOverlay, x: personOverlayX, y: personOverlayY, scale: personOverlayScale, rot: personOverlayRotation });
       personOverlay = cutout;
+      window.__personBoxHidden = false;
       personOverlayX = 0; personOverlayY = 0;
       personOverlayScale = 1; personOverlayRotation = 0;
       const sx = document.getElementById('personXInput'); if (sx) sx.value = 0;
@@ -4206,7 +4221,7 @@ function personHandles() {
 }
 
 function drawPersonBox() {
-  if (window.__noBoxes || activePanelName() !== 'person') return;
+  if (window.__noBoxes || window.__personBoxHidden || activePanelName() !== 'person') return;
   const g = personGeom();
   if (!g) return;
   ctx.save();
