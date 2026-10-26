@@ -1474,6 +1474,23 @@ canvasHost.addEventListener('mouseup', endTouch);
 canvasHost.addEventListener('touchend', endTouch);
 canvasHost.addEventListener('touchcancel', endTouch);
 
+function textHitAt(pos) {
+  if (!textLayers.length) return false;
+  const al = activeLayerId !== null ? textLayers.find(x => x.id === activeLayerId) : null;
+  if (al && hitHandle(pos, al)) return true;
+  for (let i = textLayers.length - 1; i >= 0; i--) {
+    const layer = textLayers[i];
+    if (!layer.text || layer.text.trim() === '') continue;
+    const b = getTextBox(layer);
+    const rr = layer.rotation || 0;
+    const ddx = pos.x - layer.x, ddy = pos.y - layer.y;
+    const lx = ddx * Math.cos(rr) + ddy * Math.sin(rr);
+    const ly = -ddx * Math.sin(rr) + ddy * Math.cos(rr);
+    if (lx >= b.x0 - 20 && lx <= b.x1 + 20 && ly >= b.y0 - 20 && ly <= b.y1 + 20) return true;
+  }
+  return false;
+}
+
 function startTouch(e) {
   if (e.target && e.target.closest && e.target.closest('#textFloatingMenu')) return;
   if (!imgLoaded) return;
@@ -1482,6 +1499,11 @@ function startTouch(e) {
   else { touches.clear(); touches.set('mouse', { x:e.clientX, y:e.clientY }); }
 
   const fxActive = currentFx && currentFx !== 'none' && !currentFx.endsWith(':none');
+
+  if (gestureTarget !== 'text' && gestureTarget !== 'cbody' && !cutBodyActive && touches.size === 1) {
+    const tp = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    if (textHitAt(tp)) { window.__savedGestureTarget = gestureTarget; gestureTarget = 'text'; }
+  }
 
   if (gestureTarget === 'fx' && fxActive) {
     if (touches.size === 2) {
@@ -1557,6 +1579,7 @@ if (gestureTarget === 'person' && personOverlay) {
   }
   if (touches.size === 1) {
     const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    pickPersonAt(pos);
     isDraggingPerson = true;
     personDragStart = { x: pos.x, y: pos.y, px: personOverlayX, py: personOverlayY };
     return;
@@ -1819,6 +1842,7 @@ function endTouch(e) {
   if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }
   if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
   if (isDraggingPerson) { isDraggingPerson = false; personDragStart = null; saveState(); }
+  if (touches.size === 0 && window.__savedGestureTarget) { gestureTarget = window.__savedGestureTarget; window.__savedGestureTarget = null; }
 }
 function getTextBox(layer) {
   ctx.save();
@@ -3131,7 +3155,6 @@ function resetCropAngle() {
 window.removeBackgroundCompletely = async function() {
   const status = document.getElementById('bgRmvStatus');
   if (!imgLoaded) { if (status) status.textContent = 'Load a photo first.'; return; }
-  backgroundRemoved = true;
   if (status) status.textContent = 'Sending to AI...';
   try {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
@@ -4076,6 +4099,54 @@ function drawOnePerson(im, px, py, ps, pr) {
   ctx.restore();
 }
 
+const _personHitCv = document.createElement('canvas');
+_personHitCv.width = 1; _personHitCv.height = 1;
+const _personHitCx = _personHitCv.getContext('2d', { willReadFrequently: true });
+
+function personHit(pos, im, px, py, ps, pr) {
+  if (!im || !im.naturalWidth) return false;
+  const cw = canvas.width, ch = canvas.height;
+  const aspect = im.naturalWidth / im.naturalHeight;
+  let baseW, baseH;
+  if (aspect > 1) { baseW = cw * 0.7; baseH = baseW / aspect; }
+  else { baseH = ch * 0.7; baseW = baseH * aspect; }
+  const w = baseW * ps, h = baseH * ps;
+  const cx = cw / 2 + (px / 100) * cw;
+  const cy = ch / 2 + (py / 100) * ch;
+  const rad = (pr || 0) * Math.PI / 180;
+  const dx = pos.x - cx, dy = pos.y - cy;
+  const lx = dx * Math.cos(rad) + dy * Math.sin(rad);
+  const ly = -dx * Math.sin(rad) + dy * Math.cos(rad);
+  if (Math.abs(lx) > w / 2 || Math.abs(ly) > h / 2) return false;
+  try {
+    const u = Math.min(im.naturalWidth - 1, Math.max(0, Math.floor((lx + w / 2) / w * im.naturalWidth)));
+    const v = Math.min(im.naturalHeight - 1, Math.max(0, Math.floor((ly + h / 2) / h * im.naturalHeight)));
+    _personHitCx.clearRect(0, 0, 1, 1);
+    _personHitCx.drawImage(im, u, v, 1, 1, 0, 0, 1, 1);
+    return _personHitCx.getImageData(0, 0, 1, 1).data[3] > 20;
+  } catch (err) { return true; }
+}
+
+function selectPersonExtra(i) {
+  const p = personExtras.splice(i, 1)[0];
+  if (!p) return;
+  if (personOverlay) personExtras.push({ img: personOverlay, x: personOverlayX, y: personOverlayY, scale: personOverlayScale, rot: personOverlayRotation });
+  personOverlay = p.img;
+  personOverlayX = p.x; personOverlayY = p.y;
+  personOverlayScale = p.scale; personOverlayRotation = p.rot;
+  syncPersonSliders();
+  const ctrl = document.getElementById('personControls'); if (ctrl) ctrl.style.display = 'block';
+  const st = document.getElementById('personStatus'); if (st) st.textContent = 'Person selected. Drag, adjust, or REMOVE PERSON.';
+}
+
+function pickPersonAt(pos) {
+  if (personHit(pos, personOverlay, personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation)) return;
+  for (let i = personExtras.length - 1; i >= 0; i--) {
+    const p = personExtras[i];
+    if (personHit(pos, p.img, p.x, p.y, p.scale, p.rot)) { selectPersonExtra(i); redraw(); return; }
+  }
+}
+
 function drawPersonOverlay() {
   personExtras.forEach(p => drawOnePerson(p.img, p.x, p.y, p.scale, p.rot));
   drawOnePerson(personOverlay, personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation);
@@ -4283,7 +4354,7 @@ function buildBgColorsTab() {
 
   grid.innerHTML = html;
 }
-function applyBgColorFromTab(color, el) {
+async function applyBgColorFromTab(color, el) {
   if (color === null) {
     // None = clear background
     currentBgColor = null;
@@ -4299,6 +4370,11 @@ function applyBgColorFromTab(color, el) {
   if (el) el.style.border = '2px solid #fff';
   redraw();
   saveState();
+  if (color !== null && imgLoaded && !backgroundRemoved && !window.__bgRemoving) {
+    window.__bgRemoving = true;
+    showToast('Removing background...');
+    try { await window.removeBackgroundCompletely(); } finally { window.__bgRemoving = false; }
+  }
 }
 window.buildBgColorsTab = buildBgColorsTab;
 window.applyBgColorFromTab = applyBgColorFromTab;
