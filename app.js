@@ -1442,6 +1442,7 @@ function resetStudioState() {
   subjectMode = 'none'; personMask = null; subjectReady = false;
   
   // --- THIS REMOVES THE PERSON ON NEW PROJECT ---
+  personExtras = [];
   personOverlay = null; 
   personOverlayX = 0; personOverlayY = 0;
   personOverlayScale = 1; personOverlayRotation = 0;
@@ -3225,6 +3226,7 @@ function saveProjectToHome() {
       subjectX, subjectY, subjectScale,
       subjectAmount: subjAmt.value,
   personOverlay: personOverlay ? personOverlay.src : null,
+  personExtras: personExtras.map(p => ({ src: p.img.src, x: p.x, y: p.y, scale: p.scale, rot: p.rot })),
   personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation
 }));
   } catch(e) { alert('Storage full.'); return; }
@@ -3314,6 +3316,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   const bgsv = document.getElementById('bgImgSizeVal'); if (bgsv) bgsv.innerText = currentBgImageSize;
   currentTemplate = p.template ?? 'none';
   subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
+  restorePersonExtras(p.personExtras);
 if (p.personOverlay) {
   const pi = new Image();
   pi.onload = () => { personOverlay = pi; if (imgLoaded) redraw(); };
@@ -3541,6 +3544,7 @@ if (data.projectId && localStorage.getItem('music_' + data.projectId)) {
     subjectScale = data.subjectScale || 1;
     backgroundRemoved = !!data.backgroundRemoved;
     subjectMode = data.subjectMode || 'none';
+    restorePersonExtras(data.personExtras);
     if (data.personOverlay) {
   const pi = new Image();
   pi.onload = () => { personOverlay = pi; redraw(); };
@@ -3933,6 +3937,17 @@ let personOverlayX = 0;
 let personOverlayY = 0;
 let personOverlayScale = 1;
 let personOverlayRotation = 0;
+let personExtras = [];
+
+function restorePersonExtras(list) {
+  personExtras = [];
+  (list || []).forEach(p => {
+    const im = new Image();
+    im.onload = () => redraw();
+    im.src = p.src;
+    personExtras.push({ img: im, x: p.x ?? 0, y: p.y ?? 0, scale: p.scale ?? 1, rot: p.rot ?? 0 });
+  });
+}
 
 function handlePersonPhoto(input) {
   const file = (input.files || [])[0];
@@ -3973,6 +3988,7 @@ async function removePersonBg(srcImg) {
 
     const cutout = new Image();
     cutout.onload = function() {
+      if (personOverlay) personExtras.push({ img: personOverlay, x: personOverlayX, y: personOverlayY, scale: personOverlayScale, rot: personOverlayRotation });
       personOverlay = cutout;
       personOverlayX = 0; personOverlayY = 0;
       personOverlayScale = 1; personOverlayRotation = 0;
@@ -4003,6 +4019,18 @@ function setPersonScale(v) { personOverlayScale = parseInt(v) / 100; const e = d
 function setPersonRotation(v) { personOverlayRotation = parseInt(v); const e = document.getElementById('personRotVal'); if (e) e.innerText = v; redraw(); saveState(); }
 
 function resetPersonOverlay() {
+  const prev = personExtras.pop();
+  if (prev) {
+    personOverlay = prev.img;
+    personOverlayX = prev.x; personOverlayY = prev.y;
+    personOverlayScale = prev.scale; personOverlayRotation = prev.rot;
+    syncPersonSliders();
+    const st = document.getElementById('personStatus');
+    if (st) st.textContent = 'Person removed. Previous person selected.';
+    redraw(); saveState();
+    showToast('Person removed');
+    return;
+  }
   personOverlay = null;
   personOverlayX = 0; personOverlayY = 0;
   personOverlayScale = 1; personOverlayRotation = 0;
@@ -4013,22 +4041,27 @@ function resetPersonOverlay() {
   showToast('Person removed');
 }
 
-function drawPersonOverlay() {
-  if (!personOverlay) return;
+function drawOnePerson(im, px, py, ps, pr) {
+  if (!im || !im.naturalWidth) return;
   const cw = canvas.width, ch = canvas.height;
-  const aspect = personOverlay.naturalWidth / personOverlay.naturalHeight;
+  const aspect = im.naturalWidth / im.naturalHeight;
   let baseW, baseH;
   if (aspect > 1) { baseW = cw * 0.7; baseH = baseW / aspect; }
   else { baseH = ch * 0.7; baseW = baseH * aspect; }
-  const w = baseW * personOverlayScale;
-  const h = baseH * personOverlayScale;
-  const cx = cw / 2 + (personOverlayX / 100) * cw;
-  const cy = ch / 2 + (personOverlayY / 100) * ch;
+  const w = baseW * ps;
+  const h = baseH * ps;
+  const cx = cw / 2 + (px / 100) * cw;
+  const cy = ch / 2 + (py / 100) * ch;
   ctx.save();
   ctx.translate(cx, cy);
-  if (personOverlayRotation) ctx.rotate(personOverlayRotation * Math.PI / 180);
-  ctx.drawImage(personOverlay, -w / 2, -h / 2, w, h);
+  if (pr) ctx.rotate(pr * Math.PI / 180);
+  ctx.drawImage(im, -w / 2, -h / 2, w, h);
   ctx.restore();
+}
+
+function drawPersonOverlay() {
+  personExtras.forEach(p => drawOnePerson(p.img, p.x, p.y, p.scale, p.rot));
+  drawOnePerson(personOverlay, personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation);
 }
 
 window.handlePersonPhoto = handlePersonPhoto;
