@@ -3357,6 +3357,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   currentTemplate = p.template ?? 'none';
   subjectMode = p.subjectMode ?? 'none'; strokeColor = p.strokeColor ?? '#ffffff';
   restorePersonExtras(p.personExtras);
+  if (p.personOverlay) { const pc = document.getElementById('personControls'); if (pc) pc.style.display = 'block'; }
 if (p.personOverlay) {
   const pi = new Image();
   pi.onload = () => { personOverlay = pi; if (imgLoaded) redraw(); };
@@ -3585,6 +3586,7 @@ if (data.projectId && localStorage.getItem('music_' + data.projectId)) {
     backgroundRemoved = !!data.backgroundRemoved;
     subjectMode = data.subjectMode || 'none';
     restorePersonExtras(data.personExtras);
+    if (data.personOverlay) { const pc = document.getElementById('personControls'); if (pc) pc.style.display = 'block'; }
     if (data.personOverlay) {
   const pi = new Image();
   pi.onload = () => { personOverlay = pi; redraw(); };
