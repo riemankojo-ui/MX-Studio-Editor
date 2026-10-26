@@ -1,4 +1,4 @@
-const CACHE = 'mxstudio-v3';
+const CACHE = 'mxstudio-v4';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.png'];
 
 self.addEventListener('install', (e) => {
