@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "app.vercel.mx_studio_editor.twa",
-        "sha256_cert_fingerprints": ["33:1F:D8:6B:D0:82:A4:59:3B:A2:6D:F9:41:1B:91:FA:A6:5E:55:B9:47:39:53:5A:8A:85:B5:8B:24:ED:0D:DD"]
+        "sha256_cert_fingerprints": ["CC:84:25:55:91:95:7C:2A:1D:51:1B:53:C6:7F:1C:2E:0E:9D:67:CA:54:95:24:D1:6E:99:65:2B:E4:91:DF:D9"]
       }
     }]
