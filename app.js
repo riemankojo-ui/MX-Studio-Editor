@@ -2949,6 +2949,8 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   if (name === 'text') showTextCategories();
   if (name === 'cutbody') showCbCategories(); else cbLeave();
   syncActiveInputs();
+  if (name !== 'text') textMenu.style.display = 'none';
+  redraw();
 }
 
 function switchSubTab(name, el) {
