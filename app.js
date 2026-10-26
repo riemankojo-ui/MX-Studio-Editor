@@ -1208,6 +1208,7 @@ function updateTextLayersUI() {
 
 // ---------- Text move / transform ----------
 function showFloatingMenu(x, y) {
+  if (activePanelName() !== 'text') { textMenu.style.display = 'none'; return; }
   const rect = canvas.getBoundingClientRect();
   const contRect = canvas.parentElement.getBoundingClientRect();
   const ox = rect.left - contRect.left;
@@ -1579,6 +1580,18 @@ if (gestureTarget === 'person' && personOverlay) {
   }
   if (touches.size === 1) {
     const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    const ph = personHandles();
+    if (ph) {
+      if (Math.hypot(pos.x - ph.del.x, pos.y - ph.del.y) < 36) { resetPersonOverlay(); return; }
+      if (Math.hypot(pos.x - ph.scale.x, pos.y - ph.scale.y) < 36) {
+        gesture = { type: 'personHandle', mode: 'scale', startDist: Math.max(1, Math.hypot(pos.x - ph.g.cx, pos.y - ph.g.cy)), startScale: personOverlayScale };
+        return;
+      }
+      if (Math.hypot(pos.x - ph.rot.x, pos.y - ph.rot.y) < 36) {
+        gesture = { type: 'personHandle', mode: 'rot', startAngle: Math.atan2(pos.y - ph.g.cy, pos.x - ph.g.cx), startRot: personOverlayRotation };
+        return;
+      }
+    }
     pickPersonAt(pos);
     isDraggingPerson = true;
     personDragStart = { x: pos.x, y: pos.y, px: personOverlayX, py: personOverlayY };
@@ -1757,6 +1770,25 @@ function onTouchMove(e) {
   }
 
 if (gestureTarget === 'person' && personOverlay) {
+  if (gesture && gesture.type === 'personHandle') {
+    const gp = personGeom();
+    const hp = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+    if (gp) {
+      if (gesture.mode === 'scale') {
+        const d = Math.hypot(hp.x - gp.cx, hp.y - gp.cy);
+        personOverlayScale = Math.max(0.2, Math.min(5, gesture.startScale * d / gesture.startDist));
+      } else {
+        const a = Math.atan2(hp.y - gp.cy, hp.x - gp.cx);
+        let deg = gesture.startRot + (a - gesture.startAngle) * 180 / Math.PI;
+        while (deg > 180) deg -= 360;
+        while (deg < -180) deg += 360;
+        personOverlayRotation = deg;
+      }
+      syncPersonSliders();
+      redraw();
+    }
+    return;
+  }
 if (touches.size === 2 && gesture && gesture.type === 'personPinch') {
   const arr = Array.from(touches.values());
   const scale = touchDist(arr[0], arr[1]) / gesture.startDist;
@@ -1836,6 +1868,7 @@ function endTouch(e) {
     gesture = null;
     saveState();
   }
+  if (gesture && gesture.type === 'personHandle') { gesture = null; saveState(); }
   if (touches.size < 2) gesture = null;
   if (isDraggingText) { isDraggingText = false; saveState(); syncActiveInputs(); }
   if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
@@ -1877,8 +1910,13 @@ function getSelectionHandles(layer) {
   }));
 }
 
+function activePanelName() {
+  const p = document.querySelector('.panel.active');
+  return p ? p.id.replace('panel-', '') : '';
+}
+
 function hitHandle(pos, layer) {
-  if (!layer) return null;
+  if (!layer || activePanelName() !== 'text') return null;
   const handles = getSelectionHandles(layer);
   for (const h of handles) {
     if (Math.hypot(pos.x - h.x, pos.y - h.y) < 26) return h.id;
@@ -2301,7 +2339,7 @@ textLayers.forEach(layer => {
         }
         ctx.restore();
       }
-      if (activeLayerId === layer.id) {
+      if (activeLayerId === layer.id && activePanelName() === 'text' && !window.__noBoxes) {
         const b = getTextBox(layer);
         ctx.save();
         ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
@@ -2312,6 +2350,7 @@ textLayers.forEach(layer => {
       ctx.restore();
     }
   });
+  drawPersonBox();
   drawCutBox();
 }
 
@@ -4141,7 +4180,88 @@ function selectPersonExtra(i) {
   const st = document.getElementById('personStatus'); if (st) st.textContent = 'Person selected. Drag, adjust, or REMOVE PERSON.';
 }
 
+function personGeom() {
+  const im = personOverlay;
+  if (!im || !im.naturalWidth) return null;
+  const cw = canvas.width, ch = canvas.height;
+  const aspect = im.naturalWidth / im.naturalHeight;
+  let baseW, baseH;
+  if (aspect > 1) { baseW = cw * 0.7; baseH = baseW / aspect; }
+  else { baseH = ch * 0.7; baseW = baseH * aspect; }
+  return {
+    w: baseW * personOverlayScale, h: baseH * personOverlayScale,
+    cx: cw / 2 + (personOverlayX / 100) * cw, cy: ch / 2 + (personOverlayY / 100) * ch,
+    rad: (personOverlayRotation || 0) * Math.PI / 180
+  };
+}
+
+function personHandles() {
+  const g = personGeom();
+  if (!g) return null;
+  const cos = Math.cos(g.rad), sin = Math.sin(g.rad);
+  const pt = (dx, dy) => ({ x: g.cx + dx * cos - dy * sin, y: g.cy + dx * sin + dy * cos });
+  return { g, del: pt(-g.w / 2, -g.h / 2), scale: pt(g.w / 2, g.h / 2), rot: pt(0, -g.h / 2 - 38) };
+}
+
+function drawPersonBox() {
+  if (window.__noBoxes || activePanelName() !== 'person') return;
+  const g = personGeom();
+  if (!g) return;
+  ctx.save();
+  ctx.translate(g.cx, g.cy);
+  ctx.rotate(g.rad);
+  ctx.setLineDash([10, 6]);
+  ctx.strokeStyle = 'rgba(255,255,255,.95)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(-g.w / 2, -g.h / 2, g.w, g.h);
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(0, -g.h / 2); ctx.lineTo(0, -g.h / 2 - 24); ctx.stroke();
+  const dot = (x, y, fill) => {
+    ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.stroke();
+  };
+  dot(g.w / 2, g.h / 2, '#ffffff');
+  dot(0, -g.h / 2 - 38, '#ffffff');
+  dot(-g.w / 2, -g.h / 2, '#ff2c2c');
+  const x0 = -g.w / 2, y0 = -g.h / 2, k = 5;
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x0 - k, y0 - k); ctx.lineTo(x0 + k, y0 + k);
+  ctx.moveTo(x0 + k, y0 - k); ctx.lineTo(x0 - k, y0 + k);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function personBoxHit(pos, im, px, py, ps, pr) {
+  if (!im || !im.naturalWidth) return false;
+  const cw = canvas.width, ch = canvas.height;
+  const aspect = im.naturalWidth / im.naturalHeight;
+  let baseW, baseH;
+  if (aspect > 1) { baseW = cw * 0.7; baseH = baseW / aspect; }
+  else { baseH = ch * 0.7; baseW = baseH * aspect; }
+  const w = baseW * ps, h = baseH * ps;
+  const dx = pos.x - (cw / 2 + (px / 100) * cw), dy = pos.y - (ch / 2 + (py / 100) * ch);
+  const rad = (pr || 0) * Math.PI / 180;
+  const lx = dx * Math.cos(rad) + dy * Math.sin(rad);
+  const ly = -dx * Math.sin(rad) + dy * Math.cos(rad);
+  return Math.abs(lx) <= w / 2 && Math.abs(ly) <= h / 2;
+}
+
 function pickPersonAt(pos) {
+  if (personHit(pos, personOverlay, personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation)) return;
+  for (let i = personExtras.length - 1; i >= 0; i--) {
+    const p = personExtras[i];
+    if (personHit(pos, p.img, p.x, p.y, p.scale, p.rot)) { selectPersonExtra(i); redraw(); return; }
+  }
+  if (personBoxHit(pos, personOverlay, personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation)) return;
+  for (let i = personExtras.length - 1; i >= 0; i--) {
+    const p = personExtras[i];
+    if (personBoxHit(pos, p.img, p.x, p.y, p.scale, p.rot)) { selectPersonExtra(i); redraw(); return; }
+  }
+}
+
+function pickPersonAtOld(pos) {
   if (personHit(pos, personOverlay, personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation)) return;
   for (let i = personExtras.length - 1; i >= 0; i--) {
     const p = personExtras[i];
@@ -4610,6 +4730,8 @@ function saveImage() {
     + String(d.getMinutes()).padStart(2,'0')
     + String(d.getSeconds()).padStart(2,'0');
   const filename = projName + '-' + stamp + '.png';
+  window.__noBoxes = true; redraw();
+  setTimeout(function() { window.__noBoxes = false; redraw(); }, 0);
   canvas.toBlob(function(blob) {
     if (!blob) { showToast('Save failed'); return; }
     const file = new File([blob], filename, { type: 'image/png' });
