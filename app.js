@@ -1613,10 +1613,12 @@ if (gestureTarget === 'person' && personOverlay) {
 
   for (let i = textLayers.length - 1; i >= 0; i--) {
     const layer = textLayers[i];
-    ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
-    const m = ctx.measureText(layer.text);
-    const w = m.width, h = parseInt(layer.size);
-    if (pos.x >= layer.x - w/2 - 20 && pos.x <= layer.x + w/2 + 20 && pos.y >= layer.y - h && pos.y <= layer.y + 15) { clickedLayer = layer; break; }
+    const b = getTextBox(layer);
+    const rr = layer.rotation || 0;
+    const ddx = pos.x - layer.x, ddy = pos.y - layer.y;
+    const lx = ddx * Math.cos(rr) + ddy * Math.sin(rr);
+    const ly = -ddx * Math.sin(rr) + ddy * Math.cos(rr);
+    if (lx >= b.x0 - 20 && lx <= b.x1 + 20 && ly >= b.y0 - 20 && ly <= b.y1 + 20) { clickedLayer = layer; break; }
   }
   if (clickedLayer) {
     activeLayerId = clickedLayer.id;
@@ -1818,19 +1820,31 @@ function endTouch(e) {
   if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
   if (isDraggingPerson) { isDraggingPerson = false; personDragStart = null; saveState(); }
 }
-function getSelectionHandles(layer) {
+function getTextBox(layer) {
+  ctx.save();
   ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const m = ctx.measureText(layer.text);
-  const bw = m.width + 16;
-  const bh = layer.size + 8;
+  ctx.restore();
+  const pad = 6 + (layer.style === 'stroke' ? layer.size * 0.04 : 0);
+  const sx = layer.persp ? 1 : (layer.stretchX || 1);
+  const l = m.actualBoundingBoxLeft !== undefined ? m.actualBoundingBoxLeft : m.width / 2;
+  const r = m.actualBoundingBoxRight !== undefined ? m.actualBoundingBoxRight : m.width / 2;
+  const a = m.actualBoundingBoxAscent !== undefined ? m.actualBoundingBoxAscent : layer.size * 0.5;
+  const d = m.actualBoundingBoxDescent !== undefined ? m.actualBoundingBoxDescent : layer.size * 0.5;
+  return { x0: -l * sx - pad, x1: r * sx + pad, y0: -a - pad, y1: d + pad, sx };
+}
+
+function getSelectionHandles(layer) {
+  const b = getTextBox(layer);
   const rot = layer.rotation || 0;
   const cos = Math.cos(rot), sin = Math.sin(rot);
   const corners = [
-    { id: 'tl', dx: -bw/2, dy: -bh/2 },
-    { id: 'tr', dx:  bw/2, dy: -bh/2 },
-    { id: 'bl', dx: -bw/2, dy:  bh/2 },
-    { id: 'br', dx:  bw/2, dy:  bh/2 },
-    { id: 'rot', dx: 0, dy: -bh/2 - 38 }
+    { id: 'tl', dx: b.x0, dy: b.y0 },
+    { id: 'tr', dx: b.x1, dy: b.y0 },
+    { id: 'bl', dx: b.x0, dy: b.y1 },
+    { id: 'br', dx: b.x1, dy: b.y1 },
+    { id: 'rot', dx: (b.x0 + b.x1) / 2, dy: b.y0 - 38 }
   ];
   return corners.map(c => ({
     id: c.id,
@@ -2264,9 +2278,12 @@ textLayers.forEach(layer => {
         ctx.restore();
       }
       if (activeLayerId === layer.id) {
-        const m = ctx.measureText(layer.text);
-        const bw = m.width + 16, bh = layer.size + 8;
-        drawSelectionBox(-bw/2, -bh/2, bw, bh);
+        const b = getTextBox(layer);
+        ctx.save();
+        ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+        if (b.sx !== 1) ctx.scale(1 / b.sx, 1);
+        drawSelectionBox(b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0);
+        ctx.restore();
       }
       ctx.restore();
     }
