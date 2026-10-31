@@ -1,0 +1,22 @@
+{
+  "packageId": "app.vercel.mx_studio_editor.twa",
+  "host": "mx-studio-editor.vercel.app",
+  "name": "MX Studio",
+  "launcherName": "MX Studio",
+  "display": "fullscreen",
+  "themeColor": "#121212",
+  "backgroundColor": "#121212",
+  "startUrl": "/index.html",
+  "iconUrl": "https://mx-studio-editor.vercel.app/icon-512.png",
+  "maskableIconUrl": "https://mx-studio-editor.vercel.app/icon-512.png",
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "webManifestUrl": "https://mx-studio-editor.vercel.app/manifest2.json",
+  "fullScopeUrl": "https://mx-studio-editor.vercel.app/",
+  "minSdkVersion": 21,
+  "orientation": "portrait"
+}
