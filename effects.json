@@ -1,16 +1,57 @@
 {
   "tabs": [
-    { "label": "Light Leak",   "prefix": "lightleak",   "blend": "screen",   "files": [] },
-    { "label": "Moody Leak",   "prefix": "Mood-leak",   "blend": "screen",   "files": [] },
-    { "label": "Grunge",       "prefix": "grunge",      "blend": "screen",   "files": [] },
-    { "label": "Grunge Noise", "prefix": "grunge-noise", "blend": "overlay", "files": [] },
-    { "label": "Noise",        "prefix": "noise",       "blend": "overlay",  "files": [] },
-    { "label": "Street Light", "prefix": "streetlight", "blend": "screen",   "files": [] },
-    { "label": "Paper",        "prefix": "frame-paper", "blend": "normal",   "files": [
-      "frame-paper1.png", "frame-paper2.png", "frame-paper3.png", "frame-paper4.png", "frame-paper5.png",
-      "frame-paper6.png", "frame-paper7.png", "frame-paper8.png", "frame-paper9.png", "frame-paper10.png",
-      "frame-paper11.png", "frame-paper12.png", "frame-paper13.png", "frame-paper14.png", "frame-paper15.png",
-      "frame-paper16.png", "frame-paper17.png", "frame-paper18.png"
+    { "label": "Light Leak", "prefix": "lightleak", "blend": "screen", "files": [
+      "lightleak1.jpg", "lightleak2.jpg", "lightleak3.jpg", "lightleak4.jpg",
+      "lightleak5.jpg", "lightleak6.jpg", "lightleak7.jpg", "lightleak8.jpg",
+      "lightleak9.jpg", "lightleak10.jpg", "lightleak11.jpg", "lightleak12.jpg",
+      "lightleak14.jpg"
+    ]},
+    { "label": "Moody Leak", "prefix": "Mood-leak", "blend": "screen", "files": [
+      "Mood-leak1.jpg", "Mood-leak2.jpg", "Mood-leak4.jpg", "Mood-leak5.jpg",
+      "Mood-leak7.jpg", "Mood-leak8.jpg", "Mood-leak9.jpg", "Mood-leak10.jpg",
+      "Mood-leak12.jpg", "Mood-leak13.jpg", "Mood-leak14.jpg", "Mood-leak15.jpg",
+      "Mood-leak16.jpg", "Mood-leak17.jpg", "Mood-leak18.jpg", "Mood-leak21.jpg",
+      "Mood-leak22.jpg", "Mood-leak23.jpg", "Mood-leak24.jpg", "Mood-leak25.jpg",
+      "Mood-leak26.jpg", "Mood-leak27.jpg", "Mood-leak29.jpg", "Mood-leak30.jpg",
+      "Mood-leak32.jpg", "Mood-leak34.jpg", "Mood-leak35.jpg", "Mood-leak36.jpg",
+      "Mood-leak37.jpg", "Mood-leak38.jpg", "Mood-leak39.jpg", "Mood-leak40.jpg",
+      "Mood-leak41.jpg", "Mood-leak43.jpg"
+    ]},
+    { "label": "Grunge", "prefix": "grunge", "blend": "screen", "files": [
+      "grunge1.jpg", "grunge2.jpg", "grunge3.jpg", "grunge4.jpg",
+      "grunge5.jpg", "grunge6.jpg", "grunge7.jpg", "grunge8.jpg",
+      "grunge9.jpg", "grunge10.jpg", "grunge11.jpg", "grunge12.jpg",
+      "grunge13.jpg", "grunge14.jpg", "grunge15.jpg", "grunge16.jpg",
+      "grunge17.jpg", "grunge18.jpg", "grunge19.jpg", "grunge20.jpg",
+      "grunge21.jpg", "grunge22.jpg", "grunge23.jpg", "grunge24.jpg",
+      "grunge25.jpg", "grunge26.jpg", "grunge27.jpg", "grunge28.jpg",
+      "grunge29.jpg", "grunge30.jpg", "grunge31.jpg", "grunge32.jpg",
+      "grunge33.jpg", "grunge34.jpg", "grunge35.jpg"
+    ]},
+    { "label": "Grunge Noise", "prefix": "grunge-noise", "blend": "overlay", "files": [
+      "grunge-noise1.jpg", "grunge-noise2.jpg", "grunge-noise3.jpg", "grunge-noise4.jpg",
+      "grunge-noise5.jpg", "grunge-noise6.jpg", "grunge-noise7.jpg", "grunge-noise8.jpg",
+      "grunge-noise9.jpg", "grunge-noise10.jpg", "grunge-noise11.jpg", "grunge-noise12.jpg",
+      "grunge-noise13.jpg", "grunge-noise14.jpg", "grunge-noise15.jpg", "grunge-noise17.jpg",
+      "grunge-noise18.jpg", "grunge-noise19.jpg", "grunge-noise20.jpg", "grunge-noise21.jpg",
+      "grunge-noise22.jpg", "grunge-noise23.jpg", "grunge-noise24.jpg", "grunge-noise25.jpg"
+    ]},
+    { "label": "Noise", "prefix": "noise", "blend": "overlay", "files": [
+      "noise1.jpg", "noise2.jpg", "noise3.jpg", "noise4.jpg",
+      "noise5.jpg", "noise6.jpg", "noise7.jpg", "noise8.jpg",
+      "noise9.jpg"
+    ]},
+    { "label": "Street Light", "prefix": "streetlight", "blend": "screen", "files": [
+      "streetlight1.jpg", "streetlight2.jpg", "streetlight3.jpg", "streetlight4.jpg",
+      "streetlight5.jpg"
+    ]},
+    { "label": "Paper", "prefix": "frame-paper", "blend": "normal", "files": [
+      "frame-paper1.png", "frame-paper2.png", "frame-paper3.png", "frame-paper4.png",
+      "frame-paper5.png", "frame-paper6.png", "frame-paper7.png", "frame-paper8.png",
+      "frame-paper9.png", "frame-paper10.png", "frame-paper11.png", "frame-paper12.png",
+      "frame-paper13.png", "frame-paper14.png", "frame-paper15.png", "frame-paper16.png",
+      "frame-paper17.png", "frame-paper18.png"
     ]}
-  ]
+  ],
+  "backgrounds": ["background1.jpg", "background2.jpg", "background3.jpg", "background4.jpg", "background5.jpg", "background6.jpg", "background7.jpg", "background8.jpg", "background9.jpg", "background10.jpg", "background11.jpg", "background12.jpg", "background13.jpg", "background14.jpg", "background15.jpg", "background16.jpg", "background17.jpg"]
 }

@@ -139,12 +139,68 @@ const BG_LABELS = {
   'background16.jpg':'Dark','background17.jpg':'Black'
 };
 
-const EFFECTS_BASE = './effects/';
+let EFFECTS_BASE = localStorage.getItem('mx_fx_base') || './effects/';
 let FX_CATEGORIES = [];
 let currentFxTab = '';
 const BG_CONFIG = { prefix:'background', max:20, files:[] };
 const fxImages = {};
 const bgImages = {};
+
+// ---------- Offline effects: download once, then run from the phone ----------
+const FX_REMOTE = 'https://mx-studio-editor.vercel.app/effects/';
+function fxPlugin() { return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem; }
+function fxIsApp() { return !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos); }
+function fxDownloaded() { return !!localStorage.getItem('mx_fx_base'); }
+function fxSay(t) { const el = document.getElementById('fxBannerText'); if (el) el.textContent = t; }
+function fxBannerHtml() {
+  if (!fxIsApp() || fxDownloaded()) return '';
+  return '<div id="fxBanner" style="background:#161616;border-radius:12px;padding:12px;margin:0 0 14px 0;display:flex;align-items:center;gap:10px;"><div id="fxBannerText" style="flex:1;font-size:12px;color:#ccc;line-height:1.4;">Download effects for offline use (about 37 MB, uses mobile data)</div><button id="fxBannerBtn" onclick="downloadEffects()" style="background:#fff;color:#000;border:0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:800;">Download</button></div>';
+}
+let fxBusy = false;
+async function downloadEffects() {
+  if (fxBusy) return;
+  const FS = fxPlugin();
+  if (!FS || !FS.downloadFile) { showToast('Update the app first'); return; }
+  let data = null;
+  try { const r = await fetch('./effects.json', { cache: 'no-cache' }); if (r.ok) data = await r.json(); } catch (e) {}
+  const names = [];
+  if (data) {
+    (data.tabs || []).forEach(t => (t.files || []).forEach(f => names.push(f)));
+    (data.backgrounds || []).forEach(f => names.push(f));
+  }
+  if (!names.length) { showToast('effects.json has no file list'); return; }
+  fxBusy = true;
+  const btn = document.getElementById('fxBannerBtn');
+  if (btn) btn.style.display = 'none';
+  let done = {};
+  try { done = JSON.parse(localStorage.getItem('mx_fx_done') || '{}'); } catch (e) {}
+  let base = localStorage.getItem('mx_fx_pbase') || '';
+  let count = 0, failed = 0;
+  for (const n of names) {
+    fxSay('Downloading effects ' + count + ' / ' + names.length);
+    if (done[n] && base) { count++; continue; }
+    try {
+      const r = await FS.downloadFile({ url: FX_REMOTE + n, path: 'effects/' + n, directory: 'DATA', recursive: true });
+      if (!base && r && r.path) {
+        base = window.Capacitor.convertFileSrc(r.path.replace(/[^\/]+$/, ''));
+        localStorage.setItem('mx_fx_pbase', base);
+      }
+      done[n] = 1;
+      localStorage.setItem('mx_fx_done', JSON.stringify(done));
+      count++;
+    } catch (e) { failed++; }
+  }
+  fxBusy = false;
+  if (!failed && base) {
+    localStorage.setItem('mx_fx_base', base);
+    showToast('Effects ready offline');
+    setTimeout(() => location.reload(), 600);
+  } else {
+    fxSay('Some files failed. Check internet and tap Download again.');
+    if (btn) btn.style.display = '';
+  }
+}
+window.downloadEffects = downloadEffects;
 
 // ---------- Load helpers ----------
 function loadImage(url) {
@@ -3283,6 +3339,29 @@ window.detectSubject = async function() {
 };
 
 // ---------- Project save / load ----------
+// ---------- Gallery: save edited photo + mark projects ----------
+function galleryMap() {
+  try { return JSON.parse(localStorage.getItem('mx_gallery_map') || '{}'); } catch (e) { return {}; }
+}
+function galleryProjectByMedia() {
+  const m = galleryMap(), out = {};
+  Object.keys(m).forEach(pid => { if (localStorage.getItem('music_' + pid)) out[m[pid]] = 'music_' + pid; });
+  return out;
+}
+async function saveToGallery(dataUrl, projectId, name) {
+  const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos;
+  if (!P || !P.saveImage) return;
+  const m = galleryMap();
+  const safe = (name || 'MX-Studio').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-').slice(0, 24);
+  try {
+    const r = await P.saveImage({ data: dataUrl, name: safe + '-' + Date.now(), id: m[projectId] || -1 });
+    m[projectId] = r.id;
+    localStorage.setItem('mx_gallery_map', JSON.stringify(m));
+    delete LIB_CACHE[r.id];
+    showToast('Saved to gallery');
+  } catch (e) { showToast('Could not save to gallery'); }
+}
+
 function saveProjectToHome() {
   if (!imgLoaded) return;
   if (!currentProjectId) currentProjectId = 'proj_' + Date.now();
@@ -3325,6 +3404,7 @@ function saveProjectToHome() {
   personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation
 }));
   } catch(e) { alert('Storage full.'); return; }
+  saveToGallery(canvas.toDataURL('image/png'), currentProjectId, autoName);
   undoStack = []; redoStack = []; updateHistoryButtons();
   showToast('Saved');
   playCount(() => { goHome(); });
@@ -3725,7 +3805,117 @@ function timeAgo(iso) {
   return d.toLocaleDateString();
 }
 
+let homeTab = localStorage.homeTab || 'library';
+function setHomeTab(t) { homeTab = t; localStorage.homeTab = t; renderProjectsList(); }
+
 function renderProjectsList() {
+  const container = document.getElementById('gallery');
+  if (!container) return;
+  const tabs = [['library', 'Library'], ['projects', 'Projects'], ['colors', 'Colors']];
+  container.innerHTML = '<div class="home-tabs">' + tabs.map(t =>
+    '<button class="home-tab' + (homeTab === t[0] ? ' on' : '') + '" onclick="setHomeTab(\'' + t[0] + '\')">' + t[1] + '</button>'
+  ).join('') + '</div>' + fxBannerHtml() + '<div id="homeBody"></div>';
+  if (homeTab === 'library') renderLibraryTab();
+  else if (homeTab === 'colors') renderColorsTab();
+  else renderProjectsTab();
+}
+
+function renderProjectsTab() {
+  const body = document.getElementById('homeBody');
+  if (!body) return;
+  const items = [];
+  Object.keys(localStorage).filter(k => k.startsWith('music_proj_')).forEach(key => {
+    try {
+      const p = JSON.parse(localStorage.getItem(key));
+      items.push({ key, image: p.image, name: p.name || 'Untitled', date: p.date || null, timestamp: p.savedAt || new Date(p.date || 0).getTime() || 0 });
+    } catch (e) {}
+  });
+  items.sort((a, b) => b.timestamp - a.timestamp);
+  let html = `<div class="home-top-bar"><button class="home-new-btn" onclick="document.getElementById('homeImageUpload').click()"><div class="plus-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>New Project</span></button></div>`;
+
+  if (items.length === 0) {
+    html += `<div class="home-empty"><div class="home-empty-title">START YOUR FIRST COVER</div><div class="home-empty-sub">Pick a photo from Library or a color.</div></div>`;
+  } else {
+    html += `<div class="section-title">Drafts</div><div class="projects-grid">`;
+    items.forEach(it => {
+      html += `<div class="project-card" onclick="openProjectWithCount('${it.key}')"><div class="project-card-img"><img src="${it.image}"></div><div class="project-card-info"><div class="project-card-name">${it.name}</div><div class="project-card-date">${timeAgo(it.date)}</div></div><button class="project-card-del" onclick="event.stopPropagation();deleteProject('${it.key}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
+    });
+    html += `</div>`;
+  }
+  body.innerHTML = html;
+}
+
+function renderColorsTab() {
+  const body = document.getElementById('homeBody');
+  if (!body) return;
+  body.innerHTML = '<div class="color-grid">' + SOLID_COLORS.map(c =>
+    '<div class="color-item" style="background:' + c + '" onclick="pickColorForNewProject(\'' + c + '\')"></div>'
+  ).join('') + '</div>';
+}
+
+const LIB_CACHE = {};
+let libObserver = null;
+async function renderLibraryTab() {
+  const body = document.getElementById('homeBody');
+  if (!body) return;
+  const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos;
+  if (!P) {
+    body.innerHTML = '<div class="home-empty"><div class="home-empty-title">LIBRARY</div><div class="home-empty-sub">Your phone photos show here in the Android app.</div></div><button class="lib-btn" onclick="document.getElementById(\'homeImageUpload\').click()">Choose photos</button>';
+    return;
+  }
+  body.innerHTML = '<div class="home-empty-sub" style="text-align:center;padding:30px 0;">Loading photos...</div>';
+  let photos = [];
+  try {
+    const r = await P.getPhotos({ limit: 400 });
+    photos = r.photos || [];
+  } catch (e) {
+    body.innerHTML = '<div class="home-empty"><div class="home-empty-title">ALLOW PHOTOS</div><div class="home-empty-sub">Allow photo access to see your library here.</div></div><button class="lib-btn" onclick="renderLibraryTab()">Allow</button>';
+    return;
+  }
+  if (homeTab !== 'library') return;
+  if (!photos.length) { body.innerHTML = '<div class="home-empty"><div class="home-empty-sub">No photos found</div></div>'; return; }
+  const gpm = galleryProjectByMedia();
+  body.innerHTML = '<div class="lib-grid">' + photos.map(p =>
+    '<div class="lib-item' + (gpm[p.id] ? ' lib-proj' : '') + '" data-id="' + p.id + '" onclick="openLibraryPhoto(' + p.id + ')"></div>'
+  ).join('') + '</div>';
+  if (libObserver) libObserver.disconnect();
+  libObserver = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      libObserver.unobserve(en.target);
+      const el = en.target, id = +el.dataset.id;
+      const put = u => { if (u) el.innerHTML = '<img src="' + u + '">'; };
+      if (LIB_CACHE[id]) { put(LIB_CACHE[id]); return; }
+      P.getThumb({ id: id, size: 240 }).then(r => { LIB_CACHE[id] = r.img; put(r.img); }).catch(() => {});
+    });
+  }, { rootMargin: '400px' });
+  body.querySelectorAll('.lib-item').forEach(el => libObserver.observe(el));
+}
+
+async function openLibraryPhoto(id) {
+  const projKey = galleryProjectByMedia()[id];
+  if (projKey) { if (!counterLocked) playCount(() => { loadProject(projKey); }); return; }
+  if (counterLocked) return;
+  const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos;
+  if (!P) return;
+  showToast('Opening photo...');
+  try {
+    const r = await P.getPhoto({ id: id, max: 1080 });
+    const before = new Set(Object.keys(localStorage));
+    const blob = await (await fetch(r.img)).blob();
+    await importOnePhoto(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+    const key = Object.keys(localStorage).find(k => k.startsWith('music_proj_') && !before.has(k));
+    if (key) playCount(() => { loadProject(key); });
+    else showToast('Could not open photo');
+  } catch (e) { showToast('Could not open photo'); }
+}
+
+window.setHomeTab = setHomeTab;
+window.renderLibraryTab = renderLibraryTab;
+window.openLibraryPhoto = openLibraryPhoto;
+window.pickColorForNewProject = pickColorForNewProject;
+
+function renderProjectsListOld() {
   const container = document.getElementById('gallery');
   if (!container) return;
   const keys = Object.keys(localStorage).filter(k => k.startsWith('music_proj_'));

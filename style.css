@@ -13,6 +13,17 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .section-title { font-size:16px; font-weight:800; color:#fff; padding:4px 0 10px 0; text-align:left; }
 
 .projects-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:0 0 20px 0; }
+.home-tabs { display:flex; gap:8px; padding:0 0 14px 0; }
+.home-top-bar { display:none; }
+.home-tab { flex:1; padding:11px 8px; border-radius:12px; background:#1a1a1a; color:#9a9a9a; border:0; font-size:13px; font-weight:800; cursor:pointer; }
+.home-tab.on { background:#fff; color:#000; }
+.lib-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; padding-bottom:30px; }
+.lib-item { aspect-ratio:1/1; background:#161616; overflow:hidden; cursor:pointer; position:relative; }
+.lib-proj::after { content:'PROJECT'; position:absolute; left:4px; bottom:4px; background:#fff; color:#000; font-size:8px; font-weight:800; padding:2px 5px; border-radius:4px; letter-spacing:.4px; }
+.lib-item img { width:100%; height:100%; object-fit:cover; display:block; }
+.color-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding-bottom:30px; }
+.color-item { aspect-ratio:1/1; cursor:pointer; }
+.lib-btn { width:100%; padding:14px; border-radius:12px; background:#fff; color:#000; border:0; font-weight:800; font-size:13px; }
 .project-card { cursor:pointer; position:relative; }
 .project-card:active { opacity:.9; }
 .project-card-img { width:100%; aspect-ratio:1/1; background:#111; border-radius:6px; overflow:hidden; }
