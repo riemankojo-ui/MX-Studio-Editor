@@ -42,6 +42,9 @@ jobs:
           python3 patch.py
           npx cap sync android
 
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
       - name: Set MX icon
         run: |
           R=android/app/src/main/res
