@@ -36,6 +36,15 @@ jobs:
             if [ -f "MainActivity (1).java" ]; then cp "MainActivity (1).java" native/MainActivity.java; else cp MainActivity.java native/MainActivity.java; fi
           fi
 
+      - name: Make effect previews
+        run: |
+          sudo apt-get update && sudo apt-get install -y imagemagick
+          mkdir -p www/effects-thumbs
+          for f in effects/*.jpg effects/*.jpeg effects/*.png effects/*.webp; do
+            b=$(basename "$f")
+            convert "$f[0]" -resize 240x240^ -gravity center -extent 240x240 -quality 65 "www/effects-thumbs/$b" || true
+          done
+
       - name: Add Android and sync
         run: |
           if [ ! -d android ]; then npx cap add android; fi
