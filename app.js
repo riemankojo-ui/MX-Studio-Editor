@@ -153,7 +153,7 @@ function fxIsApp() { return !!(window.Capacitor && window.Capacitor.Plugins && w
 function fxDownloaded() { return !!localStorage.getItem('mx_fx_base'); }
 function fxSay(t) { const el = document.getElementById('fxBannerText'); if (el) el.textContent = t; }
 function fxBannerHtml() {
-  if (!fxIsApp() || fxDownloaded()) return '';
+  return '';
   return '<div id="fxBanner" style="background:#161616;border-radius:12px;padding:12px;margin:0 0 14px 0;display:flex;align-items:center;gap:10px;"><div id="fxBannerText" style="flex:1;font-size:12px;color:#ccc;line-height:1.4;">Download effects for offline use (about 37 MB, uses mobile data)</div><button id="fxBannerBtn" onclick="downloadEffects()" style="background:#fff;color:#000;border:0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:800;">Download</button></div>';
 }
 let fxBusy = false;
@@ -201,6 +201,65 @@ async function downloadEffects() {
   }
 }
 window.downloadEffects = downloadEffects;
+
+// ---------- Effects: download one file when you tap it ----------
+function fxDoneMap() {
+  try { return JSON.parse(localStorage.getItem('mx_fx_done') || '{}'); } catch (e) { return {}; }
+}
+function fxUrl(name) {
+  if (!fxIsApp()) return EFFECTS_BASE + name;
+  const base = localStorage.getItem('mx_fx_base');
+  return (base && fxDoneMap()[name]) ? base + name : null;
+}
+async function fxEnsure(name) {
+  const have = fxUrl(name);
+  if (have) return have;
+  const FS = fxPlugin();
+  if (!FS || !FS.downloadFile) return null;
+  try {
+    const r = await FS.downloadFile({ url: FX_REMOTE + name, path: 'effects/' + name, directory: 'DATA', recursive: true });
+    let base = localStorage.getItem('mx_fx_base');
+    if (!base && r && r.path) {
+      base = window.Capacitor.convertFileSrc(r.path.replace(/[^\/]+$/, ''));
+      localStorage.setItem('mx_fx_base', base);
+      EFFECTS_BASE = base;
+    }
+    if (!base) return null;
+    const d = fxDoneMap();
+    d[name] = 1;
+    localStorage.setItem('mx_fx_done', JSON.stringify(d));
+    return base + name;
+  } catch (e) { return null; }
+}
+function fxThumb(name) {
+  const u = fxUrl(name);
+  if (u) return '<img src="' + u + '?v=99" style="width:100%;height:100%;object-fit:cover;">';
+  return '<div class="fx-dl" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#161616;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>';
+}
+async function fxPrepare(key, el) {
+  const fname = key.split(':')[1];
+  if (!fname || fname === 'none' || fxImages[key]) return true;
+  const fresh = !fxUrl(fname);
+  if (el) el.style.opacity = '.5';
+  if (fresh) showToast('Downloading effect...');
+  const url = await fxEnsure(fname);
+  const im = url ? await loadImage(url) : null;
+  if (el) el.style.opacity = '';
+  if (!im) { showToast('Download failed. Check internet'); return false; }
+  fxImages[key] = im;
+  const pv = el ? el.querySelector('.fx-card-preview') : null;
+  if (pv && pv.querySelector('.fx-dl')) pv.innerHTML = fxThumb(fname);
+  return true;
+}
+function fxSaveToDevice(name) {
+  const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos;
+  if (!P || !P.saveImage) return false;
+  const data = canvas.toDataURL('image/png');
+  P.saveImage({ data: data, name: name, id: -1 })
+    .then(function() { showToast('Saved to gallery'); })
+    .catch(function() { showToast('Save failed'); });
+  return true;
+}
 
 // ---------- Load helpers ----------
 function loadImage(url) {
@@ -265,6 +324,10 @@ async function probeOne(base) {
 }
 
 async function probeCategory(cat) {
+  if (fxIsApp() && cat.fileList && cat.fileList.length) {
+    cat.files = cat.fileList.map(fname => ({ fname: fname, im: null }));
+    return;
+  }
   if (cat.fileList && Array.isArray(cat.fileList) && cat.fileList.length) {
     const results = await Promise.all(cat.fileList.map(async fname => {
       const im = await loadImage(EFFECTS_BASE + fname + '?v=99'); // Cache buster added
@@ -480,7 +543,7 @@ function buildFxGrid(catKey) {
   let labelText = f.fname.replace('.png', '').replace('.jpg', '').replace('.webp', '');
   if (catKey === 'frame-paper') labelText = labelText.replace('frame-paper', 'Paper ');
   // Added ?v=99 here to break the broken image cache
-  html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview"><img src="${EFFECTS_BASE + f.fname}?v=99" style="width:100%;height:100%;object-fit:cover;"></div><span class="fx-card-label">${labelText}</span></div>`;
+  html += `<div class="fx-card ${sel}" onclick="setFx('${key}', this)"><div class="fx-card-preview">${fxThumb(f.fname)}</div><span class="fx-card-label">${labelText}</span></div>`;
 });
     
     g.innerHTML = html;
@@ -503,7 +566,8 @@ function buildFxGrid(catKey) {
   }
 }
 
-function setFx(key, el) {
+async function setFx(key, el) {
+  if (!(await fxPrepare(key, el))) return;
   currentFx = key;
   document.querySelectorAll('.fx-card').forEach(c => c.classList.remove('selected'));
   if (el) el.classList.add('selected');
@@ -4938,6 +5002,7 @@ function saveImage() {
     + String(d.getSeconds()).padStart(2,'0');
   const filename = projName + '-' + stamp + '.png';
   window.__noBoxes = true; redraw();
+  if (fxSaveToDevice(projName + '-' + stamp)) { setTimeout(function() { window.__noBoxes = false; redraw(); }, 0); return; }
   setTimeout(function() { window.__noBoxes = false; redraw(); }, 0);
   canvas.toBlob(function(blob) {
     if (!blob) { showToast('Save failed'); return; }

@@ -35,6 +35,7 @@ import java.io.InputStream;
 public class PhotosPlugin extends Plugin {
 
     private static final Uri IMAGES = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+    private static final java.util.concurrent.ExecutorService THUMB_POOL = java.util.concurrent.Executors.newFixedThreadPool(4);
 
     private String oldAlias() {
         return Build.VERSION.SDK_INT >= 33 ? "img13" : "imgOld";
@@ -145,7 +146,22 @@ public class PhotosPlugin extends Plugin {
     // ---------- small thumbnail for the grid ----------
     @PluginMethod
     public void getThumb(PluginCall call) {
-        send(call, 240, 78);
+        if (!granted()) { call.reject("denied"); return; }
+        final long tid = call.getData().optLong("id", -1);
+        if (Build.VERSION.SDK_INT < 29 || tid < 0) { send(call, 240, 78); return; }
+        THUMB_POOL.execute(() -> {
+            try {
+                Uri tu = ContentUris.withAppendedId(IMAGES, tid);
+                Bitmap tb = getContext().getContentResolver().loadThumbnail(tu, new Size(240, 240), null);
+                ByteArrayOutputStream tout = new ByteArrayOutputStream();
+                tb.compress(Bitmap.CompressFormat.JPEG, 78, tout);
+                JSObject tr = new JSObject();
+                tr.put("img", "data:image/jpeg;base64," + Base64.encodeToString(tout.toByteArray(), Base64.NO_WRAP));
+                call.resolve(tr);
+            } catch (Throwable e) {
+                call.reject("failed");
+            }
+        });
     }
 
     // ---------- bigger photo to open as a project ----------
