@@ -194,7 +194,7 @@ public class PhotosPlugin extends Plugin {
             } catch (Throwable e) {
                 call.reject("failed");
             }
-        });⁷
+        });
     }
 
     // ---------- bigger photo to open as a project ----------
