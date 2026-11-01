@@ -148,7 +148,7 @@ const bgImages = {};
 
 // ---------- Offline effects: download once, then run from the phone ----------
 const FX_REMOTE = 'https://mx-studio-editor.vercel.app/effects/';
-function fxPlugin() { return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem; }
+function fxPlugin() { const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos; return (P && P.downloadEffect) ? { downloadFile: function(o) { return P.downloadEffect({ url: o.url, name: o.path.replace('effects/', '') }); } } : null; }
 function fxIsApp() { return !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos); }
 function fxDownloaded() { return !!localStorage.getItem('mx_fx_base'); }
 function fxSay(t) { const el = document.getElementById('fxBannerText'); if (el) el.textContent = t; }
@@ -232,6 +232,14 @@ async function fxEnsure(name) {
   } catch (e) { return null; }
 }
 function fxThumb(name) {
+  if (!fxIsApp()) return fxThumbOld(name);
+  const have = !!fxUrl(name);
+  const badge = have
+    ? '<div class="fx-dl" style="position:absolute;right:5px;bottom:5px;width:18px;height:18px;border-radius:9px;background:#1fa971;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'
+    : '<div class="fx-dl" style="position:absolute;right:5px;bottom:5px;width:22px;height:22px;border-radius:11px;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>';
+  return '<div style="position:relative;width:100%;height:100%;"><img src="./effects-thumbs/' + name + '" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;">' + badge + '</div>';
+}
+function fxThumbOld(name) {
   const u = fxUrl(name);
   if (u) return '<img src="' + u + '?v=99" style="width:100%;height:100%;object-fit:cover;">';
   return '<div class="fx-dl" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#161616;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>';

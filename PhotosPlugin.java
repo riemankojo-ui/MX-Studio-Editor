@@ -100,6 +100,39 @@ public class PhotosPlugin extends Plugin {
         call.resolve(r);
     }
 
+    // ---------- download one effect file into app storage ----------
+    @PluginMethod
+    public void downloadEffect(PluginCall call) {
+        final String url = call.getString("url");
+        final String name = call.getString("name");
+        if (url == null || name == null || name.contains("..") || name.contains("/")) { call.reject("bad args"); return; }
+        new Thread(() -> {
+            java.io.File dir = new java.io.File(getContext().getFilesDir(), "effects");
+            dir.mkdirs();
+            java.io.File out = new java.io.File(dir, name);
+            java.io.File tmp = new java.io.File(dir, name + ".part");
+            try {
+                java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                c.setConnectTimeout(15000);
+                c.setReadTimeout(30000);
+                int code = c.getResponseCode();
+                if (code != 200) { call.reject("http " + code); return; }
+                try (java.io.InputStream in = c.getInputStream(); java.io.FileOutputStream fo = new java.io.FileOutputStream(tmp)) {
+                    byte[] buf = new byte[16384];
+                    int n;
+                    while ((n = in.read(buf)) > 0) fo.write(buf, 0, n);
+                }
+                if (out.exists()) out.delete();
+                if (!tmp.renameTo(out)) { call.reject("rename"); return; }
+                JSObject r = new JSObject();
+                r.put("path", out.getAbsolutePath());
+                call.resolve(r);
+            } catch (Throwable e) {
+                call.reject("net " + e.getClass().getSimpleName());
+            }
+        }).start();
+    }
+
     // ---------- save edited photo into the phone gallery ----------
     @PluginMethod
     public void saveImage(PluginCall call) {
@@ -161,7 +194,7 @@ public class PhotosPlugin extends Plugin {
             } catch (Throwable e) {
                 call.reject("failed");
             }
-        });
+        });⁷
     }
 
     // ---------- bigger photo to open as a project ----------
