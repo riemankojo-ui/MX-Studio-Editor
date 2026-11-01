@@ -1,0 +1,54 @@
+name: Build Capacitor APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install packages
+        run: npm install
+
+      - name: Make www folder
+        run: |
+          mkdir -p www
+          for f in index.html app.js style.css effects.json manifest2.json offline.html icon.svg icon-192.png icon-512.png favicon-32.png apple-touch-icon.png sample1.jpg sample2.jpg sample3.jpg; do
+            if [ -f "$f" ]; then cp "$f" www/; fi
+          done
+
+      - name: Collect native files
+        run: |
+          mkdir -p native
+          if [ ! -f native/PhotosPlugin.java ]; then cp PhotosPlugin.java native/PhotosPlugin.java; fi
+          if [ ! -f native/MainActivity.java ]; then
+            if [ -f "MainActivity (1).java" ]; then cp "MainActivity (1).java" native/MainActivity.java; else cp MainActivity.java native/MainActivity.java; fi
+          fi
+
+      - name: Add Android and sync
+        run: |
+          if [ ! -d android ]; then npx cap add android; fi
+          python3 patch.py
+          npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MX-Studio-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
