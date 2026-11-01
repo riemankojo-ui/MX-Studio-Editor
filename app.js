@@ -245,7 +245,7 @@ async function fxPrepare(key, el) {
   const url = await fxEnsure(fname);
   const im = url ? await loadImage(url) : null;
   if (el) el.style.opacity = '';
-  if (!im) { showToast('Download failed. Check internet'); return false; }
+  if (!im) { showToast('Fail: ' + (window.fxLastErr || (url ? 'cannot open file' : 'no file plugin'))); return false; }
   fxImages[key] = im;
   const pv = el ? el.querySelector('.fx-card-preview') : null;
   if (pv && pv.querySelector('.fx-dl')) pv.innerHTML = fxThumb(fname);
@@ -3426,6 +3426,23 @@ async function saveToGallery(dataUrl, projectId, name) {
   } catch (e) { showToast('Could not save to gallery'); }
 }
 
+// ---------- Remember the last project when the app closes ----------
+function autoSaveDraft() {
+  const vs = document.getElementById('view-studio');
+  if (!imgLoaded || !vs || !vs.classList.contains('active')) return;
+  const keep = { u: undoStack, r: redoStack, pc: window.playCount, st: window.showToast, sg: window.saveToGallery, al: window.alert };
+  window.playCount = function() {}; window.showToast = function() {}; window.saveToGallery = function() {}; window.alert = function() {};
+  try { saveProjectToHome(); localStorage.setItem('mx_last_proj', 'music_' + currentProjectId); } catch (e) {}
+  window.playCount = keep.pc; window.showToast = keep.st; window.saveToGallery = keep.sg; window.alert = keep.al;
+  undoStack = keep.u; redoStack = keep.r; updateHistoryButtons();
+}
+document.addEventListener('visibilitychange', function() { if (document.hidden) autoSaveDraft(); });
+window.addEventListener('pagehide', autoSaveDraft);
+function restoreLastProject() {
+  const k = localStorage.getItem('mx_last_proj');
+  if (k && localStorage.getItem(k)) { try { loadProject(k); } catch (e) {} }
+}
+
 function saveProjectToHome() {
   if (!imgLoaded) return;
   if (!currentProjectId) currentProjectId = 'proj_' + Date.now();
@@ -3602,6 +3619,7 @@ if (p.personOverlay) {
 }
 
 function goHome() {
+  localStorage.removeItem('mx_last_proj');
   document.getElementById('view-studio').classList.remove('active');
   document.getElementById('view-home').classList.add('active');
   textMenu.style.display = 'none';
@@ -3869,7 +3887,7 @@ function timeAgo(iso) {
   return d.toLocaleDateString();
 }
 
-let homeTab = localStorage.homeTab || 'library';
+let homeTab = 'library';
 function setHomeTab(t) { homeTab = t; localStorage.homeTab = t; renderProjectsList(); }
 
 function renderProjectsList() {
@@ -4160,6 +4178,7 @@ document.addEventListener('DOMContentLoaded', function() {
     buildFontGrid(); buildTemplates(); buildBorders(); buildBgColors();
     buildPresetThumbs();
     updateTextLayersUI(); initHomeUpload(); renderProjectsList();
+    setTimeout(restoreLastProject, 500);
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
     }
