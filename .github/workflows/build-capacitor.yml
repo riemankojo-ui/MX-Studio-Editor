@@ -1,0 +1,69 @@
+name: Build Capacitor APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install packages
+        run: npm install
+
+      - name: Make www folder
+        run: |
+          mkdir -p www
+          for f in index.html app.js style.css effects.json manifest2.json offline.html icon.svg icon-192.png icon-512.png favicon-32.png apple-touch-icon.png sample1.jpg sample2.jpg sample3.jpg; do
+            if [ -f "$f" ]; then cp "$f" www/; fi
+          done
+
+      - name: Collect native files
+        run: |
+          mkdir -p native
+          if [ ! -f native/PhotosPlugin.java ]; then cp PhotosPlugin.java native/PhotosPlugin.java; fi
+          if [ ! -f native/MainActivity.java ]; then
+            if [ -f "MainActivity (1).java" ]; then cp "MainActivity (1).java" native/MainActivity.java; else cp MainActivity.java native/MainActivity.java; fi
+          fi
+
+      - name: Add Android and sync
+        run: |
+          if [ ! -d android ]; then npx cap add android; fi
+          python3 patch.py
+          npx cap sync android
+
+      - name: Set MX icon
+        run: |
+          R=android/app/src/main/res
+          declare -A L=( [mdpi]=48 [hdpi]=72 [xhdpi]=96 [xxhdpi]=144 [xxxhdpi]=192 )
+          declare -A F=( [mdpi]=108 [hdpi]=162 [xhdpi]=216 [xxhdpi]=324 [xxxhdpi]=432 )
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            l=${L[$d]}; f=${F[$d]}; s=$((f*2/3))
+            mkdir -p $R/mipmap-$d
+            convert icon-512.png -resize ${l}x${l} $R/mipmap-$d/ic_launcher.png
+            convert icon-512.png -resize ${l}x${l} $R/mipmap-$d/ic_launcher_round.png
+            convert icon-512.png -resize ${s}x${s} -background none -gravity center -extent ${f}x${f} $R/mipmap-$d/ic_launcher_foreground.png
+          done
+          C=$(convert icon-512.png -depth 8 -alpha off -format "%[hex:p{2,2}]" info:)
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#%s</color>\n</resources>\n' "$C" > $R/values/ic_launcher_background.xml
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MX-Studio-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
