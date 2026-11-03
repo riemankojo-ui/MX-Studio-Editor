@@ -149,7 +149,9 @@ input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff
 .color-circle { width:36px; height:36px; border-radius:50%; cursor:pointer; flex-shrink:0; border:2px solid #333; }
 .color-circle.selected { box-shadow:0 0 0 2px #fff; }
 
-.font-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:4px 0 20px 0; max-height:400px; overflow-y:auto; }
+.font-grid { display:flex; flex-wrap:nowrap; gap:6px; padding:6px 2px 12px 2px; max-height:none; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.font-grid::-webkit-scrollbar { display:none; }
+.font-grid .font-pill { flex:0 0 auto; min-width:96px; padding:8px 14px; min-height:36px; border-radius:0; }
 .font-pill { background:#141414; border:1.5px solid #333; color:#fff; padding:8px 8px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:600; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:36px; display:flex; align-items:center; justify-content:center; }
 .font-pill.selected { border-color:#00d4ff; background:#0d1a1f; }
 .font-pill:active { background:#1a1a1a; }
