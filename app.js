@@ -1349,9 +1349,21 @@ function showFloatingMenu(x, y) {
   const ox = rect.left - contRect.left;
   const oy = rect.top - contRect.top;
   const sx = rect.width / canvas.width, sy = rect.height / canvas.height;
-  textMenu.style.left = (ox + x * sx) + 'px';
-  textMenu.style.top = (oy + y * sy - 30) + 'px';
   textMenu.style.display = 'block';
+  textMenu.style.transform = 'none';
+  const mw = textMenu.offsetWidth, mh = textMenu.offsetHeight;
+  const cw = contRect.width, ch = contRect.height;
+  const layer = textLayers.find(t => t.id === activeLayerId);
+  let half = 30;
+  if (layer) { try { const b = getTextBox(layer); half = Math.max(-b.y0, b.y1) * sy; } catch (e) {} }
+  const cx = ox + x * sx, cy = oy + y * sy;
+  let top = cy - half - 44 - mh;
+  if (top < 4) top = cy + half + 14;
+  if (top + mh > ch - 4) top = Math.max(4, ch - mh - 4);
+  let left = cx - mw / 2;
+  left = Math.max(4, Math.min(left, cw - mw - 4));
+  textMenu.style.left = left + 'px';
+  textMenu.style.top = top + 'px';
 }
 
 function moveActiveText(dx, dy) {
@@ -1439,7 +1451,7 @@ function captureState() {
     subjectMode, subjectX, subjectY, subjectScale,
     personMask, subjectReady,
     brightness: bInput.value, contrast: cInput.value, saturation: sInput.value, noise: nInput.value,
-    imgRef: img, originalImageSrc,
+    imgRef: img, originalImageSrc, backgroundRemoved,
     bodyLayers: bodyLayers.map(l => ({ ...l })),
     canvasW: canvas.width, canvasH: canvas.height
   };
@@ -1474,6 +1486,7 @@ function applyState(s) {
   nInput.value = s.noise;
   img = s.imgRef;
   originalImageSrc = s.originalImageSrc;
+  if (typeof s.backgroundRemoved === 'boolean') backgroundRemoved = s.backgroundRemoved;
   bodyLayers = (s.bodyLayers || []).map(l => ({ ...l }));
   if (!bodyLayers.find(l => l.id === activeBodyId)) activeBodyId = null;
   canvas.width = s.canvasW;
@@ -3348,6 +3361,7 @@ window.removeBackgroundCompletely = async function() {
   if (status) status.textContent = 'Sending to AI...';
   try {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    const srcBefore = originalImageSrc;
     const r = await fetch('https://mx-studio-editor.vercel.app/api/remove-bg', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3365,7 +3379,7 @@ window.removeBackgroundCompletely = async function() {
     newImg.onload = function() {
       img = newImg;
       originalImageSrc = json.image;
-      window.__originalBeforeBgRemove = json.image;
+      if (!window.__originalBeforeBgRemove) window.__originalBeforeBgRemove = srcBefore;
       subjectReady = false;
       personMask = null;
       if (!currentBgColor && !currentBgImage) currentBgColor = '#000000';
@@ -3459,6 +3473,7 @@ function restoreLastProject() {
 
 function mxMakeThumb() {
   try {
+    window.__noBoxes = true; redraw();
     const s = 360 / Math.max(canvas.width, canvas.height);
     const c = document.createElement('canvas');
     c.width = Math.max(1, Math.round(canvas.width * s));
@@ -3466,6 +3481,7 @@ function mxMakeThumb() {
     c.getContext('2d').drawImage(canvas, 0, 0, c.width, c.height);
     return c.toDataURL('image/jpeg', 0.78);
   } catch (e) { return null; }
+  finally { window.__noBoxes = false; redraw(); }
 }
 function saveProjectToHome() {
   if (!imgLoaded) return;
@@ -3511,7 +3527,10 @@ function saveProjectToHome() {
   personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation
 }));
   } catch(e) { alert('Storage full.'); return; }
-  saveToGallery(canvas.toDataURL('image/png'), currentProjectId, autoName);
+  window.__noBoxes = true; redraw();
+  const mxPng = canvas.toDataURL('image/png');
+  window.__noBoxes = false; redraw();
+  saveToGallery(mxPng, currentProjectId, autoName);
   undoStack = []; redoStack = []; updateHistoryButtons();
   showToast('Saved');
   playCount(() => { goHome(); });
@@ -3675,6 +3694,7 @@ function resetEverything() {
     restoreImg.onload = () => {
       img = restoreImg;
       originalImageSrc = window.__originalBeforeBgRemove;
+      backgroundRemoved = false;
       setupCanvasFromImage(restoreImg);
       window.__originalBeforeBgRemove = null;
       buildFilterThumbs(); buildTemplates();
