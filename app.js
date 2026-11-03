@@ -235,7 +235,7 @@ function fxThumb(name) {
   if (!fxIsApp()) return fxThumbOld(name);
   const have = !!fxUrl(name);
   const badge = have
-    ? '<div class="fx-dl" style="position:absolute;right:5px;bottom:5px;width:18px;height:18px;border-radius:9px;background:#1fa971;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'
+    ? ''
     : '<div class="fx-dl" style="position:absolute;right:5px;bottom:5px;width:22px;height:22px;border-radius:11px;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>';
   return '<div style="position:relative;width:100%;height:100%;"><img src="./effects-thumbs/' + name + '" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;">' + badge + '</div>';
 }
@@ -248,12 +248,12 @@ async function fxPrepare(key, el) {
   const fname = key.split(':')[1];
   if (!fname || fname === 'none' || fxImages[key]) return true;
   const fresh = !fxUrl(fname);
-  if (el) el.style.opacity = '.5';
-  if (fresh) showToast('Downloading effect...');
+  const dl = (fresh && el) ? el.querySelector('.fx-dl') : null;
+  const dlOld = dl ? dl.innerHTML : '';
+  if (dl) dl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></path></svg>';
   const url = await fxEnsure(fname);
   const im = url ? await loadImage(url) : null;
-  if (el) el.style.opacity = '';
-  if (!im) { showToast('Fail: ' + (window.fxLastErr || (url ? 'cannot open file' : 'no file plugin'))); return false; }
+  if (!im) { if (dl) dl.innerHTML = dlOld; showToast('Fail: ' + (window.fxLastErr || (url ? 'cannot open file' : 'no file plugin'))); return false; }
   fxImages[key] = im;
   const pv = el ? el.querySelector('.fx-card-preview') : null;
   if (pv && pv.querySelector('.fx-dl')) pv.innerHTML = fxThumb(fname);
@@ -1130,7 +1130,7 @@ function buildFontGrid() {
   const activeFont = (textLayers.find(l => l.id === activeLayerId) || {}).font;
   let html = '';
   fontList.forEach(f => {
-    const sel = (f === (activeFont || 'Impact')) ? 'selected' : '';
+    const sel = (f === (activeFont || 'Anton')) ? 'selected' : '';
     html += `<div class="font-pill ${sel}" style="font-family:'${f}',sans-serif" onclick="setActiveFont('${f}', this)">${f}</div>`;
   });
   c.innerHTML = html;
@@ -1195,7 +1195,7 @@ function updateActiveTextContent(v) {
   if (!l) {
     if (!v) return;
     const id = Date.now();
-    l = { id, text:v, x:canvas.width/2, y:canvas.height/2, font:"Impact", size:Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
+    l = { id, text:v, x:canvas.width/2, y:canvas.height/2, font:"Anton", size:Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0 };
     textLayers.push(l); activeLayerId = id; showFloatingMenu(l.x, l.y);
     buildFontGrid();
   } else { l.text = v; }
@@ -1227,9 +1227,16 @@ function setActiveFontRotation(v) {
   redraw(); saveState();
 }
 
+function mxLoadFonts() {
+  if (!document.fonts || !document.fonts.load) return;
+  const names = [...new Set(textLayers.map(l => l.font))];
+  Promise.all(names.map(n => document.fonts.load("bold 40px '" + n + "'").catch(() => {})))
+    .then(() => { if (imgLoaded) redraw(); });
+}
 function setActiveFont(f, el) { 
   if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
   const l = textLayers.find(x => x.id === activeLayerId); updateSelection(el); if (!l) return; l.font = f; redraw(); saveState(); 
+  mxLoadFonts();
 }
 function setActiveTextColor(c, el) { 
   if (activeLayerId === null && textLayers.length > 0) activeLayerId = textLayers[textLayers.length - 1].id;
@@ -1289,7 +1296,7 @@ function confirmTextCard() {
   }
 } else {
     const id = Date.now();
-    const newLayer = { id, text: val, x: canvas.width/2, y: canvas.height/2, font:"Impact", size: Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0, stretchX:1, stretchY:1 };
+    const newLayer = { id, text: val, x: canvas.width/2, y: canvas.height/2, font:"Anton", size: Math.round(canvas.width*0.1), color:"#ffffff", style:"normal", rotation:0, stretchX:1, stretchY:1 };
     textLayers.push(newLayer);
     activeLayerId = id;
     showFloatingMenu(newLayer.x, newLayer.y);
@@ -3447,8 +3454,7 @@ function autoSaveDraft() {
 document.addEventListener('visibilitychange', function() { if (document.hidden) autoSaveDraft(); });
 window.addEventListener('pagehide', autoSaveDraft);
 function restoreLastProject() {
-  const k = localStorage.getItem('mx_last_proj');
-  if (k && localStorage.getItem(k)) { try { loadProject(k); } catch (e) {} }
+  localStorage.removeItem('mx_last_proj');
 }
 
 function saveProjectToHome() {
@@ -3604,6 +3610,7 @@ if (p.personOverlay) {
       document.fonts.ready.then(() => { if (imgLoaded) redraw(); });
     }
     setTimeout(() => { if (imgLoaded) redraw(); }, 400);
+    mxLoadFonts(); setTimeout(mxLoadFonts, 1500); setTimeout(mxLoadFonts, 4000);
     if (currentFx && currentFx !== 'none' && !currentFx.endsWith(':none')) {
       const parts = currentFx.split(':');
       const catKey = parts[0], fname = parts[1];
@@ -3779,7 +3786,7 @@ if (data.projectId && localStorage.getItem('music_' + data.projectId)) {
     textLayers = (data.textLayers || []).map(l => ({
       id: l.id || Date.now() + Math.random(),
       text: l.text || '', x: l.x, y: l.y,
-      size: l.size || 40, font: l.font || 'Impact',
+      size: l.size || 40,font: l.font || 'Anton',
       color: l.color || '#ffffff', style: l.style || 'normal',
       rotation: l.rotation || 0, persp: l.persp || 0
     }));
@@ -3896,7 +3903,73 @@ function timeAgo(iso) {
 }
 
 let homeTab = 'library';
-function setHomeTab(t) { homeTab = t; localStorage.homeTab = t; renderProjectsList(); }
+const HOME_TABS = ['library', 'projects', 'colors'];
+function setHomeTab(t, skipAnim) {
+  const dir = HOME_TABS.indexOf(t) - HOME_TABS.indexOf(homeTab);
+  homeTab = t; localStorage.homeTab = t; renderProjectsList();
+  const b = document.getElementById('homeBody');
+  if (b && dir && !skipAnim) b.style.animation = (dir > 0 ? 'homeInR' : 'homeInL') + ' .22s ease';
+}
+(function() {
+  const v = document.getElementById('view-home');
+  if (!v) return;
+  let sx = 0, sy = 0, st = 0, mode = '', busy = false;
+  const body = () => document.getElementById('homeBody');
+  v.addEventListener('touchstart', function(e) {
+    if (busy || e.touches.length !== 1) { mode = 'x'; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now(); mode = '';
+  }, { passive: true });
+  v.addEventListener('touchmove', function(e) {
+    if (mode === 'x' || busy) return;
+    const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+    if (!mode) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      mode = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'h' : 'x';
+      if (mode === 'x') return;
+    }
+    const b = body(); if (!b) return;
+    const i = HOME_TABS.indexOf(homeTab);
+    const atEdge = (dx > 0 && i === 0) || (dx < 0 && i === HOME_TABS.length - 1);
+    const move = atEdge ? dx * 0.25 : dx;
+    b.style.animation = 'none';
+    b.style.transition = 'none';
+    b.style.transform = 'translateX(' + move + 'px)';
+    b.style.opacity = String(Math.max(0.35, 1 - Math.abs(move) / 500));
+  }, { passive: true });
+  v.addEventListener('touchend', function(e) {
+    if (mode !== 'h' || busy) { mode = ''; return; }
+    mode = '';
+    const dx = e.changedTouches[0].clientX - sx;
+    const b = body(); if (!b) return;
+    const i = HOME_TABS.indexOf(homeTab);
+    const dir = dx < 0 ? 1 : -1;
+    const next = i + dir;
+    const fast = Math.abs(dx) / Math.max(1, Date.now() - st) > 0.5;
+    const go = (Math.abs(dx) > 90 || (fast && Math.abs(dx) > 30)) && next >= 0 && next < HOME_TABS.length;
+    if (!go) {
+      b.style.transition = 'transform .22s ease, opacity .22s ease';
+      b.style.transform = ''; b.style.opacity = '';
+      return;
+    }
+    busy = true;
+    b.style.transition = 'transform .16s ease-in, opacity .16s ease-in';
+    b.style.transform = 'translateX(' + (dir > 0 ? -100 : 100) + '%)';
+    b.style.opacity = '0';
+    setTimeout(function() {
+      setHomeTab(HOME_TABS[next], true);
+      const nb = body();
+      if (nb) {
+        nb.style.transition = 'none';
+        nb.style.transform = 'translateX(' + (dir > 0 ? 40 : -40) + '%)';
+        nb.style.opacity = '0';
+        void nb.offsetWidth;
+        nb.style.transition = 'transform .26s cubic-bezier(.2,.8,.2,1), opacity .26s ease';
+        nb.style.transform = ''; nb.style.opacity = '';
+      }
+      setTimeout(function() { busy = false; }, 270);
+    }, 160);
+  }, { passive: true });
+})();
 
 function renderProjectsList() {
   const container = document.getElementById('gallery');
