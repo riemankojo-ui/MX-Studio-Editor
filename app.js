@@ -3457,6 +3457,16 @@ function restoreLastProject() {
   localStorage.removeItem('mx_last_proj');
 }
 
+function mxMakeThumb() {
+  try {
+    const s = 360 / Math.max(canvas.width, canvas.height);
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(canvas.width * s));
+    c.height = Math.max(1, Math.round(canvas.height * s));
+    c.getContext('2d').drawImage(canvas, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.78);
+  } catch (e) { return null; }
+}
 function saveProjectToHome() {
   if (!imgLoaded) return;
   if (!currentProjectId) currentProjectId = 'proj_' + Date.now();
@@ -3478,6 +3488,8 @@ function saveProjectToHome() {
   try {
     localStorage.setItem('music_' + currentProjectId, JSON.stringify({
       name: autoName, date: now.toISOString(), savedAt: now.getTime(),
+      thumb: mxMakeThumb(),
+      solidOrigin: window.__solidOrigin || null,
       image: originalImageSrc,
       backgroundRemoved: backgroundRemoved,
       originalImage: originalImageSrc,
@@ -3541,6 +3553,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   const p = JSON.parse(localStorage.getItem(key));
   currentProjectId = key.replace('music_', '');
   currentProjectName = p.name || 'Untitled';
+  window.__solidOrigin = p.solidOrigin || ((/^Solid (#[0-9a-f]{6})$/i.exec(p.name || '') || [])[1] || null);
   textLayers = p.textLayers || [];
   activeLayerId = null;
   bInput.value = p.brightness ?? 100; cInput.value = p.contrast ?? 100; sInput.value = p.saturation ?? 100; nInput.value = p.noise ?? 0;
@@ -3990,7 +4003,7 @@ function renderProjectsTab() {
   Object.keys(localStorage).filter(k => k.startsWith('music_proj_')).forEach(key => {
     try {
       const p = JSON.parse(localStorage.getItem(key));
-      items.push({ key, image: p.image, name: p.name || 'Untitled', date: p.date || null, timestamp: p.savedAt || new Date(p.date || 0).getTime() || 0 });
+      items.push({ key, image: p.thumb || p.image, name: p.name || 'Untitled', date: p.date || null, timestamp: p.savedAt || new Date(p.date || 0).getTime() || 0 });
     } catch (e) {}
   });
   items.sort((a, b) => b.timestamp - a.timestamp);
@@ -4011,8 +4024,59 @@ function renderProjectsTab() {
 function renderColorsTab() {
   const body = document.getElementById('homeBody');
   if (!body) return;
-  body.innerHTML = '<div class="color-grid">' + SOLID_COLORS.map(c =>
-    '<div class="color-item" style="background:' + c + '" onclick="pickColorForNewProject(\'' + c + '\')"></div>'
+  const hsl = hex => {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    const l = (mx + mn) / 2;
+    const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+    let h = 0;
+    if (d) {
+      if (mx === r) h = ((g - b) / d) % 6;
+      else if (mx === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h *= 60; if (h < 0) h += 360;
+    }
+    return { h, s, l };
+  };
+  const groups = [
+    ['Neutrals', []], ['Reds & Pinks', []], ['Oranges & Yellows', []],
+    ['Greens', []], ['Blues', []], ['Purples', []]
+  ];
+  SOLID_COLORS.forEach(c => {
+    const x = hsl(c); let gi;
+    if (x.s < 0.12) gi = 0;
+    else if (x.h < 15 || x.h >= 330) gi = 1;
+    else if (x.h < 65) gi = 2;
+    else if (x.h < 170) gi = 3;
+    else if (x.h < 260) gi = 4;
+    else gi = 5;
+    groups[gi][1].push({ c, l: x.l });
+  });
+  body.innerHTML = '<div class="color-wrap">' + groups.filter(g => g[1].length).map(g =>
+    '<div class="color-group-title">' + g[0] + '</div><div class="color-grid">' +
+    g[1].sort((a, b) => b.l - a.l).map(o =>
+      '<div class="color-item" style="background:' + o.c + '" onclick="pickColorForNewProject(\'' + o.c + '\')"></div>'
+    ).join('') + '</div>'
+  ).join('') + '</div>';
+}
+
+function renderWebLibrary(body) {
+  const items = [];
+  Object.keys(localStorage).filter(k => k.startsWith('music_proj_')).forEach(key => {
+    try {
+      const p = JSON.parse(localStorage.getItem(key));
+      if (p && p.image) items.push({ key, image: p.thumb || p.image, proj: !!p.thumb, t: p.savedAt || 0 });
+    } catch (e) {}
+  });
+  items.sort((a, b) => b.t - a.t);
+  const add = '<button class="lib-btn" onclick="document.getElementById(\'homeImageUpload\').click()">+ Add photos</button>';
+  if (!items.length) {
+    body.innerHTML = '<div class="home-empty"><div class="home-empty-title">LIBRARY</div><div class="home-empty-sub">Add photos from your device to start.</div></div><div class="lib-bar">' + add + '</div>';
+    return;
+  }
+  body.innerHTML = '<div class="lib-bar">' + add + '</div><div class="lib-grid">' + items.map(it =>
+    '<div class="lib-item' + (it.proj ? ' lib-proj' : '') + '" onclick="openProjectWithCount(\'' + it.key + '\')"><img src="' + it.image + '"><button class="project-card-del" onclick="event.stopPropagation();deleteProject(\'' + it.key + '\')"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'
   ).join('') + '</div>';
 }
 
@@ -4023,7 +4087,7 @@ async function renderLibraryTab() {
   if (!body) return;
   const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos;
   if (!P) {
-    body.innerHTML = '<div class="home-empty"><div class="home-empty-title">LIBRARY</div><div class="home-empty-sub">Your phone photos show here in the Android app.</div></div><button class="lib-btn" onclick="document.getElementById(\'homeImageUpload\').click()">Choose photos</button>';
+    renderWebLibrary(body);
     return;
   }
   body.innerHTML = '<div class="home-empty-sub" style="text-align:center;padding:30px 0;">Loading photos...</div>';
@@ -4039,7 +4103,7 @@ async function renderLibraryTab() {
   if (!photos.length) { body.innerHTML = '<div class="home-empty"><div class="home-empty-sub">No photos found</div></div>'; return; }
   const gpm = galleryProjectByMedia();
   body.innerHTML = '<div class="lib-grid">' + photos.map(p =>
-    '<div class="lib-item' + (gpm[p.id] ? ' lib-proj' : '') + '" data-id="' + p.id + '" onclick="openLibraryPhoto(' + p.id + ')"></div>'
+    '<div class="lib-item' + (gpm[p.id] ? ' lib-proj' : '') + '" data-id="' + p.id + '" onclick="openLibraryPhoto(' + p.id + ')">' + (gpm[p.id] ? '<button class="project-card-del" onclick="event.stopPropagation();deleteProject(\'' + gpm[p.id] + '\')"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' : '') + '</div>'
   ).join('') + '</div>';
   if (libObserver) libObserver.disconnect();
   libObserver = new IntersectionObserver(entries => {
@@ -4047,7 +4111,7 @@ async function renderLibraryTab() {
       if (!en.isIntersecting) return;
       libObserver.unobserve(en.target);
       const el = en.target, id = +el.dataset.id;
-      const put = u => { if (u) el.innerHTML = '<img src="' + u + '">'; };
+      const put = u => { if (u) el.insertAdjacentHTML('afterbegin', '<img src="' + u + '">'); };
       if (LIB_CACHE[id]) { put(LIB_CACHE[id]); return; }
       P.getThumb({ id: id, size: 240 }).then(r => { LIB_CACHE[id] = r.img; put(r.img); }).catch(() => {});
     });
@@ -4086,7 +4150,7 @@ function renderProjectsListOld() {
   keys.forEach(key => {
     try {
       const p = JSON.parse(localStorage.getItem(key));
-      items.push({ key, image: p.image, name: p.name || 'Untitled', date: p.date || null, timestamp: p.savedAt || new Date(p.date || 0).getTime() || 0 });
+      items.push({ key, image: p.thumb || p.image, name: p.name || 'Untitled', date: p.date || null, timestamp: p.savedAt || new Date(p.date || 0).getTime() || 0 });
     } catch(e) {}
   });
   items.sort((a, b) => b.timestamp - a.timestamp);
@@ -4766,6 +4830,7 @@ function pickColorForNewProject(color) {
     currentBgColor = null;
     currentProjectId = null;
     currentProjectName = 'Solid ' + color.toUpperCase();
+    window.__solidOrigin = color;
     document.getElementById('view-home').classList.remove('active');
     document.getElementById('view-studio').classList.add('active');
     document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'important');
@@ -4826,6 +4891,60 @@ window.switchBgPickerTab = switchBgPickerTab;
 window.pickBgForNewProject = pickBgForNewProject;
 window.pickColorForNewProject = pickColorForNewProject;
 // ---------- BG Colors tab ----------
+function mxSolidBase() {
+  const m = /^Solid (#[0-9a-f]{6})$/i.exec(currentProjectName || '');
+  return m ? m[1].toLowerCase() : null;
+}
+function mxSortedColors() {
+  const hsl = hex => {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    const l = (mx + mn) / 2;
+    const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+    let h = 0;
+    if (d) {
+      if (mx === r) h = ((g - b) / d) % 6;
+      else if (mx === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h *= 60; if (h < 0) h += 360;
+    }
+    return { h, s, l };
+  };
+  const groups = [[], [], [], [], [], []];
+  SOLID_COLORS.forEach(c => {
+    const x = hsl(c); let gi;
+    if (x.s < 0.12) gi = 0;
+    else if (x.h < 15 || x.h >= 330) gi = 1;
+    else if (x.h < 65) gi = 2;
+    else if (x.h < 170) gi = 3;
+    else if (x.h < 260) gi = 4;
+    else gi = 5;
+    groups[gi].push({ c, l: x.l });
+  });
+  const out = [];
+  groups.forEach(g => g.sort((a, b) => b.l - a.l).forEach(o => out.push(o.c)));
+  return out;
+}
+function mxReplaceSolidBase(color, el) {
+  const W = canvas.width, H = canvas.height;
+  const blank = document.createElement('canvas');
+  blank.width = W; blank.height = H;
+  const b = blank.getContext('2d');
+  b.fillStyle = color; b.fillRect(0, 0, W, H);
+  const src = blank.toDataURL('image/png');
+  const im = new Image();
+  im.onload = function() {
+    img = im;
+    originalImageSrc = src;
+    currentProjectName = 'Solid ' + color.toUpperCase();
+    currentBgColor = null; currentBgImage = null;
+    document.querySelectorAll('#bgColorsTabGrid > div').forEach(x => { x.style.border = '1px solid transparent'; });
+    if (el) el.style.border = '2px solid #fff';
+    redraw(); saveState();
+  };
+  im.src = src;
+}
 function buildBgColorsTab() {
   const grid = document.getElementById('bgColorsTabGrid');
   if (!grid) return;
@@ -4834,20 +4953,22 @@ function buildBgColorsTab() {
   let html = '';
 
   // "None" option first
-  const noneSel = (!currentBgColor && !currentBgImage);
+  const noneSel = (!currentBgColor && !currentBgImage) && (!mxSolidBase() || mxSolidBase() === String(window.__solidOrigin || '').toLowerCase());
   html += `<div onclick="applyBgColorFromTab(null, this)" style="flex:0 0 auto;width:62px;height:62px;background:#111;border-radius:0;border:${noneSel ? '2px' : '1px'} solid ${noneSel ? '#fff' : '#222'};cursor:pointer;display:flex;align-items:center;justify-content:center;">
     <span style="color:#666;font-size:10px;font-weight:800;letter-spacing:1px;">NONE</span>
   </div>`;
 
   // All colors
-  SOLID_COLORS.forEach(col => {
-    const isSel = (currentBgColor === col);
+  mxSortedColors().forEach(col => {
+    const isSel = (currentBgColor === col) || (mxSolidBase() === col.toLowerCase() && mxSolidBase() !== String(window.__solidOrigin || '').toLowerCase());
     html += `<div onclick="applyBgColorFromTab('${col}', this)" style="flex:0 0 auto;width:62px;height:62px;background:${col};border-radius:0;border:${isSel ? '2px' : '1px'} solid ${isSel ? '#fff' : 'transparent'};cursor:pointer;"></div>`;
   });
 
   grid.innerHTML = html;
 }
 async function applyBgColorFromTab(color, el) {
+  if (color !== null && mxSolidBase()) { mxReplaceSolidBase(color, el); return; }
+  if (color === null && mxSolidBase() && window.__solidOrigin) { mxReplaceSolidBase(window.__solidOrigin, el); return; }
   if (color === null) {
     // None = clear background
     currentBgColor = null;

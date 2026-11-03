@@ -29,9 +29,14 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .lib-item { aspect-ratio:1/1; background:#161616; overflow:hidden; cursor:pointer; position:relative; }
 .lib-proj::after { content:'PROJECT'; position:absolute; left:4px; bottom:4px; background:#fff; color:#000; font-size:8px; font-weight:800; padding:2px 5px; border-radius:4px; letter-spacing:.4px; }
 .lib-item img { width:100%; height:100%; object-fit:cover; display:block; }
-.color-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding-bottom:30px; }
-.color-item { aspect-ratio:1/1; cursor:pointer; }
-.lib-btn { width:100%; padding:14px; border-radius:12px; background:#fff; color:#000; border:0; font-weight:800; font-size:13px; }
+.color-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:3px; padding:0 3px; }
+.color-wrap { padding-bottom:30px; }
+.color-group-title { font-size:10px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:#777; padding:18px 10px 8px; }
+.color-item { aspect-ratio:1/1; cursor:pointer; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); transition:transform .12s ease; -webkit-tap-highlight-color:transparent; }
+.color-item:active { transform:scale(.9); }
+.lib-btn { padding:9px 18px; border-radius:0; background:#fff; color:#000; border:0; font-weight:800; font-size:12px; letter-spacing:.3px; -webkit-tap-highlight-color:transparent; }
+.lib-btn:active { opacity:.8; }
+.lib-bar { display:flex; justify-content:center; padding:10px 8px 12px; }
 .project-card { cursor:pointer; position:relative; }
 .project-card:active { opacity:.9; }
 .project-card-img { width:100%; aspect-ratio:1/1; background:#161616; border-radius:0; overflow:hidden; }
@@ -39,8 +44,9 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .project-card-info { position:absolute; left:0; right:0; bottom:0; padding:24px 6px 5px 6px; text-align:left; background:linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,0)); pointer-events:none; }
 .project-card-name { font-size:11px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:1px; text-shadow:0 1px 3px rgba(0,0,0,.6); }
 .project-card-date { font-size:9px; color:#bbb; text-shadow:0 1px 3px rgba(0,0,0,.6); }
-.project-card-del { position:absolute; top:4px; right:4px; width:22px; height:22px; background:rgba(0,0,0,.7); border:none; border-radius:50%; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
-.project-card-del svg { stroke:#fff; }
+.project-card-del { position:absolute; top:5px; right:5px; width:20px; height:20px; background:rgba(20,20,20,.45); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.18); border-radius:0; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; -webkit-tap-highlight-color:transparent; transition:transform .12s ease, background .12s ease; }
+.project-card-del:active { transform:scale(.88); background:rgba(255,59,48,.75); }
+.project-card-del svg { stroke:#fff; stroke-width:1.8; width:9px; height:9px; }
 
 .home-empty { padding:50px 20px; text-align:center; }
 .home-empty-icon { font-size:48px; margin-bottom:14px; opacity:.55; }
@@ -206,12 +212,13 @@ input[type="text"] { color:#fff; font-size:13px; width:100%; box-sizing:border-b
 
 #confirmModal { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
 #confirmModal.active { display:flex; }
-.confirm-card { background:#161616; border:1px solid #242424; border-radius:16px; padding:24px 20px 18px; width:100%; max-width:280px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
-.confirm-title { font-size:15px; font-weight:800; color:#fff; margin-bottom:6px; }
-.confirm-sub { font-size:11px; color:#888; margin-bottom:20px; line-height:1.5; }
+.confirm-card { background:#121212; border:1px solid #2a2a2a; border-top:2px solid #ff2c2c; border-radius:0; padding:22px 18px 18px; width:100%; max-width:300px; text-align:left; box-shadow:0 20px 60px rgba(0,0,0,.7); }
+.confirm-title { font-size:15px; font-weight:800; color:#fff; margin-bottom:6px; letter-spacing:.2px; }
+.confirm-sub { font-size:12px; color:#8a8a8a; margin-bottom:22px; line-height:1.5; }
 .confirm-actions { display:flex; gap:10px; }
-.confirm-btn { flex:1; border:none; padding:12px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; text-transform:uppercase; }
-.confirm-btn.keep { background:#242424; color:#fff; }
+.confirm-btn { flex:1; border:none; padding:13px 12px; border-radius:0; font-size:11px; font-weight:800; letter-spacing:.8px; cursor:pointer; text-transform:uppercase; -webkit-tap-highlight-color:transparent; }
+.confirm-btn:active { opacity:.8; }
+.confirm-btn.keep { background:transparent; color:#fff; box-shadow:inset 0 0 0 1px #3a3a3a; }
 .confirm-btn.delete { background:#ff2c2c; color:#fff; }
 
 #textCardModal { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:650; display:none; align-items:center; justify-content:center; padding:20px; }
