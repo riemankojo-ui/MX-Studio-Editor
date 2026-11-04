@@ -146,6 +146,64 @@ const BG_CONFIG = { prefix:'background', max:20, files:[] };
 const fxImages = {};
 const bgImages = {};
 
+// ---------- Offline fonts: save Google fonts on the phone ----------
+function mxApplyFontCss(css) {
+  let st = document.getElementById('mxFontsLocal');
+  if (!st) { st = document.createElement('style'); st.id = 'mxFontsLocal'; document.head.appendChild(st); }
+  st.textContent = css;
+  buildFontGrid();
+  if (imgLoaded) setTimeout(function() { mxLoadFonts(); }, 300);
+}
+function mxFontSay(t) { const el = document.getElementById('mxFontText'); if (el) el.textContent = t; }
+function mxFontFail() {
+  mxFontSay('Failed. Check internet and tap Download again.');
+  const b = document.getElementById('mxFontBtn'); if (b) b.style.display = '';
+}
+function mxFontBanner() {
+  if (document.getElementById('mxFontBar')) return;
+  const d = document.createElement('div');
+  d.id = 'mxFontBar';
+  d.style.cssText = 'position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:99999;background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;';
+  d.innerHTML = '<div id="mxFontText" style="flex:1;font-size:12px;color:#ccc;line-height:1.4;text-align:left;">Download fonts for offline use (needs internet)</div><button id="mxFontBtn" style="background:#fff;color:#000;border:0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:800;">Download</button>';
+  document.body.appendChild(d);
+  document.getElementById('mxFontBtn').onclick = function() { window.mxFontGo = true; this.style.display = 'none'; mxCacheFonts(); };
+}
+async function mxCacheFonts() {
+  if (!fxIsApp()) return;
+  const saved = localStorage.getItem('mx_font_css');
+  if (saved) { mxApplyFontCss(saved); return; }
+  const FS = fxPlugin();
+  const lk = document.querySelector('link[href*="fonts.googleapis.com"]');
+  if (!FS || !lk) return;
+  if (!window.mxFontGo) { mxFontBanner(); return; }
+  try {
+    mxFontSay('Starting download...');
+    const resp = await fetch(lk.href).catch(function() { return null; });
+    if (!resp || !resp.ok) { mxFontFail(); return; }
+    const txt = await resp.text();
+    const blocks = txt.split('/* ').filter(function(b) { return b.indexOf('latin */') === 0; }).map(function(b) { return '/* ' + b; });
+    let base = '', failed = 0, doneN = 0;
+    const out = new Array(blocks.length);
+    for (let i = 0; i < blocks.length; i += 6) {
+      await Promise.all(blocks.slice(i, i + 6).map(async function(b, j) {
+        const k = i + j;
+        const m = b.match(/url\((https:[^)]+)\)/);
+        if (!m) { failed++; return; }
+        try {
+          const r = await FS.downloadFile({ url: m[1], path: 'effects/fnt-' + k + '.woff2' });
+          if (!base) base = window.Capacitor.convertFileSrc(r.path.replace(/[^\/]+$/, ''));
+          out[k] = b.replace(m[1], base + 'fnt-' + k + '.woff2'); doneN++; mxFontSay('Downloading fonts ' + doneN + ' / ' + blocks.length);
+        } catch (e) { failed++; }
+      }));
+    }
+    const css = out.filter(Boolean).join('\n');
+    if (!css) { mxFontFail(); return; }
+    if (!css) return;
+    mxApplyFontCss(css);
+    if (!failed) { localStorage.setItem('mx_font_css', css); const bar = document.getElementById('mxFontBar'); if (bar) bar.remove(); showToast('Fonts ready offline'); } else { mxFontFail(); }
+  } catch (e) {}
+}
+
 // ---------- Offline effects: download once, then run from the phone ----------
 const FX_REMOTE = 'https://mx-studio-editor.vercel.app/effects/';
 function fxPlugin() { const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos; return (P && P.downloadEffect) ? { downloadFile: function(o) { return P.downloadEffect({ url: o.url, name: o.path.replace('effects/', '') }); } } : null; }
@@ -277,6 +335,19 @@ doMxExport = function(cleanName) {
     .catch(function(e) {
       if (String((e && e.message) || e).indexOf('cancel') < 0) showToast('Export failed');
     });
+};
+
+const _mxShareWeb = shareMxProject;
+shareMxProject = function() {
+  const Fs = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem;
+  const Sh = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share;
+  if (!(Fs && Sh)) { _mxShareWeb(); return; }
+  if (!imgLoaded) { showToast('Load a photo first'); return; }
+  const filename = (currentProjectName || 'MxProject').replace(/[^a-z0-9\-_ ]/gi, '_').replace(/\s+/g, '-') + '.mx';
+  Fs.writeFile({ path: filename, data: JSON.stringify(buildMxData()), directory: 'CACHE', encoding: 'utf8' })
+    .then(function(r) { return Sh.share({ title: filename, files: [r.uri] }); })
+    .then(function() { closeBackupSheet(); })
+    .catch(function(e) { if (String((e && e.message) || e).toLowerCase().indexOf('cancel') < 0) showToast('Share failed'); });
 };
 
 function fxSaveToDevice(name) {
@@ -416,7 +487,7 @@ function playCount(callback) {
       if (!cb && callback) { try { callback(); } catch(e){} }
       setTimeout(() => {
         el.classList.add('fade-out');
-        setTimeout(() => { el.style.display = 'none'; counterLocked = false; }, 300);
+        setTimeout(() => { el.style.display = 'none'; counterLocked = false; }, 750);
       }, 100);
     }
   }
@@ -1713,10 +1784,19 @@ function applyState(s) {
 
 function saveState() {
   if (!imgLoaded) return;
-  undoStack.push(captureState());
+  const mxNew = captureState();
+  const mxLast = undoStack[undoStack.length - 1];
+  if (mxLast && mxSameState(mxLast, mxNew)) return;
+  undoStack.push(mxNew);
   if (undoStack.length > 25) undoStack.shift();
   redoStack = [];
   updateHistoryButtons();
+}
+
+function mxSameState(a, b) {
+  if (a.personMask !== b.personMask || a.imgRef !== b.imgRef || a.originalImageSrc !== b.originalImageSrc || a.currentBgImage !== b.currentBgImage) return false;
+  const strip = function(s) { const c = Object.assign({}, s); delete c.personMask; delete c.imgRef; delete c.originalImageSrc; delete c.currentBgImage; return JSON.stringify(c); };
+  return strip(a) === strip(b);
 }
 
 function undo() {
@@ -3976,6 +4056,22 @@ if (p.personOverlay) {
   document.querySelector('.nav-btn[data-panel="adjust"]').classList.add('active');
 }
 
+function mxBackHome() {
+  let l = document.getElementById('mxBackLoad');
+  if (!l) {
+    l = document.createElement('div');
+    l.id = 'mxBackLoad';
+    l.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99998;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;';
+    l.innerHTML = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></path></svg>';
+    document.body.appendChild(l);
+  }
+  l.style.display = 'flex';
+  setTimeout(function() {
+    setTimeout(function() { try { goHome(); } finally { l.style.display = 'none'; } }, 650);
+  }, 60);
+}
+window.mxBackHome = mxBackHome;
+
 function goHome() {
   localStorage.removeItem('mx_last_proj');
   document.getElementById('view-studio').classList.remove('active');
@@ -4324,7 +4420,7 @@ function renderProjectsList() {
   const tabs = [['library', 'Library'], ['projects', 'Projects'], ['colors', 'Colors']];
   container.innerHTML = '<div class="home-tabs">' + tabs.map(t =>
     '<button class="home-tab' + (homeTab === t[0] ? ' on' : '') + '" onclick="setHomeTab(\'' + t[0] + '\')">' + t[1] + '</button>'
-  ).join('') + '</div>' + fxBannerHtml() + '<div id="homeBody"></div>';
+  ).join('') + '<button class="home-reload' + (homeTab === 'library' ? '' : ' off') + '" onclick="mxReloadLibrary(this)" title="Reload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-3-6.2"/><polygon points="21 2.5 21 9 14.5 9" fill="currentColor"/></svg></button></div>' + fxBannerHtml() + '<div id="homeBody"></div>';
   if (homeTab === 'library') renderLibraryTab();
   else if (homeTab === 'colors') renderColorsTab();
   else renderProjectsTab();
@@ -4413,6 +4509,68 @@ function renderWebLibrary(body) {
     '<div class="lib-item' + (it.proj ? ' lib-proj' : '') + '" onclick="openProjectWithCount(\'' + it.key + '\')"><img src="' + it.image + '"><button class="project-card-del" onclick="event.stopPropagation();deleteProject(\'' + it.key + '\')"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'
   ).join('') + '</div>';
 }
+
+function mxReloadLibrary(btn) {
+  if (btn) btn.classList.add('spin');
+  for (const k in LIB_CACHE) delete LIB_CACHE[k];
+  const b = document.getElementById('homeBody');
+  if (b) { b.classList.remove('drop'); void b.offsetWidth; b.classList.add('drop'); }
+  const t0 = Date.now();
+  Promise.resolve(renderLibraryTab()).then(function() {
+    setTimeout(function() { if (btn) btn.classList.remove('spin'); }, Math.max(0, 600 - (Date.now() - t0)));
+  });
+}
+window.mxReloadLibrary = mxReloadLibrary;
+
+(function() {
+  const v = document.getElementById('view-home');
+  if (!v) return;
+  let y0 = 0, x0 = 0, pull = 0, on = false, fired = false;
+  let ar = null;
+  function arrowEl() {
+    if (ar) return ar;
+    ar = document.createElement('div');
+    ar.id = 'mxPullArrow';
+    ar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-3-6.2"/><polygon points="21 2.5 21 9 14.5 9" fill="#fff"/></svg>';
+    v.appendChild(ar);
+    return ar;
+  }
+  function arrowTo(p, spin, drag) {
+    const a = arrowEl();
+    const tb = v.querySelector('.home-tabs');
+    const top = tb ? tb.getBoundingClientRect().bottom : 60;
+    const k = Math.min(1, p / 120);
+    a.style.transition = drag ? 'none' : '';
+    a.style.top = top + 'px';
+    a.style.opacity = k ? '1' : '0';
+    a.style.transform = 'translate(-50%,' + (-40 + k * 56) + 'px)';
+    a.firstChild.style.transform = spin ? '' : 'rotate(' + (k * 270) + 'deg)';
+    a.classList.toggle('spin', !!spin);
+  }
+  v.addEventListener('touchstart', function(e) {
+    const c = v.querySelector('.home-container');
+    on = c && c.scrollTop <= 0 && e.touches.length === 1;
+    y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; pull = 0; fired = false;
+  }, { passive: true });
+  v.addEventListener('touchmove', function(e) {
+    if (!on || fired) return;
+    const dy = e.touches[0].clientY - y0, dx = e.touches[0].clientX - x0;
+    if (dy <= 0 || Math.abs(dx) > dy) { pull = 0; return; }
+    pull = dy;
+    const b = document.getElementById('homeBody');
+    void b;
+    arrowTo(dy, false, true);
+  }, { passive: true });
+  v.addEventListener('touchend', function() {
+    const b = document.getElementById('homeBody');
+    if (b && pull) { b.style.transition = 'transform .2s ease'; b.style.transform = ''; }
+    if (on && pull > 120 && !fired) {
+      fired = true; arrowTo(120, true, false); if (homeTab === 'library') mxReloadLibrary(null); else { renderProjectsList(); const nb = document.getElementById('homeBody'); if (nb) { nb.classList.remove('drop'); void nb.offsetWidth; nb.classList.add('drop'); } }
+      setTimeout(function() { arrowTo(0, false, false); }, 900);
+    } else if (ar) { arrowTo(0, false, false); }
+    on = false; pull = 0;
+  }, { passive: true });
+})();
 
 const LIB_CACHE = {};
 let libObserver = null;
@@ -4621,6 +4779,7 @@ function importOnePhoto(file) {
 // ---------- Boot ----------
 document.querySelector('.bottom-nav').style.setProperty('display', 'none', 'important');
 document.addEventListener('DOMContentLoaded', function() {
+  mxCacheFonts();
   const el = document.getElementById('splashScreen');
   if (el) { el.classList.remove('fade-out'); el.style.display = 'flex'; }
 
@@ -4674,7 +4833,7 @@ setTimeout(() => {
 }, 0);
     setTimeout(() => {
       const s = document.getElementById('splashScreen');
-      if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 300); }
+      if (s) { s.classList.add('fade-out'); setTimeout(() => { s.style.display = 'none'; }, 750); }
     }, 400);
   })();
 });
