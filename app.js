@@ -100,15 +100,15 @@ const BG_COLORS = ['#ffffff', '#ff2c2c', '#000000'];
 
 const TEMPLATES = [
   { name:'None',b:100,c:100,s:100,n:0,f:'none' },
-  { name:'Fresh',b:106,c:104,s:112,n:0,f:'none' },
-  { name:'Euro',b:98,c:108,s:92,n:12,f:'sepia(22%)' },
-  { name:'Portrait',b:108,c:96,s:112,n:6,f:'none' },
-  { name:'Moody',b:90,c:125,s:90,n:8,f:'none' },
+  { name:'Fresh',b:112,c:106,s:128,n:0,f:'none' },
+  { name:'Euro',b:96,c:118,s:78,n:14,f:'sepia(30%)' },
+  { name:'Portrait',b:115,c:90,s:120,n:0,f:'contrast(95%) saturate(110%)' },
+  { name:'Moody',b:80,c:140,s:80,n:18,f:'none' },
   { name:'Cinematic',b:96,c:118,s:95,n:6,f:'hue-rotate(-6deg) saturate(95%)' },
-  { name:'Summer',b:108,c:108,s:128,n:0,f:'saturate(120%)' },
-  { name:'Mono',b:100,c:118,s:0,n:0,f:'grayscale(100%)' },
-  { name:'Noir',b:92,c:150,s:0,n:14,f:'grayscale(100%) contrast(140%)' },
-  { name:'Golden',b:106,c:106,s:116,n:12,f:'sepia(30%) saturate(120%)' }
+  { name:'Summer',b:112,c:110,s:150,n:0,f:'saturate(130%)' },
+  { name:'Mono',b:100,c:125,s:0,n:0,f:'grayscale(100%)' },
+  { name:'Noir',b:88,c:165,s:0,n:20,f:'grayscale(100%) contrast(150%)' },
+  { name:'Golden',b:108,c:108,s:125,n:14,f:'sepia(45%) saturate(130%)' }
 ];
 
 const FILTERS = [
@@ -424,6 +424,23 @@ function switchAdjustCat(name, el) {
   if (name === 'presets') buildPresetThumbs();
 }
 
+let _pvKey = null, _pvUrl = null;
+function mxPreviewUrl() {
+  if (!imgLoaded || !img || !img.src) return '';
+  if (_pvKey === img.src) return _pvUrl;
+  try {
+    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    const s = 160 / Math.max(iw, ih);
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(iw * s));
+    c.height = Math.max(1, Math.round(ih * s));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    _pvUrl = c.toDataURL('image/png');
+  } catch (e) { _pvUrl = img.src; }
+  _pvKey = img.src;
+  return _pvUrl;
+}
+
 function buildPresetThumbs() {
   const el = document.getElementById('presetThumbsContainer');
   if (!el) return;
@@ -432,8 +449,8 @@ function buildPresetThumbs() {
   let html = '';
   FILTERS.forEach((f, i) => {
     const sel = (currentFilter === f.code) ? 'selected' : '';
-    const filterStyle = f.code === 'none' ? 'none' : f.code;
-    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('sample2.jpg'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
+    const filterStyle = f.code === 'none' ? 'none' : (f.code === 'coverart' ? 'grayscale(100%) contrast(180%)' : f.code);
+    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('sample${(i % 3) + 1}.jpg'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
   });
   el.innerHTML = html;
 }// ---------- FX system ----------
@@ -1018,8 +1035,8 @@ function buildFilterThumbs() {
   let html = '';
   FILTERS.forEach((f, i) => {
     const sel = (currentFilter === f.code) ? 'selected' : '';
-    const filterStyle = f.code === 'none' ? 'none' : f.code;
-    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('sample1.jpg'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
+    const filterStyle = f.code === 'none' ? 'none' : (f.code === 'coverart' ? 'grayscale(100%) contrast(180%)' : f.code);
+    html += `<div class="filter-thumb ${sel}" onclick="applyFilterByIndex(${i}, this)"><div class="filter-thumb-img" style="background-image:url('sample${(i % 3) + 1}.jpg'); filter:${filterStyle};"></div><span class="filter-thumb-label">${f.name}</span></div>`;
   });
   el.innerHTML = html;
 }
@@ -1041,7 +1058,7 @@ function buildTemplates() {
   TEMPLATES.forEach((t, i) => {
     const sel = (currentTemplate === t.name) ? 'selected' : '';
     const filterStyle = `brightness(${t.b}%) contrast(${t.c}%) saturate(${t.s}%) ${t.f !== 'none' ? t.f : ''}`;
-    html += `<div class="template-thumb ${sel}" onclick="applyTemplate(${i}, this)"><div class="template-thumb-img" style="background-image:url('sample${(Math.floor(i / 6) % 3) + 1}.jpg'); filter:${filterStyle};"></div><span class="template-thumb-label">${t.name}</span></div>`;
+    html += `<div class="template-thumb ${sel}" onclick="applyTemplate(${i}, this)"><div class="template-thumb-img" style="background-image:url('sample${(i % 3) + 1}.jpg'); filter:${filterStyle};"></div><span class="template-thumb-label">${t.name}</span></div>`;
 
   });
   c.innerHTML = html;
@@ -1123,7 +1140,19 @@ function setBgColor(color, el) {
 function setBgColorSize(v) { currentBgColorSize = parseInt(v); const e = document.getElementById('bgColorSizeVal'); if (e) e.innerText = v; redraw(); saveState(); }
 
 // ---------- Fonts ----------
-function buildFontGrid() {
+function buildFontGrid() { buildFontGridRaw(); mxReadyPills(); }
+function mxReadyPills() {
+  const c = document.getElementById('fontGridContainer');
+  if (!c) return;
+  c.querySelectorAll('.font-pill').forEach(p => {
+    const fam = p.style.fontFamily.split(',')[0].replace(/["']/g, '');
+    const done = () => p.classList.add('ready');
+    if (!document.fonts || !document.fonts.load || document.fonts.check("14px '" + fam + "'")) { done(); return; }
+    document.fonts.load("14px '" + fam + "'").then(done).catch(done);
+  });
+  setTimeout(() => c.querySelectorAll('.font-pill').forEach(p => p.classList.add('ready')), 2500);
+}
+function buildFontGridRaw() {
   const c = document.getElementById('fontGridContainer');
   if (!c) return;
   const fontList = ["Impact","Bebas Neue","Oswald","Montserrat","Anton","Pacifico","Permanent Marker","Russo One","Press Start 2P","Righteous","Orbitron","Bungee","Bungee Inline","Creepster","Monoton","Luckiest Guy","Rye","Satisfy","Yellowtail","Chewy","Alfa Slab One","Cinzel","Audiowide","Black Ops One","Chango","Coiny","Damion","Diplomata SC","Frijole","Gloria Hallelujah","Gugi","Knewave","Lobster","Parisienne","Poppins","Playfair Display","Special Elite","Great Vibes","Merriweather","Dancing Script","Caveat","Cormorant Garamond","Crimson Text","Exo 2","Fjalla One","Indie Flower","Josefin Sans","Lora","Lobster Two","Merienda","Nanum Pen Script","Neucha","Nunito","Oleo Script","Pattaya","Peralta","Rajdhani","Rock Salt","Sacramento","Shadows Into Light","Share Tech Mono","Sigmar One","Spectral","Teko","Titan One","Ubuntu","Unica One","Varela Round","Vollkorn","Yanone Kaffeesatz","Zilla Slab","Abril Fatface","Alegreya","Archivo Black","Barlow Condensed","Bitter","Bree Serif","Cabin","Catamaran","Comfortaa","DM Serif Display","EB Garamond","Fira Sans","Frank Ruhl Libre","Fugaz One","Gothic A1","Heebo","IBM Plex Sans","Inconsolata","Jost","Karla","Kaushan Script","Libre Baskerville","Lilita One","M PLUS Rounded 1c","Manrope","Marcellus","Maven Pro"];
@@ -1140,6 +1169,7 @@ function buildFontGrid() {
 function setActiveTextBrightness(v) {
   v = parseInt(v);
   const e = document.getElementById('brVal'); if (e) e.innerText = v;
+  if (activeLayerId === null && textLayers.length) activeLayerId = textLayers[textLayers.length - 1].id;
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) return;
   const hsl = hexToHsl(l.color || '#ffffff');
@@ -1150,6 +1180,7 @@ function setActiveTextBrightness(v) {
 function setActiveTextHue(v) {
   v = parseInt(v);
   const e = document.getElementById('hueVal'); if (e) e.innerText = v + '°';
+  if (activeLayerId === null && textLayers.length) activeLayerId = textLayers[textLayers.length - 1].id;
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) return;
   const hsl = hexToHsl(l.color || '#ffffff');
@@ -1176,6 +1207,9 @@ function syncActiveInputs() {
     return;
   }
   if (sizeInput) sizeInput.value = l.size;
+  const skv = l.style === 'stroke' ? (l.strokeW > 0 ? l.strokeW : 8) : (l.strokeW || 0);
+  const skI = document.getElementById('strokeW'); if (skI) skI.value = skv;
+  const skT = document.getElementById('strokeWVal'); if (skT) skT.innerText = skv;
   const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = l.size;
   const cb = document.getElementById('colorBrightness');
   if (cb) {
@@ -1202,7 +1236,39 @@ function updateActiveTextContent(v) {
   updateTextLayersUI(); redraw(); saveState();
 }
 
+function mxLayerForStroke() {
+  if (activeLayerId === null && textLayers.length) activeLayerId = textLayers[textLayers.length - 1].id;
+  return textLayers.find(x => x.id === activeLayerId) || null;
+}
+function mxSyncStyleChips(style) {
+  const names = { normal:'Standard', stroke:'Outline', shadow:'Shadow', glow:'Glow' };
+  document.querySelectorAll('#subtab-featured .h-card').forEach(c => c.classList.toggle('selected', c.textContent.trim() === names[style]));
+}
+function setStrokeWidth(v) {
+  v = parseInt(v);
+  const t = document.getElementById('strokeWVal'); if (t) t.innerText = v;
+  const l = mxLayerForStroke(); if (!l) return;
+  l.strokeW = v;
+  if (v > 0 && l.style === 'normal') l.style = 'stroke';
+  else if (v === 0 && l.style === 'stroke') l.style = 'normal';
+  mxSyncStyleChips(l.style);
+  redraw(); saveState();
+}
+function setStrokeColor(c, el) {
+  const l = mxLayerForStroke(); if (!l) return;
+  l.strokeColor = c;
+  if (!(l.strokeW > 0)) l.strokeW = 8;
+  if (l.style === 'normal') l.style = 'stroke';
+  document.querySelectorAll('.sk-sw').forEach(s => s.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  syncActiveInputs(); mxSyncStyleChips(l.style);
+  redraw(); saveState();
+}
+window.setStrokeWidth = setStrokeWidth;
+window.setStrokeColor = setStrokeColor;
+
 function setActiveFontSize(v) {
+  if (activeLayerId === null && textLayers.length) activeLayerId = textLayers[textLayers.length - 1].id;
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) { const fs = document.getElementById('fSizeVal'); if (fs) fs.innerText = v; return; }
   l.size = parseInt(v);
@@ -1211,6 +1277,7 @@ function setActiveFontSize(v) {
 }
 
 function setActiveTextPersp(v) {
+  if (activeLayerId === null && textLayers.length) activeLayerId = textLayers[textLayers.length - 1].id;
   const l = textLayers.find(x => x.id === activeLayerId);
   const pv = document.getElementById('perspVal');
   if (pv) pv.innerText = v;
@@ -1220,6 +1287,7 @@ function setActiveTextPersp(v) {
 }
 
 function setActiveFontRotation(v) {
+  if (activeLayerId === null && textLayers.length) activeLayerId = textLayers[textLayers.length - 1].id;
   const frv = document.getElementById('fRotVal'); if (frv) frv.innerText = v + '°';
   const l = textLayers.find(x => x.id === activeLayerId);
   if (!l) return;
@@ -1313,6 +1381,7 @@ function editActiveText() {
 }
 
 function deleteActiveTextLayer() {
+  if (activeLayerId === null && textLayers.length) activeLayerId = textLayers[textLayers.length - 1].id;
   if (textLayers.length === 0) { textMenu.style.display = 'none'; return; }
   textLayers = textLayers.filter(x => x.id !== activeLayerId);
   activeLayerId = textLayers.length ? textLayers[0].id : null;
@@ -1709,6 +1778,15 @@ function startTouch(e) {
     }
     if (touches.size === 1) {
       const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
+      if (ovCropActive()) {
+        const r = ovCropRect(), lp = ovToLocal(r.g, pos), R = 40;
+        let corner = null;
+        if (Math.hypot(lp.x - r.x0, lp.y - r.y0) < R) corner = 'tl';
+        else if (Math.hypot(lp.x - r.x1, lp.y - r.y0) < R) corner = 'tr';
+        else if (Math.hypot(lp.x - r.x0, lp.y - r.y1) < R) corner = 'bl';
+        else if (Math.hypot(lp.x - r.x1, lp.y - r.y1) < R) corner = 'br';
+        if (corner) { window.__ovDrag = { corner: corner }; return; }
+      }
       isDraggingOverlay = true;
       overlayDragStart = { x: pos.x, y: pos.y, ox: overlayX, oy: overlayY };
       return;
@@ -1824,7 +1902,8 @@ if (gestureTarget === 'person' && personOverlay) {
   }
 }
 
-function onTouchMove(e) {
+function onTouchMove(e) { window.__inMove = true; try { onTouchMoveRaw(e); } finally { window.__inMove = false; } }
+function onTouchMoveRaw(e) {
   if (!imgLoaded) return;
   if (e.preventDefault) e.preventDefault();
   if (e.touches) { for (const t of e.touches) touches.set(t.identifier, { x:t.clientX, y:t.clientY }); }
@@ -1890,6 +1969,15 @@ function onTouchMove(e) {
       overlayScale = Math.max(0.1, Math.min(5, gesture.startScale * scale));
       overlayRotation = gesture.startRot + rotDelta;
       redraw(); return;
+    }
+    if (window.__ovDrag && window.__ovGeom) {
+      const g = window.__ovGeom, c = window.__ovDrag.corner;
+      const lp = ovToLocal(g, getCanvasCoordinates(e, e.touches ? e.touches[0] : null));
+      const fx = Math.max(0, Math.min(100, (lp.x + g.w / 2) / g.w * 100));
+      const fy = Math.max(0, Math.min(100, (lp.y + g.h / 2) / g.h * 100));
+      if (c === 'tl' || c === 'bl') cutLeft = Math.min(fx, 90 - cutRight); else cutRight = Math.min(100 - fx, 90 - cutLeft);
+      if (c === 'tl' || c === 'tr') cutTop = Math.min(fy, 90 - cutBottom); else cutBottom = Math.min(100 - fy, 90 - cutTop);
+      ovCropSync(); redraw(); return;
     }
     if (isDraggingOverlay && overlayDragStart) {
       const pos = getCanvasCoordinates(e, e.touches ? e.touches[0] : null);
@@ -2029,6 +2117,7 @@ function endTouch(e) {
   if (isDraggingFx) { isDraggingFx = false; fxDragStart = null; saveState(); }
   if (isDraggingSubject) { isDraggingSubject = false; subjectDragStart = null; saveState(); }
   if (isDraggingBg) { isDraggingBg = false; bgDragStart = null; saveState(); }
+  if (window.__ovDrag) { window.__ovDrag = null; saveState(); }
   if (isDraggingPerson) {
     isDraggingPerson = false; personDragStart = null;
     const tp = window.__personTap; window.__personTap = null;
@@ -2041,7 +2130,7 @@ function endTouch(e) {
 }
 function getTextBox(layer) {
   ctx.save();
-  ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
+  ctx.font = `${mxFW(layer.font)} ${layer.size}px '${layer.font}', sans-serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const m = ctx.measureText(layer.text);
   ctx.restore();
@@ -2053,6 +2142,8 @@ function getTextBox(layer) {
   const d = m.actualBoundingBoxDescent !== undefined ? m.actualBoundingBoxDescent : layer.size * 0.5;
   return { x0: -l * sx - pad, x1: r * sx + pad, y0: -a - pad, y1: d + pad, sx };
 }
+const MX_SINGLE_WEIGHT = new Set(['Anton','Audiowide','Alfa Slab One','Bebas Neue','Black Ops One','Bungee','Bungee Inline','Chango','Chewy','Coiny','Creepster','Damion','Diplomata SC','Frijole','Gloria Hallelujah','Great Vibes','Gugi','Knewave','Lobster','Luckiest Guy','Monoton','Pacifico','Parisienne','Permanent Marker','Press Start 2P','Righteous','Russo One','Rye','Satisfy','Special Elite','Yellowtail','Indie Flower','Nanum Pen Script','Neucha','Pattaya','Peralta','Rock Salt','Sacramento','Shadows Into Light','Share Tech Mono','Sigmar One','Titan One','Unica One','Varela Round','Abril Fatface','Bree Serif','DM Serif Display','Fugaz One','Kaushan Script','Lilita One','Marcellus','Fjalla One']);
+function mxFW(f) { return MX_SINGLE_WEIGHT.has(f) ? 'normal' : 'bold'; }
 
 function getSelectionHandles(layer) {
   const b = getTextBox(layer);
@@ -2153,6 +2244,43 @@ function drawSelectionBox(bx, by, bw, bh) {
   ctx.beginPath(); ctx.arc(bx + bw/2, by - 38, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
 }
 
+function ovCropActive() {
+  const sv = document.getElementById('subtab-overlaycrop');
+  return !!(overlayImg && window.__ovGeom && sv && sv.classList.contains('active') && activePanelName() === 'clean');
+}
+function ovToLocal(g, p) {
+  const dx = p.x - g.cx, dy = p.y - g.cy, c = Math.cos(-g.rot), s = Math.sin(-g.rot);
+  return { x: dx * c - dy * s, y: dx * s + dy * c };
+}
+function ovCropRect() {
+  const g = window.__ovGeom;
+  return { g: g, x0: -g.w / 2 + g.w * cutLeft / 100, x1: g.w / 2 - g.w * cutRight / 100, y0: -g.h / 2 + g.h * cutTop / 100, y1: g.h / 2 - g.h * cutBottom / 100 };
+}
+function drawOvCropBox() {
+  if (!ovCropActive()) return;
+  const r = ovCropRect(), g = r.g;
+  ctx.save();
+  ctx.translate(g.cx, g.cy); ctx.rotate(g.rot);
+  ctx.setLineDash([8, 6]); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(-g.w / 2, -g.h / 2, g.w, g.h);
+  ctx.setLineDash([]); ctx.strokeStyle = '#00d4ff'; ctx.lineWidth = 3;
+  ctx.strokeRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+  ctx.fillStyle = '#00d4ff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  [[r.x0, r.y0], [r.x1, r.y0], [r.x0, r.y1], [r.x1, r.y1]].forEach(p => { ctx.beginPath(); ctx.arc(p[0], p[1], 12, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
+  ctx.restore();
+}
+function ovCropSync() {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = Math.round(v); };
+  const lab = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = Math.round(v); };
+  set('cutTopInput', cutTop); lab('cutTopVal', cutTop);
+  set('cutBottomInput', cutBottom); lab('cutBottomVal', cutBottom);
+  set('cutLeftInput', cutLeft); lab('cutLeftVal', cutLeft);
+  set('cutRightInput', cutRight); lab('cutRightVal', cutRight);
+}
+function resetOvCrop() {
+  cutTop = 0; cutBottom = 0; cutLeft = 0; cutRight = 0;
+  ovCropSync(); redraw(); saveState();
+}
 function drawCutBox() {
   if (!cutBodyActive) return;
   const w = canvas.width, h = canvas.height;
@@ -2182,7 +2310,9 @@ function drawCutBox() {
 }
 
 // ---------- Main redraw ----------
-function redraw() {
+let _rdQ = false;
+function redraw() { if (window.__inMove) { if (!_rdQ) { _rdQ = true; requestAnimationFrame(() => { _rdQ = false; redrawNow(); }); } return; } redrawNow(); }
+function redrawNow() {
   if (!imgLoaded) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   let filterString = `brightness(${bInput.value}%) contrast(${cInput.value}%) saturate(${sInput.value}%) `;
@@ -2426,6 +2556,7 @@ if (currentFilter === 'coverart') {
     ctx.globalAlpha = overlayOpacity / 100;
     ctx.globalCompositeOperation = 'source-over';
     ctx.translate(overlayX * cw, overlayY * ch);
+    window.__ovGeom = { cx: overlayX * cw, cy: overlayY * ch, rot: overlayRotation || 0, w: off.width, h: off.height };
     if (overlayRotation) ctx.rotate(overlayRotation);
     ctx.drawImage(off, -off.width / 2, -off.height / 2);
     ctx.restore();
@@ -2439,9 +2570,9 @@ textLayers.forEach(layer => {
       ctx.save();
       ctx.translate(layer.x, layer.y);
       if (layer.rotation) ctx.rotate(layer.rotation);
-      ctx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
+      ctx.font = `${mxFW(layer.font)} ${layer.size}px '${layer.font}', sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      if (layer.style === 'stroke') { ctx.lineWidth = Math.max(2, layer.size * 0.08); ctx.strokeStyle = '#000'; ctx.strokeText(layer.text, 0, 0); }
+      if (layer.style === 'stroke' && !layer.persp) { ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(1, layer.size * (layer.strokeW > 0 ? layer.strokeW : 8) / 100); ctx.strokeStyle = layer.strokeColor || '#000'; ctx.strokeText(layer.text, 0, 0); }
       else if (layer.style === 'shadow') { ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 4; ctx.shadowOffsetY = 4; }
       else if (layer.style === 'glow') { ctx.shadowColor = layer.color; ctx.shadowBlur = 20; }
       ctx.fillStyle = layer.color;
@@ -2461,15 +2592,16 @@ textLayers.forEach(layer => {
         off.height = textH * SS;
         const octx = off.getContext('2d');
         octx.scale(SS, SS);
-        octx.font = `bold ${layer.size}px '${layer.font}', sans-serif`;
+        octx.font = `${mxFW(layer.font)} ${layer.size}px '${layer.font}', sans-serif`;
         octx.textAlign = 'center';
         octx.textBaseline = 'middle';
         octx.fillStyle = layer.color;
+        if (layer.style === 'stroke') { octx.lineJoin = 'round'; octx.lineWidth = Math.max(1, layer.size * (layer.strokeW > 0 ? layer.strokeW : 8) / 100); octx.strokeStyle = layer.strokeColor || '#000'; octx.strokeText(layer.text, textW/2, textH/2); }
         octx.fillText(layer.text, textW/2, textH/2);
         ctx.save();
         ctx.imageSmoothingEnabled = true;
         if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
-        const rows = 200;
+        const rows = 100;
         const k = Math.abs(persp) / 100 * 0.9;
         const dir = persp > 0 ? 1 : -1;
         const sAt = (t) => dir > 0 ? (1 - k * (1 - t)) : (1 - k * t);
@@ -2488,6 +2620,7 @@ textLayers.forEach(layer => {
         const totalH = destY;
         const startY = -totalH / 2;
         const OVERLAP_SRC = srcRowH * 1.5;
+        const wc = document.createElement('canvas'); wc.width = Math.ceil(textW); wc.height = Math.ceil(totalH) + 2; const wctx = wc.getContext('2d'); wctx.imageSmoothingEnabled = true; layer._wc = wc; layer._wy = startY;
         for (const r of rowData) {
           const w = textW * r.scale;
           const srcY0 = Math.max(0, r.srcY - OVERLAP_SRC);
@@ -2497,10 +2630,11 @@ textLayers.forEach(layer => {
           const overlapDstBot = (srcY1 - r.srcY - srcRowH) * r.scale;
           const dstY = startY + r.destY - overlapDstTop;
           const dstH = r.destH + overlapDstTop + overlapDstBot;
-          ctx.drawImage(off, 0, srcY0 * SS, textW * SS, srcH * SS, -w/2, dstY, w, dstH);
+          wctx.drawImage(off, 0, srcY0 * SS, textW * SS, srcH * SS, textW/2 - w/2, dstY - startY, w, dstH);
         }
         ctx.restore();
       }
+      if (persp !== 0 && layer._wc) ctx.drawImage(layer._wc, -layer._wc.width / 2, layer._wy);
       if (activeLayerId === layer.id && activePanelName() === 'text' && !window.__noBoxes) {
         const b = getTextBox(layer);
         ctx.save();
@@ -2514,6 +2648,7 @@ textLayers.forEach(layer => {
   });
   drawPersonBox();
   drawCutBox();
+  drawOvCropBox();
 }
 
 // ---------- Clean pick ----------
@@ -2531,7 +2666,7 @@ function pickAndClean(file) {
       overlayRotation = 0;
       overlayOpacity = 0;
       const op = document.getElementById('unshowOpacityInput'); if (op) op.value = 0;
-      const opv = document.getElementById('unshowOpacityVal'); if (opv) opv.innerText = '0';
+      const opv = document.getElementById('unshowOpacityVal'); if (opv) opv.innerText = '100'; overlayOpacity = 100; if (op) op.value = 100;
       if (!imgLoaded) {
         img = newImg;
         originalImageSrc = ev.target.result;
@@ -2544,7 +2679,7 @@ function pickAndClean(file) {
       }
       redraw(); saveState();
       if (status) status.textContent = 'Photo added as layer. Drag to move, pinch to resize.';
-      showToast('Photo added as layer');
+      showToast('Photo added as layer'); overlayOpacity = 100; { const o = document.getElementById('unshowOpacityInput'); if (o) o.value = 100; const ov = document.getElementById('unshowOpacityVal'); if (ov) ov.innerText = '100'; } redraw(); saveState();
     };
     newImg.onerror = () => { if (status) status.textContent = 'Failed to load image.'; };
     newImg.src = ev.target.result;
@@ -3125,6 +3260,7 @@ function switchSubTab(name, el) {
   if (name === 'basic' || name === 'layers') syncActiveInputs();
   if (name === 'font') buildFontGrid();
   if (name === 'bgcolors') buildBgColorsTab();
+  redraw();
 }
 
 // ---------- Text sections (categories) ----------
@@ -3489,7 +3625,7 @@ function saveProjectToHome() {
   const serializedLayers = textLayers.map(l => ({
     id: l.id, text: l.text, x: l.x, y: l.y, size: l.size,
     font: l.font, color: l.color, style: l.style,
-    rotation: l.rotation, persp: l.persp || 0
+    rotation: l.rotation, persp: l.persp || 0, strokeW: l.strokeW, strokeColor: l.strokeColor
   }));
   let bgFile = null;
   if (currentBgImage) {
@@ -3522,6 +3658,7 @@ function saveProjectToHome() {
       fxX, fxY, fxScale, fxRotation,
       subjectX, subjectY, subjectScale,
       subjectAmount: subjAmt.value,
+      overlay: overlayImg ? { src: overlayImg.src, fill: !!overlayImg._isColorFill, x: overlayX, y: overlayY, scale: overlayScale, rot: overlayRotation, opacity: overlayOpacity, tint: overlayTint, tintAmt: overlayTintAmount, ratio: overlayCropRatio, round: overlayRound, cutTop: cutTop, cutBottom: cutBottom, cutLeft: cutLeft, cutRight: cutRight, cutFeather: cutFeather, cornerRound: cornerRound } : null,
   personOverlay: personOverlay ? personOverlay.src : null,
   personExtras: personExtras.map(p => ({ src: p.img.src, x: p.x, y: p.y, scale: p.scale, rot: p.rot })),
   personOverlayX, personOverlayY, personOverlayScale, personOverlayRotation
@@ -3574,6 +3711,7 @@ document.querySelector('.bottom-nav').style.setProperty('display', 'flex', 'impo
   currentProjectName = p.name || 'Untitled';
   window.__solidOrigin = p.solidOrigin || ((/^Solid (#[0-9a-f]{6})$/i.exec(p.name || '') || [])[1] || null);
   textLayers = p.textLayers || [];
+  mxLoadFonts();
   activeLayerId = null;
   bInput.value = p.brightness ?? 100; cInput.value = p.contrast ?? 100; sInput.value = p.saturation ?? 100; nInput.value = p.noise ?? 0;
   subjAmt.value = p.subjectAmount ?? 12;
@@ -3629,6 +3767,24 @@ if (p.personOverlay) {
   personOverlayScale = p.personOverlayScale ?? 1;
   personOverlayRotation = p.personOverlayRotation ?? 0;
 }  
+  if (p.overlay && p.overlay.src) {
+    const o = p.overlay;
+    overlayX = o.x ?? 0.5; overlayY = o.y ?? 0.5; overlayScale = o.scale ?? 0.7; overlayRotation = o.rot ?? 0;
+    overlayOpacity = o.opacity ?? 100; overlayTint = o.tint ?? null; overlayTintAmount = o.tintAmt ?? 60;
+    overlayCropRatio = o.ratio ?? 'free'; overlayRound = o.round ?? 0;
+    cutTop = o.cutTop ?? 0; cutBottom = o.cutBottom ?? 0; cutLeft = o.cutLeft ?? 0; cutRight = o.cutRight ?? 0;
+    cutFeather = o.cutFeather ?? 0; cornerRound = o.cornerRound ?? 0;
+    const oi = new Image();
+    oi.onload = () => { if (o.fill) oi._isColorFill = true; overlayImg = oi; if (imgLoaded) redraw(); };
+    oi.src = o.src;
+    const sv = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    const sl = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = Math.round(v); };
+    sv('unshowOpacityInput', overlayOpacity); sl('unshowOpacityVal', overlayOpacity);
+    sv('cutFeatherInput', cutFeather); sl('cutFeatherVal', cutFeather);
+    sv('cornerRoundInput', cornerRound); sl('cornerRoundVal', cornerRound);
+    sv('overlayScaleSlider', Math.round(overlayScale * 100)); sl('overlayScaleVal', overlayScale * 100);
+    ovCropSync();
+  }
   const sourceImage = p.originalImage || p.image;
   originalImageSrc = sourceImage;
   window.__originalBeforeBgRemove = p.preBgRemoveImage || null;
@@ -3713,13 +3869,16 @@ function openBackupSheet() {
   const card = document.getElementById('backupSheetCard');
   if (!sheet || !card) return;
   sheet.style.display = 'flex';
-  requestAnimationFrame(() => { card.style.transform = 'translateY(0)'; });
+  card.style.transition = 'none'; card.style.transform = 'none';
+  sheet.style.transition = 'none'; sheet.style.opacity = '0'; void sheet.offsetWidth;
+  sheet.style.transition = 'opacity .18s ease';
+  requestAnimationFrame(() => { sheet.style.opacity = '1'; });
 }
 function closeBackupSheet() {
   const sheet = document.getElementById('backupSheet');
   const card = document.getElementById('backupSheetCard');
   if (!sheet || !card) return;
-  card.style.transform = 'translateY(-100%)';
+  sheet.style.opacity = '0';
   setTimeout(() => { sheet.style.display = 'none'; }, 300);
 }
 
@@ -3731,7 +3890,7 @@ function buildMxData() {
   const serializedLayers = textLayers.map(l => ({
     id: l.id, text: l.text, x: l.x, y: l.y, size: l.size,
     font: l.font, color: l.color, style: l.style,
-    rotation: l.rotation, persp: l.persp || 0
+    rotation: l.rotation, persp: l.persp || 0, strokeW: l.strokeW, strokeColor: l.strokeColor
   }));
   let bgFile = null;
   if (currentBgImage) {
@@ -3821,7 +3980,7 @@ if (data.projectId && localStorage.getItem('music_' + data.projectId)) {
       text: l.text || '', x: l.x, y: l.y,
       size: l.size || 40,font: l.font || 'Anton',
       color: l.color || '#ffffff', style: l.style || 'normal',
-      rotation: l.rotation || 0, persp: l.persp || 0
+      rotation: l.rotation || 0, persp: l.persp || 0, strokeW: l.strokeW, strokeColor: l.strokeColor
     }));
     activeLayerId = null;
     if (data.brightness !== undefined) bInput.value = data.brightness;
