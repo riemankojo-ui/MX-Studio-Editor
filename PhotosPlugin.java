@@ -23,6 +23,10 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+import com.getcapacitor.annotation.ActivityCallback;
+import androidx.activity.result.ActivityResult;
+import android.app.Activity;
+import android.content.Intent;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -134,6 +138,36 @@ public class PhotosPlugin extends Plugin {
     }
 
     // ---------- save edited photo into the phone gallery ----------
+    // ---------- save any file through the system file picker ----------
+    @PluginMethod
+    public void saveFile(PluginCall call) {
+        if (call.getString("data") == null) { call.reject("no data"); return; }
+        Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("application/octet-stream");
+        i.putExtra(Intent.EXTRA_TITLE, call.getString("name", "MX-Project.mx"));
+        startActivityForResult(call, i, "saveFileResult");
+    }
+
+    @ActivityCallback
+    private void saveFileResult(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        Intent d = result.getData();
+        if (result.getResultCode() != Activity.RESULT_OK || d == null || d.getData() == null) {
+            call.reject("cancelled");
+            return;
+        }
+        try {
+            byte[] bytes = call.getString("data").getBytes("UTF-8");
+            try (java.io.OutputStream os = getContext().getContentResolver().openOutputStream(d.getData(), "wt")) {
+                os.write(bytes);
+            }
+            call.resolve();
+        } catch (Throwable e) {
+            call.reject("failed");
+        }
+    }
+
     @PluginMethod
     public void saveImage(PluginCall call) {
         String data = call.getString("data");

@@ -96,13 +96,78 @@ html, body { height:100vh; width:100%; overflow:hidden; overscroll-behavior:none
 .sub-tab.fx-ic.active { color:#fff; border-bottom:none; }
 .sub-tab.fx-ic.active svg { stroke:#00d4ff; }
 .sub-tab.fx-ic.active span { color:#00d4ff; }
+.cart-head { display:flex; align-items:center; justify-content:space-between; padding:2px 2px 0; }
+.cart-head .fx-reset { width:30px; height:30px; font-size:16px; }
+#adjust-cartoon .h-scroll { gap:6px; padding:6px 0 10px; }
+#adjust-cartoon .h-card { padding:9px 16px; }
+#adjust-cartoon .h-card.selected { background:#222; color:#00d4ff; }
+#adjust-cartoon .fx-ctrl { margin-top:0; padding:8px 2px; }
+#adjust-cartoon .fx-ctrl-l { min-width:96px; }
+#adjustSubTabs { gap:10px; }
+#adjustSubTabs .sub-tab.fx-ic { min-width:60px; padding:6px 4px; gap:4px; font-size:10px; }
+#adjustSubTabs .sub-tab.fx-ic svg { width:22px; height:22px; }
 .sub-view { display:none; }
 .sub-view.active { display:block; }
+.ce-wrap { padding-top:2px; }
+#subtab-cuteffects .h-scroll { gap:6px; padding:4px 0 10px; }
+#subtab-cuteffects .h-card { padding:9px 16px; }
+#subtab-cuteffects .h-card.selected { background:#222; color:#00d4ff; }
+#subtab-cuteffects .fx-ctrl { margin-top:0; padding:8px 2px; }
+#subtab-cuteffects .fx-ctrl-l { min-width:84px; }
+#subtab-cuteffects .color-row { flex:1; padding:0; gap:8px; }
+#subtab-cuteffects .color-circle { width:28px; height:28px; border-radius:0; border:1px solid #3a3a3a; }
+#subtab-cuteffects .color-circle.selected { border:2px solid #00d4ff; }
+.ce-hint { font-size:10px; color:#666; text-align:center; margin-top:10px; line-height:1.6; }
+.ca-wrap { padding-top:4px; }
+.ca-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 2px 4px; }
+.ca-hint { font-size:10px; color:#777; line-height:1.5; }
+.ca-head .fx-reset { width:30px; height:30px; font-size:16px; flex:0 0 auto; }
+.ca-wrap .fx-ctrl { margin-top:0; padding:8px 2px; }
+.ca-wrap .fx-ctrl-l { min-width:104px; }
+.bl-wrap { margin-top:8px; }
+.bl-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; }
+.bl-full { grid-column:1/-1; }
+.bl-l { font-size:10px; font-weight:700; color:#8a8a8a; letter-spacing:.5px; text-transform:uppercase; }
+.bl-l b { color:#00d4ff; }
+.bl-cell input[type="range"] { max-width:none; width:100%; height:6px; background:#2a2a2a; margin:12px 0 10px; }
+.bl-cell input[type="range"]::-webkit-slider-thumb { width:22px; height:22px; background:#fff; border:3px solid #00d4ff; }
+.bl-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
+.bl-btn { background:#161616; color:#ddd; border:none; padding:12px 0; border-radius:0; font-size:10px; font-weight:800; letter-spacing:.6px; cursor:pointer; }
+.bl-btn:active { background:#2a2a2a; }
+.bl-del { margin-top:8px; width:100%; background:transparent; color:#ff2c2c; border:1px solid #ff2c2c; padding:12px; border-radius:0; font-size:11px; font-weight:800; letter-spacing:1px; cursor:pointer; }
+.bl-del:active { background:#ff2c2c; color:#fff; }
+#panel-person .sub-tabs .sub-tab.fx-ic { min-width:60px; padding:6px 4px; gap:4px; font-size:10px; }
+#panel-person .sub-tabs .sub-tab.fx-ic svg { width:22px; height:22px; }
+.person-rows .fx-ctrl { margin-top:0; padding:8px 2px; }
+.person-rows .fx-ctrl-l { min-width:96px; }
+#panel-clean .sub-tabs .sub-tab.fx-ic { min-width:60px; padding:6px 4px; gap:4px; font-size:10px; }
+#panel-clean .sub-tabs .sub-tab.fx-ic svg { width:22px; height:22px; }
+.pick-btn { display:block; width:100%; box-sizing:border-box; margin:10px 0 0; padding:14px; background:#00d4ff; color:#001a20; text-align:center; border:none; border-radius:0; font-size:12px; font-weight:800; letter-spacing:1.2px; cursor:pointer; }
+.pick-btn:active { filter:brightness(.9); }
+#panel-border .sub-tabs .sub-tab.fx-ic { min-width:60px; padding:6px 4px; gap:4px; font-size:10px; }
+#panel-border .sub-tabs .sub-tab.fx-ic svg { width:22px; height:22px; }
+#subtab-borderstyle .fx-ctrl { margin-top:0; padding:8px 2px; }
+#subtab-borderstyle .fx-ctrl-l { min-width:84px; }
+#panel-bgimage .sub-tabs .sub-tab.fx-ic { min-width:60px; padding:6px 4px; gap:4px; font-size:10px; }
+#panel-bgimage .sub-tabs .sub-tab.fx-ic svg { width:22px; height:22px; }
+#panel-bg .sub-tabs .sub-tab.fx-ic { min-width:60px; padding:6px 4px; gap:4px; font-size:10px; }
+#panel-bg .sub-tabs .sub-tab.fx-ic svg { width:22px; height:22px; }
+.subj-btn { display:block; width:100%; margin:14px 0 10px; padding:14px; background:#00d4ff; color:#001a20; border:none; border-radius:0; font-size:12px; font-weight:800; letter-spacing:1.2px; cursor:pointer; }
+.subj-btn:active { filter:brightness(.9); }
+.subj-btn:disabled { opacity:.5; }
+.subj-status { font-size:11px; color:#777; line-height:1.6; text-align:center; padding:2px 8px; }
+#subtab-subjeffect .h-scroll { gap:6px; padding:6px 0 10px; }
+#subtab-subjeffect .h-card { padding:9px 16px; }
+#subtab-subjeffect .h-card.selected { background:#222; color:#00d4ff; }
+#subtab-subjeffect .fx-ctrl { margin-top:0; padding:8px 2px; }
+#subtab-subjeffect .fx-ctrl-l { min-width:96px; }
 
 input[type="range"] { -webkit-appearance:none; appearance:none; width:100%; max-width:240px; height:4px; background:#242424; border-radius:2px; outline:none; }
 input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; }
 input[type="range"]::-moz-range-thumb { width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; border:none; }
-.adjust-sliders { display:flex; flex-direction:column; gap:20px; padding:8px 4px; }
+.adjust-sliders { display:flex; flex-direction:column; gap:0; padding:0; }
+#adjust-sliders .fx-ctrl { margin-top:0; padding:8px 2px; }
+#adjust-sliders .fx-ctrl-l { min-width:110px; }
 
 .h-scroll, .filter-thumbs, .template-thumbs, .border-thumbs, .color-row, .bgcolor-row, .fx-grid { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
 .h-scroll::-webkit-scrollbar, .filter-thumbs::-webkit-scrollbar, .template-thumbs::-webkit-scrollbar, .border-thumbs::-webkit-scrollbar, .color-row::-webkit-scrollbar, .bgcolor-row::-webkit-scrollbar, .fx-grid::-webkit-scrollbar { display:none; }

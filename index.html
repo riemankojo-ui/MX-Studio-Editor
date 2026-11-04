@@ -71,10 +71,10 @@
 
   <div id="panel-adjust" class="panel active">
     <div class="sub-tabs" id="adjustSubTabs">
-      <button class="sub-tab active" onclick="switchAdjustCat('templates', this)">TEMPLATES</button>
-      <button class="sub-tab" onclick="switchAdjustCat('presets', this)">PRESETS</button>
-      <button class="sub-tab" onclick="switchAdjustCat('sliders', this)">SLIDERS</button>
-      <button class="sub-tab" onclick="switchAdjustCat('cartoon', this)">CARTOON</button>
+      <button class="sub-tab fx-ic active" onclick="switchAdjustCat('templates', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Templates</span></button>
+      <button class="sub-tab fx-ic" onclick="switchAdjustCat('presets', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg><span>Presets</span></button>
+      <button class="sub-tab fx-ic" onclick="switchAdjustCat('sliders', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="21"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/><circle cx="6" cy="15" r="2"/><circle cx="12" cy="8" r="2"/><circle cx="18" cy="13" r="2"/></svg><span>Sliders</span></button>
+      <button class="sub-tab fx-ic" onclick="switchAdjustCat('cartoon', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2.5 4 2.5S16 14 16 14"/><line x1="9" y1="9.5" x2="9.01" y2="9.5"/><line x1="15" y1="9.5" x2="15.01" y2="9.5"/></svg><span>Cartoon</span></button>
     </div>
     <div id="adjust-templates" class="sub-view active">
       <div class="template-thumbs" id="templateContainer"></div>
@@ -83,16 +83,21 @@
       <div class="filter-thumbs" id="presetThumbsContainer"></div>
     </div>
     <div id="adjust-sliders" class="sub-view">
-      <div class="adjust-sliders" style="background:#141414;border-radius:12px;padding:16px 14px;">
-        <input type="range" id="brightness" min="0" max="200" value="100">
-        <input type="range" id="contrast" min="50" max="200" value="100">
-        <input type="range" id="saturation" min="0" max="200" value="100">
-        <input type="range" id="noise" min="0" max="100" value="0">
+      <div class="adjust-sliders">
+        <div class="cart-head" style="justify-content:flex-end;"><button class="fx-reset" onclick="resetAdjustSliders()" aria-label="Reset sliders">↺</button></div>
+        <div class="fx-ctrl"><span class="fx-ctrl-l">Brightness <b id="adjBrVal">100</b>%</span>
+          <input type="range" id="brightness" min="0" max="200" value="100"></div>
+        <div class="fx-ctrl"><span class="fx-ctrl-l">Contrast <b id="adjCoVal">100</b>%</span>
+          <input type="range" id="contrast" min="50" max="200" value="100"></div>
+        <div class="fx-ctrl"><span class="fx-ctrl-l">Saturation <b id="adjSaVal">100</b>%</span>
+          <input type="range" id="saturation" min="0" max="200" value="100"></div>
+        <div class="fx-ctrl"><span class="fx-ctrl-l">Noise <b id="adjNoVal">0</b></span>
+          <input type="range" id="noise" min="0" max="100" value="0"></div>
       </div>
     </div>
     <div id="adjust-cartoon" class="sub-view">
-      <div style="background:#141414;border-radius:12px;padding:16px 14px;">
-        <label class="section-label" style="margin-top:0;">CARTOON STYLE</label>
+      <div>
+        <div class="cart-head"><span class="fx-ctrl-l">Style</span><button class="fx-reset" onclick="resetCartoon()" aria-label="Reset cartoon">↺</button></div>
         <div class="h-scroll">
           <div class="h-card selected" onclick="setCartoonStyle('none', this)">None</div>
           <div class="h-card" onclick="setCartoonStyle('anime', this)">Anime</div>
@@ -101,14 +106,13 @@
           <div class="h-card" onclick="setCartoonStyle('oil', this)">Oil</div>
           <div class="h-card" onclick="setCartoonStyle('cell', this)">Cell</div>
         </div>
-        <label class="section-label">STRENGTH: <span id="cartoonAmtVal">70</span>%</label>
-        <input type="range" id="cartoonAmt" min="0" max="100" value="70" oninput="setCartoonAmount(this.value)">
-        <label class="section-label">LEVELS: <span id="cartoonLevelsVal">6</span></label>
-        <input type="range" id="cartoonLevels" min="2" max="12" value="6" oninput="setCartoonLevels(this.value)">
-        <label class="section-label">EDGE: <span id="cartoonEdgeVal">1.2</span></label>
-        <input type="range" id="cartoonEdge" min="0" max="4" step="0.1" value="1.2" oninput="setCartoonEdge(this.value)">
+        <div class="fx-ctrl"><span class="fx-ctrl-l">Strength <b id="cartoonAmtVal">70</b>%</span>
+          <input type="range" id="cartoonAmt" min="0" max="100" value="70" oninput="setCartoonAmount(this.value)"></div>
+        <div class="fx-ctrl"><span class="fx-ctrl-l">Levels <b id="cartoonLevelsVal">6</b></span>
+          <input type="range" id="cartoonLevels" min="2" max="12" value="6" oninput="setCartoonLevels(this.value)"></div>
+        <div class="fx-ctrl"><span class="fx-ctrl-l">Edge <b id="cartoonEdgeVal">1.2</b></span>
+          <input type="range" id="cartoonEdge" min="0" max="4" step="0.1" value="1.2" oninput="setCartoonEdge(this.value)"></div>
       </div>
-      <button class="crop-tool" onclick="resetCartoon()" style="margin-top:14px;width:100%;justify-content:center;">RESET CARTOON</button>
     </div>
   </div>
 
@@ -273,45 +277,38 @@
 
   <div id="panel-bg" class="panel">
     <div class="sub-tabs">
-      <button class="sub-tab active" onclick="switchSubTab('subjmain', this)">DETECT</button>
-      <button class="sub-tab" onclick="switchSubTab('subjeffect', this)">EFFECT</button>
+      <button class="sub-tab fx-ic active" onclick="switchSubTab('subjmain', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Detect</span></button>
+      <button class="sub-tab fx-ic" onclick="switchSubTab('subjeffect', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg><span>Effect</span></button>
     </div>
 
     <div id="subtab-subjmain" class="sub-view active">
-      <div id="subjectStatus" style="font-size:11px;color:#666;line-height:1.6;text-align:center;padding:14px 8px;">Tap DETECT — first run downloads a small AI model.</div>
-      <button class="bgremover-btn" id="detectBtn" onclick="detectSubject()" style="margin-bottom:8px;">
-        <div class="label">
-          <span class="title" style="color:#00d4ff;">DETECT SUBJECT</span>
-        </div>
-      </button>
+      <button class="subj-btn" id="detectBtn" onclick="detectSubject()">DETECT SUBJECT</button>
+      <div id="subjectStatus" class="subj-status">Tap DETECT — first run downloads a small AI model.</div>
     </div>
 
     <div id="subtab-subjeffect" class="sub-view">
-      <label class="section-label">EFFECT</label>
       <div class="h-scroll">
         <div class="h-card selected" onclick="setSubjectMode('none', this)">None</div>
         <div class="h-card" onclick="setSubjectMode('blur', this)">BG Blur</div>
         <div class="h-card" onclick="setSubjectMode('stroke', this)">Stroke</div>
       </div>
-      <label class="section-label">AMOUNT: <span id="subjectAmtVal">12</span></label>
-      <input type="range" id="subjectAmount" min="1" max="25" value="12">
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Amount <b id="subjectAmtVal">12</b></span>
+        <input type="range" id="subjectAmount" min="1" max="25" value="12"></div>
     </div>
   </div>
 
   <div id="panel-border" class="panel">
     <div class="sub-tabs">
-      <button class="sub-tab active" onclick="switchSubTab('borderstyle', this)">STYLE</button>
-      <button class="sub-tab" onclick="switchSubTab('bordercolor', this)">COLOR</button>
+      <button class="sub-tab fx-ic active" onclick="switchSubTab('borderstyle', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"/><rect x="7" y="7" width="10" height="10"/></svg><span>Style</span></button>
+      <button class="sub-tab fx-ic" onclick="switchSubTab('bordercolor', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg><span>Color</span></button>
     </div>
     <div id="subtab-borderstyle" class="sub-view active">
-      <label class="section-label">FRAME STYLE</label>
       <div class="border-thumbs" id="borderContainer"></div>
-      <label class="section-label">FRAME SIZE: <span id="borderSizeVal">5</span>%</label>
-      <input type="range" id="borderSizeInput" min="1" max="20" value="5" oninput="setBorderSize(this.value)">
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Size <b id="borderSizeVal">5</b>%</span>
+        <input type="range" id="borderSizeInput" min="1" max="20" value="5" oninput="setBorderSize(this.value)"></div>
     </div>
     <div id="subtab-bordercolor" class="sub-view">
-      <label class="section-label">FRAME COLOR</label>
-      <div style="display:flex;gap:12px;padding:4px 2px 8px;">
+      <div style="display:flex;gap:12px;padding:10px 2px 8px;">
         <div class="bcolor-circle selected" style="background:#ffffff;" onclick="setBorderColor('#ffffff', this)"></div>
         <div class="bcolor-circle" style="background:#ff2c2c;" onclick="setBorderColor('#ff2c2c', this)"></div>
         <div class="bcolor-circle" style="background:#000000;" onclick="setBorderColor('#000000', this)"></div>
@@ -333,9 +330,9 @@
 
   <div id="panel-bgimage" class="panel">
   <div class="sub-tabs">
-  <button class="sub-tab active" onclick="switchSubTab('bgcolors', this)">COLORS</button>
-  <button class="sub-tab" onclick="switchSubTab('bglayers', this)">LAYERS</button>
-  <button class="sub-tab" onclick="switchSubTab('bgimport', this)">IMPORT BG</button>
+  <button class="sub-tab fx-ic active" onclick="switchSubTab('bgcolors', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16" cy="10" r="1"/></svg><span>Colors</span></button>
+  <button class="sub-tab fx-ic" onclick="switchSubTab('bglayers', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/></svg><span>Layers</span></button>
+  <button class="sub-tab fx-ic" onclick="switchSubTab('bgimport', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg><span>Import</span></button>
 </div>
 
   <div id="subtab-bggrid" class="sub-view" style="display:none;">
@@ -384,15 +381,15 @@
 
   <div id="panel-clean" class="panel">
     <div class="sub-tabs">
-      <button class="sub-tab active" onclick="switchSubTab('cleanpick', this)">PICK &amp; CLEAN</button>
-      <button class="sub-tab" onclick="switchSubTab('unshow2', this)">UNSHOW</button>
-      <button class="sub-tab" onclick="switchSubTab('overlaycolor', this)">COLORS</button>
-      <button class="sub-tab" onclick="switchSubTab('overlaycrop', this)">CROP</button>
+      <button class="sub-tab fx-ic active" onclick="switchSubTab('cleanpick', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span>Pick</span></button>
+      <button class="sub-tab fx-ic" onclick="switchSubTab('unshow2', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Unshow</span></button>
+      <button class="sub-tab fx-ic" onclick="switchSubTab('overlaycolor', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16" cy="10" r="1"/></svg><span>Colors</span></button>
+      <button class="sub-tab fx-ic" onclick="switchSubTab('overlaycrop', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg><span>Crop</span></button>
     </div>
 
     <div id="subtab-cleanpick" class="sub-view active">
-      <div style="padding:20px 8px;">
-        <label for="cleanPickInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;border-radius:4px;">+ PICK PHOTO FROM GALLERY</label>
+      <div style="padding:6px 2px;">
+        <label for="cleanPickInput" class="pick-btn">+ PICK PHOTO FROM GALLERY</label>
         <input type="file" id="cleanPickInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;" onchange="handleCleanPick(this)">
         <div id="cleanStatus" style="font-size:11px;color:#666;line-height:1.6;margin-top:14px;text-align:center;">Pick any photo — it will load onto the canvas.</div>
       </div>
@@ -524,35 +521,32 @@
 
 <div id="panel-person" class="panel">
   <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('personpick', this)">PICK</button>
-    <button class="sub-tab" onclick="switchSubTab('personadjust', this)">ADJUST</button>
+    <button class="sub-tab fx-ic active" onclick="switchSubTab('personpick', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span>Pick</span></button>
+    <button class="sub-tab fx-ic" onclick="switchSubTab('personadjust', this)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="21"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/><circle cx="6" cy="15" r="2"/><circle cx="12" cy="8" r="2"/><circle cx="18" cy="13" r="2"/></svg><span>Adjust</span></button>
   </div>
 
   <div id="subtab-personpick" class="sub-view active">
     <div id="personStatus" style="font-size:11px;color:#888;text-align:center;padding:14px 8px;line-height:1.6;">Pick a photo from your gallery. The background will be removed automatically.</div>
 
-    <label for="personPhotoInput" class="crop-tool" style="width:100%;justify-content:center;padding:16px;background:#ffffff;color:#000;font-weight:800;font-size:13px;display:flex;cursor:pointer;border-radius:4px;">+ PICK PHOTO</label>
+    <label for="personPhotoInput" class="pick-btn">+ PICK PHOTO</label>
     <input type="file" id="personPhotoInput" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;" onchange="handlePersonPhoto(this)">
 
     <div id="personControls" style="display:none;margin-top:14px;">
       <div style="font-size:11px;color:#666;text-align:center;padding:10px;line-height:1.5;">Drag the person on the canvas to move. Pinch to scale. Use ADJUST tab for fine control.</div>
-      <button class="crop-tool" onclick="resetPersonOverlay()" style="margin-top:14px;width:100%;justify-content:center;background:#ff2c2c;color:#fff;font-weight:800;">REMOVE PERSON</button>
+      <button class="crop-tool" onclick="resetPersonOverlay()" style="margin-top:10px;width:100%;justify-content:center;background:#ff2c2c;color:#fff;font-weight:800;border-radius:0;padding:14px;letter-spacing:1.2px;">REMOVE PERSON</button>
     </div>
   </div>
 
   <div id="subtab-personadjust" class="sub-view">
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;">
-      <label class="section-label" style="margin-top:0;">MOVE X: <span id="personXVal">0</span></label>
-      <input type="range" id="personXInput" min="-100" max="100" value="0" oninput="setPersonX(this.value)">
-
-      <label class="section-label">MOVE Y: <span id="personYVal">0</span></label>
-      <input type="range" id="personYInput" min="-100" max="100" value="0" oninput="setPersonY(this.value)">
-
-      <label class="section-label">SCALE: <span id="personScaleVal">100</span>%</label>
-      <input type="range" id="personScaleInput" min="20" max="300" value="100" oninput="setPersonScale(this.value)">
-
-      <label class="section-label">ROTATION: <span id="personRotVal">0</span>°</label>
-      <input type="range" id="personRotInput" min="-180" max="180" value="0" oninput="setPersonRotation(this.value)">
+    <div class="person-rows">
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Move X <b id="personXVal">0</b></span>
+        <input type="range" id="personXInput" min="-100" max="100" value="0" oninput="setPersonX(this.value)"></div>
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Move Y <b id="personYVal">0</b></span>
+        <input type="range" id="personYInput" min="-100" max="100" value="0" oninput="setPersonY(this.value)"></div>
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Scale <b id="personScaleVal">100</b>%</span>
+        <input type="range" id="personScaleInput" min="20" max="300" value="100" oninput="setPersonScale(this.value)"></div>
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Rotate <b id="personRotVal">0</b>°</span>
+        <input type="range" id="personRotInput" min="-180" max="180" value="0" oninput="setPersonRotation(this.value)"></div>
     </div>
   </div>
 </div>
@@ -605,56 +599,47 @@
   <div id="subtab-cutlayers" class="sub-view">
     <div id="bodyLayersList" class="text-layers-list" style="max-height:130px;"></div>
 
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;margin-top:10px;">
-      <label class="section-label">MOVE X: <span id="bodyLayerXVal">0</span></label>
-      <input type="range" id="bodyLayerXInput" min="-100" max="100" value="0" oninput="setBodyLayerX(this.value)">
-
-      <label class="section-label">MOVE Y: <span id="bodyLayerYVal">0</span></label>
-      <input type="range" id="bodyLayerYInput" min="-100" max="100" value="0" oninput="setBodyLayerY(this.value)">
-
-      <label class="section-label">SCALE: <span id="bodyLayerScaleVal">100</span>%</label>
-      <input type="range" id="bodyLayerScaleInput" min="20" max="200" value="100" oninput="setBodyLayerScale(this.value)">
-
-      <label class="section-label">ROTATION: <span id="bodyLayerRotVal">0</span>°</label>
-      <input type="range" id="bodyLayerRotInput" min="-180" max="180" value="0" oninput="setBodyLayerRot(this.value)">
-
-      <label class="section-label">OPACITY: <span id="bodyLayerOpacityVal">100</span>%</label>
-      <input type="range" id="bodyLayerOpacityInput" min="0" max="100" value="100" oninput="setBodyLayerOpacity(this.value)">
-
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px;">
-        <button onclick="duplicateBodyLayer()" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">DUPLICATE</button>
-        <button onclick="flipBodyLayer('h')" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">FLIP ↔</button>
-        <button onclick="flipBodyLayer('v')" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">FLIP ↕</button>
-        <button onclick="moveBodyLayerOrder(1)" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">FORWARD</button>
-        <button onclick="moveBodyLayerOrder(-1)" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">BACKWARD</button>
-        <button onclick="resetBodyLayerTransform()" style="background:#1b1b1b;color:#fff;border:none;padding:11px 0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;">RESET</button>
+    <div class="bl-wrap">
+      <div class="bl-grid">
+        <div class="bl-cell"><div class="bl-l">Move X <b id="bodyLayerXVal">0</b></div>
+          <input type="range" id="bodyLayerXInput" min="-100" max="100" value="0" oninput="setBodyLayerX(this.value)"></div>
+        <div class="bl-cell"><div class="bl-l">Move Y <b id="bodyLayerYVal">0</b></div>
+          <input type="range" id="bodyLayerYInput" min="-100" max="100" value="0" oninput="setBodyLayerY(this.value)"></div>
+        <div class="bl-cell"><div class="bl-l">Scale <b id="bodyLayerScaleVal">100</b>%</div>
+          <input type="range" id="bodyLayerScaleInput" min="20" max="200" value="100" oninput="setBodyLayerScale(this.value)"></div>
+        <div class="bl-cell"><div class="bl-l">Rotate <b id="bodyLayerRotVal">0</b>°</div>
+          <input type="range" id="bodyLayerRotInput" min="-180" max="180" value="0" oninput="setBodyLayerRot(this.value)"></div>
+        <div class="bl-cell bl-full"><div class="bl-l">Opacity <b id="bodyLayerOpacityVal">100</b>%</div>
+          <input type="range" id="bodyLayerOpacityInput" min="0" max="100" value="100" oninput="setBodyLayerOpacity(this.value)"></div>
       </div>
-
-      <button onclick="deleteBodyLayer()" style="margin-top:14px;width:100%;background:#ff2c2c;color:#fff;border:none;padding:12px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;">DELETE THIS LAYER</button>
+      <div class="bl-actions">
+        <button class="bl-btn" onclick="duplicateBodyLayer()">DUPLICATE</button>
+        <button class="bl-btn" onclick="flipBodyLayer('h')">FLIP ↔</button>
+        <button class="bl-btn" onclick="flipBodyLayer('v')">FLIP ↕</button>
+        <button class="bl-btn" onclick="moveBodyLayerOrder(1)">FORWARD</button>
+        <button class="bl-btn" onclick="moveBodyLayerOrder(-1)">BACKWARD</button>
+        <button class="bl-btn" onclick="resetBodyLayerTransform()">RESET</button>
+      </div>
+      <button class="bl-del" onclick="deleteBodyLayer()">DELETE LAYER</button>
     </div>
   </div>
 
   <!-- ========== TAB 4: ADJUST ========== -->
   <div id="subtab-cutadjust" class="sub-view">
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;">
-      <label class="section-label" style="margin-top:0;">BRIGHTNESS: <span id="bodyLayerBrightVal">100</span>%</label>
-      <input type="range" id="bodyLayerBrightInput" min="20" max="200" value="100" oninput="setBodyLayerBright(this.value)">
-
-      <label class="section-label">CONTRAST: <span id="bodyLayerContrastVal">100</span>%</label>
-      <input type="range" id="bodyLayerContrastInput" min="20" max="200" value="100" oninput="setBodyLayerContrast(this.value)">
-
-      <label class="section-label">SATURATION: <span id="bodyLayerSatVal">100</span>%</label>
-      <input type="range" id="bodyLayerSatInput" min="0" max="200" value="100" oninput="setBodyLayerSat(this.value)">
-
-      <button onclick="resetBodyLayerAdjust()" style="margin-top:14px;width:100%;background:#1b1b1b;color:#fff;border:none;padding:11px;border-radius:10px;font-size:11px;font-weight:800;cursor:pointer;">RESET ADJUST</button>
+    <div class="ca-wrap">
+      <div class="ca-head"><span class="ca-hint">Select a layer in the LAYERS tab first.</span><button class="fx-reset" onclick="resetBodyLayerAdjust()" aria-label="Reset adjust">↺</button></div>
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Brightness <b id="bodyLayerBrightVal">100</b>%</span>
+        <input type="range" id="bodyLayerBrightInput" min="20" max="200" value="100" oninput="setBodyLayerBright(this.value)"></div>
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Contrast <b id="bodyLayerContrastVal">100</b>%</span>
+        <input type="range" id="bodyLayerContrastInput" min="20" max="200" value="100" oninput="setBodyLayerContrast(this.value)"></div>
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Saturation <b id="bodyLayerSatVal">100</b>%</span>
+        <input type="range" id="bodyLayerSatInput" min="0" max="200" value="100" oninput="setBodyLayerSat(this.value)"></div>
     </div>
-    <div style="font-size:10px;color:#555;text-align:center;margin-top:12px;line-height:1.6;">Select a layer in the LAYERS tab first.</div>
   </div>
 
   <!-- ========== TAB 3: EFFECTS ========== -->
   <div id="subtab-cuteffects" class="sub-view">
-    <div style="background:#141414;border-radius:12px;padding:16px 14px;">
-      <label class="section-label" style="margin-top:0;">LAYER EFFECT</label>
+    <div class="ce-wrap">
       <div class="h-scroll">
         <div class="h-card selected" onclick="setBodyLayerEffect('none', this)">None</div>
         <div class="h-card" onclick="setBodyLayerEffect('shadow', this)">Shadow</div>
@@ -662,21 +647,20 @@
         <div class="h-card" onclick="setBodyLayerEffect('outline', this)">Outline</div>
         <div class="h-card" onclick="setBodyLayerEffect('blur', this)">Blur</div>
       </div>
-
-      <label class="section-label">AMOUNT: <span id="bodyLayerEffectAmtVal">10</span></label>
-      <input type="range" id="bodyLayerEffectAmt" min="1" max="40" value="10" oninput="setBodyLayerEffectAmt(this.value)">
-
-      <label class="section-label">EFFECT COLOR</label>
-      <div class="color-row">
-        <div class="color-circle" style="background:#ffffff;" onclick="setBodyLayerEffectColor('#ffffff', this)"></div>
-        <div class="color-circle" style="background:#000000;" onclick="setBodyLayerEffectColor('#000000', this)"></div>
-        <div class="color-circle" style="background:#00d4ff;" onclick="setBodyLayerEffectColor('#00d4ff', this)"></div>
-        <div class="color-circle" style="background:#ff2c2c;" onclick="setBodyLayerEffectColor('#ff2c2c', this)"></div>
-        <div class="color-circle" style="background:#ffd700;" onclick="setBodyLayerEffectColor('#ffd700', this)"></div>
-        <div class="color-circle" style="background:#00ff88;" onclick="setBodyLayerEffectColor('#00ff88', this)"></div>
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Amount <b id="bodyLayerEffectAmtVal">10</b></span>
+        <input type="range" id="bodyLayerEffectAmt" min="1" max="40" value="10" oninput="setBodyLayerEffectAmt(this.value)"></div>
+      <div class="fx-ctrl"><span class="fx-ctrl-l">Color</span>
+        <div class="color-row">
+          <div class="color-circle" style="background:#ffffff;" onclick="setBodyLayerEffectColor('#ffffff', this)"></div>
+          <div class="color-circle" style="background:#000000;" onclick="setBodyLayerEffectColor('#000000', this)"></div>
+          <div class="color-circle" style="background:#00d4ff;" onclick="setBodyLayerEffectColor('#00d4ff', this)"></div>
+          <div class="color-circle" style="background:#ff2c2c;" onclick="setBodyLayerEffectColor('#ff2c2c', this)"></div>
+          <div class="color-circle" style="background:#ffd700;" onclick="setBodyLayerEffectColor('#ffd700', this)"></div>
+          <div class="color-circle" style="background:#00ff88;" onclick="setBodyLayerEffectColor('#00ff88', this)"></div>
+        </div>
       </div>
+      <div class="ce-hint">Select a layer in the LAYERS tab, then pick an effect here.</div>
     </div>
-    <div style="font-size:10px;color:#555;text-align:center;margin-top:16px;line-height:1.6;">Select a layer in the LAYERS tab, then pick an effect here.</div>
   </div>
   </div>
 </div>

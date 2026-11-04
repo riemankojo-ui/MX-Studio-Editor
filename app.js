@@ -259,6 +259,26 @@ async function fxPrepare(key, el) {
   if (pv && pv.querySelector('.fx-dl')) pv.innerHTML = fxThumb(fname);
   return true;
 }
+const _mxExportWeb = doMxExport;
+doMxExport = function(cleanName) {
+  const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos;
+  if (!(P && P.saveFile)) { _mxExportWeb(cleanName); return; }
+  const d = new Date();
+  const stamp = d.getFullYear()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0')
+    + '-'
+    + String(d.getHours()).padStart(2,'0')
+    + String(d.getMinutes()).padStart(2,'0')
+    + String(d.getSeconds()).padStart(2,'0');
+  const filename = cleanName + '-' + stamp + '.mx';
+  P.saveFile({ data: JSON.stringify(buildMxData()), name: filename })
+    .then(function() { closeBackupSheet(); showToast('Exported'); })
+    .catch(function(e) {
+      if (String((e && e.message) || e).indexOf('cancel') < 0) showToast('Export failed');
+    });
+};
+
 function fxSaveToDevice(name) {
   const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Photos;
   if (!P || !P.saveImage) return false;
@@ -944,7 +964,132 @@ function resetCartoon() {
   redraw(); saveState();
 }
 
+window._cartSm = null;
+
+function cartBilateral(d, w, h, rad, sigma, passes) {
+  const n = w * h;
+  let R = new Uint8Array(n), G = new Uint8Array(n), B = new Uint8Array(n);
+  let R2 = new Uint8Array(n), G2 = new Uint8Array(n), B2 = new Uint8Array(n);
+  for (let i = 0, j = 0; i < n; i++, j += 4) { R[i] = d[j]; G[i] = d[j+1]; B[i] = d[j+2]; }
+  const lut = new Float32Array(766);
+  for (let k = 0; k < 766; k++) lut[k] = Math.exp(-(k * k) / (2 * sigma * sigma));
+  const ks = rad * 2 + 1, sw = new Float32Array(ks * ks), ss = rad / 1.5;
+  for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++)
+    sw[(dy + rad) * ks + dx + rad] = Math.exp(-(dx*dx + dy*dy) / (2 * ss * ss));
+  for (let p = 0; p < passes; p++) {
+    for (let y = 0; y < h; y++) {
+      const y0 = Math.max(0, y - rad), y1 = Math.min(h - 1, y + rad);
+      for (let x = 0; x < w; x++) {
+        const x0 = Math.max(0, x - rad), x1 = Math.min(w - 1, x + rad);
+        const i = y * w + x, r0 = R[i], g0 = G[i], b0 = B[i];
+        let sr = 0, sg = 0, sb = 0, sW = 0;
+        for (let yy = y0; yy <= y1; yy++) {
+          const row = yy * w, wr = (yy - y + rad) * ks + rad - x;
+          for (let xx = x0; xx <= x1; xx++) {
+            const j = row + xx;
+            let a = R[j] - r0, b = G[j] - g0, c = B[j] - b0;
+            if (a < 0) a = -a; if (b < 0) b = -b; if (c < 0) c = -c;
+            const wt = sw[wr + xx] * lut[a + b + c];
+            sr += R[j] * wt; sg += G[j] * wt; sb += B[j] * wt; sW += wt;
+          }
+        }
+        R2[i] = sr / sW + 0.5; G2[i] = sg / sW + 0.5; B2[i] = sb / sW + 0.5;
+      }
+    }
+    let t = R; R = R2; R2 = t; t = G; G = G2; G2 = t; t = B; B = B2; B2 = t;
+  }
+  for (let i = 0, j = 0; i < n; i++, j += 4) { d[j] = R[i]; d[j+1] = G[i]; d[j+2] = B[i]; }
+}
+
+function cartoonProcess(d, w, h, style, levels, edgeAmt) {
+  const n = w * h;
+  const lum = new Float32Array(n);
+  for (let i = 0, j = 0; i < n; i++, j += 4) lum[i] = d[j] * 0.299 + d[j+1] * 0.587 + d[j+2] * 0.114;
+  let edge = null;
+  if (edgeAmt > 0 && style !== 'oil') {
+    edge = new Float32Array(n);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        const gx = -lum[i-w-1] - 2*lum[i-1] - lum[i+w-1] + lum[i-w+1] + 2*lum[i+1] + lum[i+w+1];
+        const gy = -lum[i-w-1] - 2*lum[i-w] - lum[i-w+1] + lum[i+w-1] + 2*lum[i+w] + lum[i+w+1];
+        const m = (Math.sqrt(gx*gx + gy*gy) * edgeAmt - 80) / 160;
+        edge[i] = m < 0 ? 0 : (m > 1 ? 1 : m);
+      }
+    }
+    if (style === 'comic' || edgeAmt > 2.5) {
+      const e2 = new Float32Array(n);
+      for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        e2[i] = Math.max(edge[i], edge[i-1], edge[i+1], edge[i-w], edge[i+w]);
+      }
+      edge = e2;
+    }
+  }
+  const step = 255 / (Math.max(2, levels) - 1);
+  const sat = style === 'comic' ? 1.35 : (style === 'oil' ? 1.1 : 1.25);
+  const ink = style === 'comic' ? 1 : 0.85;
+  for (let i = 0, p = 0; i < n; i++, p += 4) {
+    const y = lum[i];
+    const yq = style === 'oil' ? y : Math.round(y / step) * step;
+    const dl = yq - y;
+    let r = d[p] + dl, g = d[p+1] + dl, b = d[p+2] + dl;
+    r = yq + (r - yq) * sat; g = yq + (g - yq) * sat; b = yq + (b - yq) * sat;
+    if (edge) { const k = 1 - edge[i] * ink; r *= k; g *= k; b *= k; }
+    d[p] = r; d[p+1] = g; d[p+2] = b;
+  }
+}
+
 function generateCartoon(srcCanvas) {
+  const W = srcCanvas.width, H = srcCanvas.height;
+  const style = cartoonStyle;
+  const sc = Math.min(1, 720 / Math.max(W, H));
+  const w = Math.max(2, Math.round(W * sc)), h = Math.max(2, Math.round(H * sc));
+  const work = document.createElement('canvas');
+  work.width = w; work.height = h;
+  const wctx = work.getContext('2d', { willReadFrequently: true });
+  wctx.imageSmoothingQuality = 'high';
+  wctx.drawImage(srcCanvas, 0, 0, w, h);
+
+  const out = document.createElement('canvas');
+  out.width = W; out.height = H;
+  const octx = out.getContext('2d');
+  octx.imageSmoothingQuality = 'high';
+
+  if (style === 'sketch') {
+    const R = 2 + cartoonEdge * 2;
+    const g = document.createElement('canvas'); g.width = w; g.height = h;
+    const gc = g.getContext('2d');
+    gc.filter = 'grayscale(100%)'; gc.drawImage(work, 0, 0); gc.filter = 'none';
+    const inv = document.createElement('canvas'); inv.width = w; inv.height = h;
+    const ic = inv.getContext('2d');
+    ic.filter = 'grayscale(100%) invert(100%) blur(' + R + 'px)'; ic.drawImage(work, 0, 0); ic.filter = 'none';
+    gc.globalCompositeOperation = 'color-dodge';
+    gc.drawImage(inv, 0, 0);
+    gc.globalCompositeOperation = 'source-over';
+    octx.filter = 'contrast(125%)';
+    octx.drawImage(g, 0, 0, W, H);
+    octx.filter = 'none';
+    return out;
+  }
+
+  const rad = style === 'comic' ? 2 : 3;
+  const sigma = style === 'oil' ? 70 : (style === 'comic' ? 40 : 50);
+  const passes = style === 'oil' ? 4 : (style === 'comic' ? 1 : 2);
+  const key = (img.src || '') + '|' + style + '|' + w + 'x' + h;
+  if (!window._cartSm || window._cartSm.key !== key) {
+    const base = wctx.getImageData(0, 0, w, h);
+    cartBilateral(base.data, w, h, rad, sigma, passes);
+    window._cartSm = { key: key, data: base.data };
+  }
+  const id = new ImageData(new Uint8ClampedArray(window._cartSm.data), w, h);
+  cartoonProcess(id.data, w, h, style, cartoonLevels, cartoonEdge);
+  wctx.putImageData(id, 0, 0);
+  octx.drawImage(work, 0, 0, W, H);
+  return out;
+}
+
+function generateCartoonOld(srcCanvas) {
   const w = srcCanvas.width, h = srcCanvas.height;
   const out = document.createElement('canvas');
   out.width = w; out.height = h;
@@ -2312,7 +2457,17 @@ function drawCutBox() {
 // ---------- Main redraw ----------
 let _rdQ = false;
 function redraw() { if (window.__inMove) { if (!_rdQ) { _rdQ = true; requestAnimationFrame(() => { _rdQ = false; redrawNow(); }); } return; } redrawNow(); }
+function mxSyncAdjLabels() {
+  const set = (id, el) => { const e = document.getElementById(id); if (e && el) e.textContent = el.value; };
+  set('adjBrVal', bInput); set('adjCoVal', cInput); set('adjSaVal', sInput); set('adjNoVal', nInput);
+}
+function resetAdjustSliders() {
+  bInput.value = 100; cInput.value = 100; sInput.value = 100; nInput.value = 0;
+  redraw(); saveState();
+}
+window.resetAdjustSliders = resetAdjustSliders;
 function redrawNow() {
+  mxSyncAdjLabels();
   if (!imgLoaded) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   let filterString = `brightness(${bInput.value}%) contrast(${cInput.value}%) saturate(${sInput.value}%) `;
