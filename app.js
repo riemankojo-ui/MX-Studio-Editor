@@ -1511,6 +1511,14 @@ function setActiveFontRotation(v) {
   redraw(); saveState();
 }
 
+window.addEventListener('load', () => setTimeout(() => {
+  if (!document.fonts || !document.fonts.forEach) return;
+  const q = [];
+  document.fonts.forEach(ff => { if (ff.status === 'unloaded' && /U\+0000-00FF/i.test(ff.unicodeRange)) q.push(ff); });
+  let i = 0;
+  const next = () => { const b = q.slice(i, i + 4); i += 4; if (!b.length) return; Promise.all(b.map(ff => ff.load().catch(() => {}))).then(next); };
+  next();
+}, 2000));
 function mxLoadFonts() {
   if (!document.fonts || !document.fonts.load) return;
   const names = [...new Set(textLayers.map(l => l.font))];
