@@ -89,6 +89,8 @@ jobs:
             convert icon-512.png -resize ${l}x${l} $R/mipmap-$d/ic_launcher_round.png
             convert icon-512.png -resize ${s}x${s} -background none -gravity center -extent ${f}x${f} $R/mipmap-$d/ic_launcher_foreground.png
           done
+          mkdir -p $R/mipmap-anydpi-v26
+          for n in ic_launcher ic_launcher_round; do printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@color/ic_launcher_background"/>\n    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>\n</adaptive-icon>\n' > $R/mipmap-anydpi-v26/$n.xml; done
           C=$(convert icon-512.png -depth 8 -alpha off -format "%[hex:p{2,2}]" info:)
           printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#%s</color>\n</resources>\n' "$C" > $R/values/ic_launcher_background.xml
 
