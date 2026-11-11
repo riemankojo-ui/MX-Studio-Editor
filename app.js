@@ -159,7 +159,7 @@ function mxFontFail() {
   mxFontSay('Failed. Check internet and tap Download again.');
   const b = document.getElementById('mxFontBtn'); if (b) b.style.display = '';
 }
-function mxFontBanner() {
+function mxFontBanner() { return;
   if (document.getElementById('mxFontBar')) return;
   const d = document.createElement('div');
   d.id = 'mxFontBar';
