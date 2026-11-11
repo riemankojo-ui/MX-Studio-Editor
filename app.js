@@ -1356,7 +1356,7 @@ function setBgColor(color, el) {
 function setBgColorSize(v) { currentBgColorSize = parseInt(v); const e = document.getElementById('bgColorSizeVal'); if (e) e.innerText = v; redraw(); saveState(); }
 
 // ---------- Fonts ----------
-function buildFontGrid() { buildFontGridRaw(); mxReadyPills(); }
+function buildFontGrid() { buildFontGridRaw(); mxReadyPills(); const fix = () => { const c = document.getElementById('fontGridContainer'); if (c) c.scrollLeft = 0; }; fix(); setTimeout(fix, 150); }
 function mxReadyPills() {
   const c = document.getElementById('fontGridContainer');
   if (!c) return;
@@ -1373,6 +1373,7 @@ function buildFontGridRaw() {
   if (!c) return;
   const fontList = ["Impact","Bebas Neue","Oswald","Montserrat","Anton","Pacifico","Permanent Marker","Russo One","Press Start 2P","Righteous","Orbitron","Bungee","Bungee Inline","Creepster","Monoton","Luckiest Guy","Rye","Satisfy","Yellowtail","Chewy","Alfa Slab One","Cinzel","Audiowide","Black Ops One","Chango","Coiny","Damion","Diplomata SC","Frijole","Gloria Hallelujah","Gugi","Knewave","Lobster","Parisienne","Poppins","Playfair Display","Special Elite","Great Vibes","Merriweather","Dancing Script","Caveat","Cormorant Garamond","Crimson Text","Exo 2","Fjalla One","Indie Flower","Josefin Sans","Lora","Lobster Two","Merienda","Nanum Pen Script","Neucha","Nunito","Oleo Script","Pattaya","Peralta","Rajdhani","Rock Salt","Sacramento","Shadows Into Light","Share Tech Mono","Sigmar One","Spectral","Teko","Titan One","Ubuntu","Unica One","Varela Round","Vollkorn","Yanone Kaffeesatz","Zilla Slab","Abril Fatface","Alegreya","Archivo Black","Barlow Condensed","Bitter","Bree Serif","Cabin","Catamaran","Comfortaa","DM Serif Display","EB Garamond","Fira Sans","Frank Ruhl Libre","Fugaz One","Gothic A1","Heebo","IBM Plex Sans","Inconsolata","Jost","Karla","Kaushan Script","Libre Baskerville","Lilita One","M PLUS Rounded 1c","Manrope","Marcellus","Maven Pro"];
   const activeFont = (textLayers.find(l => l.id === activeLayerId) || {}).font;
+  fontList.splice(fontList.indexOf('Impact'), 1); fontList.splice(fontList.indexOf('Anton'), 1); fontList.unshift('Anton');
   let html = '';
   fontList.forEach(f => {
     const sel = (f === (activeFont || 'Anton')) ? 'selected' : '';
@@ -1548,7 +1549,8 @@ function updateSelection(el) {
 function setSubjectMode(mode, el) { subjectMode = mode; updateSelection(el); redraw(); saveState(); }
 
 // ---------- Text card modal ----------
-function openTextCard(mode, layerId) {
+function openTextCard(mode, layerId) { if (typeof openLiveText === 'function') { openLiveText(mode, layerId); return; } return openTextCardOld(mode, layerId); }
+function openTextCardOld(mode, layerId) {
   textCardMode = mode || 'add';
   textCardLayerId = layerId || null;
   const modal = document.getElementById('textCardModal');
@@ -1569,6 +1571,38 @@ inp.setAttribute('autocomplete', 'new-password');
   }
   modal.classList.add('active');
   setTimeout(() => { inp.focus(); inp.select(); }, 100);
+}
+
+function openLiveText(mode, layerId) {
+  let l;
+  const isNew = !(mode === 'edit' && layerId);
+  if (isNew) {
+    const id = Date.now();
+    l = { id, text: 'Type here', x: canvas.width/2, y: canvas.height/2, font:'Anton', size: Math.round(canvas.width*0.1), color:'#ffffff', style:'normal', rotation:0, stretchX:1, stretchY:1 };
+    textLayers.push(l);
+  } else { l = textLayers.find(x => x.id === layerId); if (!l) return; }
+  activeLayerId = l.id;
+  const old = document.getElementById('liveTextInput'); if (old) old.remove();
+  const r = canvas.getBoundingClientRect(); const sc = r.width / canvas.width;
+  const inp = document.createElement('input');
+  inp.id = 'liveTextInput'; inp.type = 'text'; inp.value = l.text || ''; inp.autocomplete = 'off';
+  inp.style.cssText = 'position:fixed;z-index:99998;background:transparent;border:1px dashed rgba(255,255,255,.6);outline:none;color:transparent;caret-color:#fff;text-align:center;padding:2px 6px;width:' + Math.min(r.width*0.9, 320) + 'px;left:' + (r.left + l.x*sc) + 'px;top:' + (r.top + l.y*sc) + 'px;transform:translate(-50%,-50%);font-size:' + Math.max(16, l.size*sc) + 'px;font-family:' + l.font + ';';
+  document.body.appendChild(inp); if (!document.getElementById('liveTextCss')) { const st = document.createElement('style'); st.id = 'liveTextCss'; st.textContent = '#liveTextInput::selection{background:transparent;}'; document.head.appendChild(st); }
+  inp.style.pointerEvents = 'none';
+  const follow = () => { if (!inp.parentNode) return; const rr = canvas.getBoundingClientRect(), s2 = rr.width / canvas.width, fs = Math.max(16, l.size*s2), b = getTextBox(l), bw = (b.x1 - b.x0) * s2, bh = (b.y1 - b.y0) * s2; inp.style.boxSizing = 'border-box'; inp.style.padding = '0'; inp.style.transform = 'none'; inp.style.width = bw + 'px'; inp.style.height = bh + 'px'; inp.style.left = (rr.left + (l.x + b.x0) * s2) + 'px'; inp.style.top = (rr.top + (l.y + b.y0) * s2) + 'px'; inp.style.fontSize = fs + 'px'; inp.style.fontFamily = l.font; inp.style.lineHeight = bh + 'px'; inp.style.borderRadius = '10px'; requestAnimationFrame(follow); };
+  requestAnimationFrame(follow);
+  inp.addEventListener('input', () => { l.text = inp.value; redraw(); });
+  const finish = () => {
+    if (!inp.parentNode) return;
+    inp.remove();
+    if (!(l.text || '').trim() || (isNew && l.text === 'Type here')) { textLayers = textLayers.filter(x => x.id !== l.id); activeLayerId = textLayers.length ? textLayers[textLayers.length-1].id : null; }
+    syncActiveInputs(); updateTextLayersUI(); redraw(); saveState();
+    const cur = textLayers.find(x => x.id === activeLayerId); if (cur) showFloatingMenu(cur.x, cur.y);
+  };
+  inp.addEventListener('blur', finish);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } });
+  syncActiveInputs(); redraw();
+  setTimeout(() => { inp.focus(); inp.select(); }, 50);
 }
 
 function closeTextCard() {
